@@ -1,7 +1,7 @@
 {
   "name": "Arma Reforger Panel",
   "short_name": "Arma Panel",
-  "description": "Panel zarządzania serwerem Arma Reforger",
+  "description": "Panel Arma Reforger du Commando Kieffer",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

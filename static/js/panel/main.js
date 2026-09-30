@@ -1,0 +1,35 @@
+// Entry point of the panel page.
+
+import { initLogViewer } from './logs.js';
+import { initMetrics } from './metrics.js';
+import { initMods } from './mods.js';
+import { fetchPersistence, initPersistence } from './persistence.js';
+import { initServerConfig } from './server-config.js';
+import { initServerControl } from './server-control.js';
+import { fetchStatus, startCountdown } from './status.js';
+
+async function doLogout() {
+  await fetch('/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+
+initMetrics();
+initLogViewer();
+
+// Status listeners run in registration order, top of the page first.
+initServerControl();
+initServerConfig();
+initMods();
+initPersistence();
+
+document.getElementById('btn-logout').addEventListener('click', doLogout);
+
+fetchStatus().then(() => { fetchPersistence(); startCountdown(); });
+
+// PWA — rejestracja service workera
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(err => console.log('SW error:', err));
+  });
+}

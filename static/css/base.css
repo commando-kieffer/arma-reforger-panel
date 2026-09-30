@@ -1,0 +1,19 @@
+/* Reset and design tokens shared by the login page and the panel. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0c0f;
+  --surface:   #111418;
+  --surface2:  #161b22;
+  --border:    #1e2530;
+  --accent:    #c8a84b;
+  --accent2:   #e8c96a;
+  --text:      #d4cfc6;
+  --muted:     #5a6070;
+  --online:    #4caf7d;
+  --offline:   #d64c4c;
+  --warn:      #e0913a;
+  --cpu-color: #4c9fd6;
+  --ram-color: #c8a84b;
+}

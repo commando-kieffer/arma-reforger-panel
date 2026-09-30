@@ -81,10 +81,10 @@ if [[ "$MODE" == "update" ]]; then
     # Read existing user from panel service
     EXISTING_USER=$(grep "^User=" /etc/systemd/system/arma-panel.service 2>/dev/null | cut -d= -f2 || echo "arma")
     PANEL_DIR_EXISTING=$(grep "^WorkingDirectory=" /etc/systemd/system/arma-panel.service 2>/dev/null | cut -d= -f2 || echo "$PANEL_DIR")
-    cp "$SCRIPT_DIR/app.py"     "$PANEL_DIR_EXISTING/"
-    cp "$SCRIPT_DIR/index.html" "$PANEL_DIR_EXISTING/"
-    cp "$SCRIPT_DIR/login.html" "$PANEL_DIR_EXISTING/"
-    cp "$SCRIPT_DIR/static/"*   "$PANEL_DIR_EXISTING/static/"
+    cp    "$SCRIPT_DIR/app.py"     "$PANEL_DIR_EXISTING/"
+    cp -r "$SCRIPT_DIR/arma_panel" "$PANEL_DIR_EXISTING/"
+    cp -r "$SCRIPT_DIR/templates"  "$PANEL_DIR_EXISTING/"
+    cp -r "$SCRIPT_DIR/static/"*   "$PANEL_DIR_EXISTING/static/"
     chown -R "$EXISTING_USER:$EXISTING_USER" "$PANEL_DIR_EXISTING"
     systemctl restart arma-panel
     echo -e "${GREEN}✓ Panel updated and restarted.${NC}"
@@ -294,16 +294,16 @@ fi
 mkdir -p "$PANEL_DIR/static"
 
 # Copy files from script directory
-for f in app.py index.html login.html; do
-    if [ -f "$SCRIPT_DIR/$f" ]; then
-        cp "$SCRIPT_DIR/$f" "$PANEL_DIR/"
+for f in app.py arma_panel templates; do
+    if [ -e "$SCRIPT_DIR/$f" ]; then
+        cp -r "$SCRIPT_DIR/$f" "$PANEL_DIR/"
     else
         echo -e "      ${RED}WARNING: $f not found in script directory.${NC}"
     fi
 done
-for f in manifest.json service-worker.js icon-192.png icon-512.png; do
-    if [ -f "$SCRIPT_DIR/static/$f" ]; then
-        cp "$SCRIPT_DIR/static/$f" "$PANEL_DIR/static/"
+for f in manifest.json service-worker.js icon-192.png icon-512.png css js; do
+    if [ -e "$SCRIPT_DIR/static/$f" ]; then
+        cp -r "$SCRIPT_DIR/static/$f" "$PANEL_DIR/static/"
     fi
 done
 

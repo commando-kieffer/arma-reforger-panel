@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Arma Reforger — Panel Login</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c8a84b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arma Panel">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+<div class="login-box">
+  <div class="corner"></div>
+  <div class="tag">&#9632; Server Management Panel</div>
+  <h1>ARMA <span>REFORGER</span></h1>
+  <div class="field">
+    <label for="pwd">Panel Password</label>
+    <input type="password" id="pwd" placeholder="Enter password..." autofocus />
+  </div>
+  <button class="btn" id="btn-login">Login ↗</button>
+  <div class="error" id="err"></div>
+</div>
+<script type="module" src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

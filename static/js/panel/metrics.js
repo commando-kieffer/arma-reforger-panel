@@ -1,0 +1,83 @@
+// CPU and RAM charts, fed by /api/metrics every few seconds.
+
+const MAX_POINTS = 60;
+const POLL_MS = 3000;
+
+let cpuChart = null;
+let ramChart = null;
+
+function makeChartData(color) {
+  return {
+    labels: Array(MAX_POINTS).fill(''),
+    datasets: [{
+      data: Array(MAX_POINTS).fill(null),
+      borderColor: color,
+      backgroundColor: color + '18',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: true,
+      tension: 0.4,
+    }]
+  };
+}
+
+const chartOpts = (max) => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: false,
+  plugins: { legend: { display: false }, tooltip: { enabled: false } },
+  scales: {
+    x: { display: false },
+    y: {
+      display: true,
+      min: 0, max: max,
+      grid: { color: '#1e253022', drawBorder: false },
+      ticks: {
+        color: '#5a6070', font: { size: 9 }, maxTicksLimit: 3,
+        callback: v => v + '%'
+      }
+    }
+  }
+});
+
+function pushChart(chart, value) {
+  chart.data.datasets[0].data.push(value);
+  if (chart.data.datasets[0].data.length > MAX_POINTS)
+    chart.data.datasets[0].data.shift();
+  chart.update('none');
+}
+
+async function fetchMetrics() {
+  try {
+    const r = await fetch('/api/metrics');
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const d = await r.json();
+
+    const ramPct = d.ram_total > 0 ? Math.round(d.ram_used / d.ram_total * 100) : 0;
+
+    document.getElementById('cpu-val').textContent = (d.cpu ?? 0).toFixed(1) + '%';
+    document.getElementById('ram-val').textContent = ramPct + '%';
+    document.getElementById('proc-cpu-sub').textContent = 'Arma: ' + (d.running ? (d.cpu ?? 0).toFixed(1) + '%' : '—%');
+    document.getElementById('proc-ram-sub').textContent = 'Arma: ' + (d.running ? (d.ram_process ?? 0) + ' MB / ' + d.ram_total + ' MB' : '— MB');
+
+    pushChart(cpuChart, d.cpu ?? 0);
+    pushChart(ramChart, ramPct);
+  } catch (e) {}
+}
+
+export function initMetrics() {
+  cpuChart = new Chart(document.getElementById('chart-cpu'), {
+    type: 'line',
+    data: makeChartData('#4c9fd6'),
+    options: chartOpts(100)
+  });
+
+  ramChart = new Chart(document.getElementById('chart-ram'), {
+    type: 'line',
+    data: makeChartData('#c8a84b'),
+    options: chartOpts(100)
+  });
+
+  setInterval(fetchMetrics, POLL_MS);
+  fetchMetrics();
+}

@@ -160,17 +160,26 @@ If you use **HestiaCP**, add a subdomain through its web interface — it handle
 
 ```
 arma-reforger-panel/
-├── app.py               # Flask backend — API, server control, metrics
-├── index.html           # Main panel UI (English)
-├── login.html           # Login screen
-├── config.env           # Your local config (excluded from git)
-├── config.env.example   # Config template
-├── install.sh           # All-in-one installer
+├── app.py                   # Entry point started by systemd
+├── arma_panel/              # Flask application
+│   ├── __init__.py              # App factory
+│   ├── config.py                # Settings loaded from config.env
+│   ├── security.py              # Auth, CSRF, rate limiting, headers
+│   ├── routes/                  # Blueprints: pages, auth, status, server, config, mods, persistence, scenarios
+│   └── services/                # Server process, config.json, metrics, logs, mods, saves, scenario discovery
+├── templates/
+│   ├── index.html               # Main panel UI
+│   └── login.html               # Login screen
 ├── static/
-│   ├── manifest.json        # PWA manifest
-│   ├── service-worker.js    # PWA service worker
-│   ├── icon-192.png         # App icon
-│   └── icon-512.png         # App icon (large)
+│   ├── css/                     # Stylesheets
+│   ├── js/                      # Front-end scripts (ES modules)
+│   ├── manifest.json            # PWA manifest
+│   ├── service-worker.js        # PWA service worker
+│   ├── icon-192.png             # App icon
+│   └── icon-512.png             # App icon (large)
+├── config.env               # Your local config (excluded from git)
+├── config.env.example       # Config template
+├── install.sh               # All-in-one installer
 └── README.md
 ```
 

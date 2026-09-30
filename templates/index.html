@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Arma Reforger — Management Panel</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#c8a84b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arma Panel">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+</head>
+<body>
+<div class="layout">
+
+  <header>
+    <div class="header-left">
+      <div class="tag">&#9632; Server Management Panel</div>
+      <h1>ARMA <span>REFORGER</span></h1>
+    </div>
+    <button class="btn-logout" id="btn-logout">Logout ↗</button>
+  </header>
+
+  <!-- Status -->
+  <div class="card clip">
+    <div class="card-corner"></div>
+    <div class="card-label">Server Status</div>
+    <div class="status-row">
+      <div class="status-indicator">
+        <div class="dot loading" id="dot"></div>
+        <div class="status-text loading" id="status-text">ŁADOWANIE...</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="stat-item">
+        <div class="label">Name</div>
+        <div class="value" id="server-name-display">—</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="stat-item">
+        <div class="label">IP : Port</div>
+        <div class="value" id="ip-port-display">—</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="stat-item">
+        <div class="label">Mission</div>
+        <div class="value" id="map-name">—</div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="stat-item">
+        <div class="label">Uptime</div>
+        <div class="value" id="uptime-display">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-grid">
+    <button class="ctrl-btn start" id="btn-start" data-server-action="start" disabled>
+      <span class="ctrl-icon">▶</span>START
+    </button>
+    <button class="ctrl-btn stop" id="btn-stop" data-server-action="stop" disabled>
+      <span class="ctrl-icon">■</span>STOP
+    </button>
+    <button class="ctrl-btn reset" id="btn-reset" data-server-action="restart" disabled>
+      <span class="ctrl-icon">↺</span>RESTART
+    </button>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">CPU — System</div>
+          <div class="chart-sub" id="proc-cpu-sub">Arma: —%</div>
+        </div>
+        <div>
+          <div class="chart-value cpu" id="cpu-val">—%</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-cpu"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">RAM — System</div>
+          <div class="chart-sub" id="proc-ram-sub">Arma: — MB</div>
+        </div>
+        <div>
+          <div class="chart-value ram" id="ram-val">—%</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-ram"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div class="card card--config">
+    <div class="card-label">Server Configuration</div>
+    <div class="config-grid">
+      <div class="field-group">
+        <label for="input-name">Name serwera</label>
+        <input type="text" id="input-name" placeholder="np. LEM Arma" maxlength="64" />
+      </div>
+      <div class="field-group field-group--mission">
+        <label for="input-mission">Scenario / Mission</label>
+        <div class="field-aux">
+          <span id="scenario-source-badge"></span>
+          <button type="button" id="btn-rescan-scenarios" class="link-btn">Rescan from mods</button>
+        </div>
+        <select id="input-mission"></select>
+      </div>
+      <div class="field-group">
+        <label for="input-password">Game password (puste = brak hasła)</label>
+        <input type="text" id="input-password" placeholder="Zostaw puste aby usunąć hasło" maxlength="64" />
+      </div>
+      <div class="field-group">
+        <label for="input-password-admin">Admin password</label>
+        <input type="text" id="input-password-admin" placeholder="Hasło admina" maxlength="64" />
+      </div>
+    </div>
+    <button class="btn-save" id="btn-save">Save changes</button>
+    <div class="restart-notice" id="restart-notice">⚠ Zmiany zostaną zastosowane po restarcie serwera</div>
+  </div>
+
+  <!-- Mods -->
+  <div class="card card--mods">
+    <div class="card-label">Server Mods</div>
+
+    <!-- Lista aktywnych modów -->
+    <div id="mods-list" class="mods-list">
+      <div class="mods-placeholder">Loading mods...</div>
+    </div>
+
+    <!-- Bulk import (paste JSON or upload file) -->
+    <div class="card-section card-section--tight">
+      <div class="card-section-label">Bulk import</div>
+      <textarea id="mods-import-text" class="import-textarea" rows="6" maxlength="200000" placeholder='[
+  { "modId": "595F2BF2F44836FB", "name": "RHS - Status Quo", "version": "0.14.4899" }
+]'></textarea>
+      <div class="import-actions">
+        <select id="mods-import-mode" class="field-input import-mode">
+          <option value="replace">Replace full list</option>
+          <option value="merge">Merge with existing</option>
+        </select>
+        <button class="btn-save btn-inline" type="button" id="btn-import-text">Import pasted JSON</button>
+        <label class="btn-save btn-inline btn-ghost">
+          Upload .json file
+          <input type="file" id="mods-import-file" accept="application/json,.json" hidden />
+        </label>
+      </div>
+      <div class="card-help">
+        Format: a JSON array of <code>{ "modId": "&lt;hex&gt;", "name": "&lt;optional&gt;", "version": "&lt;optional&gt;" }</code>.
+        File limit 2 MB. Replace overwrites the whole mod list; merge adds missing entries only.
+      </div>
+    </div>
+
+    <!-- Single-add form -->
+    <div class="card-section">
+      <div class="card-section-label">Add a single mod</div>
+      <div class="config-grid">
+        <div class="field-group">
+          <label for="mod-id">Mod ID <span class="required">*</span></label>
+          <input type="text" id="mod-id" placeholder="e.g. 595F2BF2F44836FB" maxlength="64" />
+        </div>
+        <div class="field-group">
+          <label for="mod-name">Name <span class="required">*</span></label>
+          <input type="text" id="mod-name" placeholder="e.g. RHS - Status Quo" maxlength="128" />
+        </div>
+        <div class="field-group">
+          <label for="mod-version">Version (optional)</label>
+          <input type="text" id="mod-version" placeholder="e.g. 0.14.4795" maxlength="32" />
+        </div>
+      </div>
+      <button class="btn-save" id="btn-add-mod">Add mod</button>
+      <div class="restart-notice" id="mods-restart-notice">⚠ Mod changes will be applied after server restart</div>
+    </div>
+  </div>
+
+  <!-- Persistence -->
+  <div class="card card--persistence">
+    <div class="card-label">Persistence</div>
+    <div class="card-description">
+      Server launches always pass <code>-loadSessionSave</code>, so any existing save is loaded on
+      start. This toggle writes the <code>game.gameProperties.persistence</code> block in
+      <code>config.json</code> — enable to autosave every N minutes, disable to stop writing new
+      saves (existing saves still load on start; use <strong>Flush saves</strong> to start fresh).
+      Session save only works in scenarios that implement it (Conflict, Combat Ops); Game Master
+      needs manual saves from Esc.
+    </div>
+    <div class="config-grid">
+      <div class="field-group">
+        <label for="input-persist-enabled">Enabled</label>
+        <select id="input-persist-enabled">
+          <option value="false">Disabled</option>
+          <option value="true">Enabled</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="input-persist-interval">Auto-save interval (minutes, 0–60)</label>
+        <input type="number" id="input-persist-interval" min="0" max="60" step="1" value="10" />
+      </div>
+      <div class="field-group">
+        <label for="input-persist-hive">Hive ID (0–16383)</label>
+        <input type="number" id="input-persist-hive" min="0" max="16383" step="1" value="1" />
+      </div>
+    </div>
+    <div id="persist-stats" class="persist-stats"></div>
+    <div class="card-actions">
+      <button class="btn-save" id="btn-persist-save">Save changes</button>
+      <button class="btn-save btn-danger" id="btn-persist-flush">Flush saves</button>
+    </div>
+    <div class="restart-notice" id="persist-restart-notice">⚠ Restart required for persistence changes to take effect</div>
+  </div>
+
+  <!-- Live Logs -->
+  <div class="log-viewer-card">
+    <div class="log-viewer-header">
+      <div class="log-viewer-title">
+        <div class="log-live-dot off" id="log-live-dot"></div>
+        Server logs — live
+      </div>
+      <button class="btn-clear-log" id="btn-clear-log">Clear</button>
+    </div>
+    <div id="log-output"></div>
+  </div>
+
+  <!-- Op log -->
+  <div class="op-log">
+    <div class="log-label">Last operation</div>
+    <div class="log-entry info" id="log-msg">Oczekiwanie na dane serwera...</div>
+  </div>
+
+  <footer>
+    Refresh in <span id="refresh-timer">10</span>s &nbsp;|&nbsp; Panel v3.0
+  </footer>
+
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/panel/main.js') }}"></script>
+</body>
+</html>
