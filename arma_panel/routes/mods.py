@@ -1,4 +1,4 @@
-"""Managing the server's mod list."""
+"""Mod sets and the mods in each of them."""
 
 import json
 
@@ -6,18 +6,80 @@ from flask import Blueprint, jsonify, request
 
 from ..i18n import t, tn
 from ..security import csrf_protected, login_required
+from ..services import modsets
 from ..services.mods import collect_import_entries, merge_mods, normalize_mod_entry
 from ..services.process import get_server_pid
 from ..services.server_config import ChangeRejected
-from .common import save_config
+from .common import attempt
 
-bp = Blueprint("mods", __name__, url_prefix="/api/mods")
+bp = Blueprint("mods", __name__, url_prefix="/api/modsets")
 
 
-@bp.post("/add")
+def _attempt(action):
+    return attempt(action, write_failed="api.modset_write_failed")
+
+
+@bp.get("")
+@login_required
+def overview():
+    result, error = _attempt(modsets.overview)
+    if error:
+        return error
+    return jsonify({"ok": True, **result})
+
+
+@bp.post("")
 @login_required
 @csrf_protected
-def add_mod():
+def create_set():
+    data = request.get_json(silent=True) or {}
+    set_id, error = _attempt(lambda: modsets.create(data.get("name"), data.get("copy_from")))
+    if error:
+        return error
+    return jsonify({"ok": True, "id": set_id})
+
+
+@bp.post("/<set_id>/rename")
+@login_required
+@csrf_protected
+def rename_set(set_id):
+    data = request.get_json(silent=True) or {}
+    _, error = _attempt(lambda: modsets.rename(set_id, data.get("name")))
+    if error:
+        return error
+    return jsonify({"ok": True})
+
+
+@bp.post("/<set_id>/delete")
+@login_required
+@csrf_protected
+def delete_set(set_id):
+    _, error = _attempt(lambda: modsets.delete(set_id))
+    if error:
+        return error
+    return jsonify({"ok": True})
+
+
+@bp.post("/<set_id>/activate")
+@login_required
+@csrf_protected
+def activate_set(set_id):
+    _, error = _attempt(lambda: modsets.activate(set_id))
+    if error:
+        return error
+    return jsonify({"ok": True, "restart_required": get_server_pid() is not None})
+
+
+def _restart_required(in_use):
+    # Only the set in use is in config.json; editing another one doesn't
+    # concern the server.
+    return in_use and get_server_pid() is not None
+
+
+@bp.post("/<set_id>/mods/add")
+@login_required
+@csrf_protected
+def add_mod(set_id):
     data = request.get_json(silent=True) or {}
     norm = normalize_mod_entry({"modId": data.get("modId",""), "name": data.get("name",""), "version": data.get("version","")})
     if not norm:
@@ -25,17 +87,16 @@ def add_mod():
     if "name" not in norm:
         return jsonify({"ok": False, "error": t("api.mod_name_required")})
 
-    def add(cfg):
-        mods = cfg.setdefault("game", {}).setdefault("mods", [])
+    def add(mods):
         if any(str(m.get("modId", "")).upper() == norm["modId"] for m in mods):
             raise ChangeRejected(t("api.mod_exists"))
-        mods.append(norm)
-        return mods
+        return mods + [norm], None
 
-    mods, error = save_config(add)
+    outcome, error = _attempt(lambda: modsets.change_mods(set_id, add))
     if error:
         return error
-    return jsonify({"ok": True, "restart_required": get_server_pid() is not None, "mods": mods})
+    _, in_use = outcome
+    return jsonify({"ok": True, "restart_required": _restart_required(in_use)})
 
 
 def _read_import_request():
@@ -57,11 +118,11 @@ def _read_import_request():
     return raw, mode
 
 
-@bp.post("/import")
+@bp.post("/<set_id>/mods/import")
 @login_required
 @csrf_protected
-def import_mods():
-    """Bulk-import mods. Accepts either:
+def import_mods(set_id):
+    """Bulk-import mods into a set. Accepts either:
        - multipart/form-data with a 'file' part containing a JSON array, plus
          form fields 'mode' (replace|merge) and '_csrf'.
        - application/json with {payload: <text or array>, mode, _csrf}.
@@ -90,46 +151,42 @@ def import_mods():
         for pos, mod_id in skipped_entries
     ]
 
-    def import_into(cfg):
-        g = cfg.setdefault("game", {})
+    def import_into(mods):
         if mode == "merge":
-            g["mods"], added = merge_mods(g.get("mods", []), valid)
-            return g["mods"], t("api.import_merged", added=added, present=len(valid) - added)
-        g["mods"] = valid
-        return g["mods"], tn("api.import_replaced", len(valid))
+            merged, added = merge_mods(mods, valid)
+            return merged, t("api.import_merged", added=added, present=len(valid) - added)
+        return valid, tn("api.import_replaced", len(valid))
 
-    result, error = save_config(import_into)
+    outcome, error = _attempt(lambda: modsets.change_mods(set_id, import_into))
     if error:
         return error
-    mods, msg = result
+    msg, in_use = outcome
     return jsonify({
         "ok": True,
         "message": msg,
         "imported": len(valid),
         "skipped": skipped,
-        "mods": mods,
-        "restart_required": get_server_pid() is not None,
+        "restart_required": _restart_required(in_use),
     })
 
 
-@bp.post("/remove")
+@bp.post("/<set_id>/mods/remove")
 @login_required
 @csrf_protected
-def remove_mod():
+def remove_mod(set_id):
     data   = request.get_json(silent=True) or {}
     mod_id = str(data.get("modId", "")).strip().upper()
     if not mod_id:
         return jsonify({"ok": False, "error": t("api.missing_mod_id")})
 
-    def remove(cfg):
-        mods = cfg.get("game", {}).get("mods", [])
+    def remove(mods):
         kept = [m for m in mods if str(m.get("modId", "")).upper() != mod_id]
         if len(kept) == len(mods):
             raise ChangeRejected(t("api.mod_not_found"))
-        cfg["game"]["mods"] = kept
-        return kept
+        return kept, None
 
-    mods, error = save_config(remove)
+    outcome, error = _attempt(lambda: modsets.change_mods(set_id, remove))
     if error:
         return error
-    return jsonify({"ok": True, "restart_required": get_server_pid() is not None, "mods": mods})
+    _, in_use = outcome
+    return jsonify({"ok": True, "restart_required": _restart_required(in_use)})

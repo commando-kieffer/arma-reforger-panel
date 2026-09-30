@@ -1,4 +1,4 @@
-"""Validation and merging of the `game.mods` list in config.json."""
+"""Validation and merging of mod lists (mod sets and `game.mods` in config.json)."""
 
 HEX_DIGITS = "0123456789ABCDEFabcdef"
 

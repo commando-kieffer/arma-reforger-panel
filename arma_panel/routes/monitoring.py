@@ -44,7 +44,6 @@ def status():
         "ram_process":    ram,
         "ram_used":       ram_used,
         "ram_total":      ram_total,
-        "mods":           cfg.get("game", {}).get("mods", []),
         "csrf":           ensure_csrf(),
     })
 

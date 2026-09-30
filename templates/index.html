@@ -235,10 +235,35 @@
   </section>
 
   <!-- Mods -->
-  <section class="card">
+  <section class="card" id="mods-card">
     <h2 class="card-title">{{ t('mods.title') }}</h2>
 
-    <!-- Active mods -->
+    <!-- Mod sets: the rest of the card edits the one chosen here -->
+    <div class="modset-bar">
+      <div class="field-group modset-field">
+        <label for="modset-select">{{ t('modsets.label') }}</label>
+        <select id="modset-select" disabled></select>
+      </div>
+      <button type="button" class="btn btn-solid" id="btn-modset-activate" disabled>{{ t('modsets.activate') }}</button>
+    </div>
+    <div class="modset-actions">
+      <button type="button" class="link-btn" data-modset-action="new">{{ t('modsets.new') }}</button>
+      <button type="button" class="link-btn" data-modset-action="duplicate">{{ t('modsets.duplicate') }}</button>
+      <button type="button" class="link-btn" data-modset-action="rename">{{ t('modsets.rename') }}</button>
+      <button type="button" class="link-btn link-btn--danger" data-modset-action="delete">{{ t('modsets.delete') }}</button>
+    </div>
+    <form class="modset-name-form" id="modset-name-form" hidden>
+      <div class="field-group modset-field">
+        <label for="modset-name">{{ t('modsets.name_label') }}</label>
+        <input type="text" id="modset-name" maxlength="60" autocomplete="off" required />
+      </div>
+      <button type="submit" class="btn btn-solid">{{ t('modsets.save_name') }}</button>
+      <button type="button" class="btn btn-outline" id="btn-modset-name-cancel">{{ t('modsets.cancel') }}</button>
+    </form>
+    <div class="card-help modset-state" id="modset-state"></div>
+    <div class="field-warning" id="modset-differs" hidden>{{ t('modsets.config_differs') }}</div>
+
+    <!-- Mods of the chosen set -->
     <div id="mods-list" class="mods-list">
       <div class="mods-placeholder">{{ t('mods.loading') }}</div>
     </div>

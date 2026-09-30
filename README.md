@@ -17,7 +17,7 @@ A lightweight, self-hosted web panel for managing your **Arma Reforger dedicated
 - **Mission selector** — 41 built-in missions including all vanilla and RHS — Status Quo scenarios
 - **Gameplay settings** — View distances, third-person view, voice chat UI, BattlEye, join queue size and AI limit
 - **Persistence** — Keep the server's save defaults, set custom autosave settings or turn saving off, and flush the session saves
-- **Mod management** — Add and remove Workshop mods directly from the panel
+- **Mod sets** — Keep several named mod lists and pick the one the server loads at its next start; add, remove or import Workshop mods in each
 - **Config editor** — Edit server name, scenario, passwords, max players, server browser visibility and crossplay without touching the filesystem
 - **PWA support** — Installable as a native app on Android and iOS
 - **English and French** — Switch the interface language from the panel header or the login screen
@@ -122,6 +122,10 @@ sudo systemctl restart arma-panel
 
 Before each change it makes to the server's `config.json`, the panel copies the current file to `config-backups/` in the panel directory and keeps the 20 most recent copies. To roll back, copy one of them over `config.json`. If `config.json` can't be parsed (e.g. after a manual edit), the panel shows a warning and refuses to save until the file is fixed.
 
+### Mod sets
+
+Mod sets are stored in `modsets/` in the panel directory: one `<id>.json` file per set (`{"name": ..., "mods": [...]}`) and an `active` file holding the id of the set in use. The server itself only reads `game.mods` in `config.json`: choosing a set copies its mods there, and changes to the set in use are written to both. On first start the panel creates a "Default" set from the mods already in `config.json`. If `game.mods` is later edited by hand, the Mods card shows that it no longer matches the set in use.
+
 ---
 
 ## Useful Commands
@@ -177,7 +181,7 @@ arma-reforger-panel/
 │   ├── translations/            # en.json, fr.json
 │   ├── security.py              # Auth, CSRF, rate limiting, headers
 │   ├── routes/                  # Blueprints: pages, auth, status, server, config, mods, persistence, scenarios
-│   └── services/                # Server process, config.json, metrics, logs, mods, saves, scenario discovery
+│   └── services/                # Server process, config.json, metrics, logs, mods and mod sets, saves, scenario discovery
 ├── templates/
 │   ├── index.html               # Main panel UI
 │   ├── login.html               # Login screen

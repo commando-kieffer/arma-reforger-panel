@@ -15,6 +15,7 @@ from datetime import datetime
 
 from .. import config
 from ..log import logger
+from .files import write_atomic
 
 BACKUP_KEEP = 20
 
@@ -97,18 +98,4 @@ def _backup():
 def _write_atomic(cfg):
     # Resolve a symlinked config.json so the link keeps pointing at the new file.
     path = os.path.realpath(config.SERVER_CONFIG)
-    tmp = f"{path}.tmp"
-    data = json.dumps(cfg, indent="\t", ensure_ascii=False) + "\n"
-    try:
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(data)
-            f.flush()
-            os.fsync(f.fileno())
-        shutil.copymode(path, tmp)
-        os.replace(tmp, path)
-    except OSError:
-        try:
-            os.remove(tmp)
-        except OSError:
-            pass
-        raise
+    write_atomic(path, json.dumps(cfg, indent="\t", ensure_ascii=False) + "\n")
