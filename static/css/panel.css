@@ -469,8 +469,9 @@ body {
 #log-output::-webkit-scrollbar-track { background: transparent; }
 #log-output::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 3px; }
 
-/* Each line is followed by a "\n" text node, which breaks the line already. */
-.log-line { display: inline; }
+/* Aligned lines wrap under the message column: 28 characters for the time,
+   the 13-character category field and ": " (see static/js/panel/log-format.js). */
+.log-line.aligned { padding-left: 28ch; text-indent: -28ch; }
 .log-line.err  { color: #FF8A80; }
 .log-line.warn { color: #FFD166; }
 .log-line.ok   { color: #7BD88F; }
@@ -577,4 +578,7 @@ body {
   .status-indicator { grid-column: 1 / -1; justify-self: start; }
 
   .ctrl-icon { width: 38px; height: 38px; font-size: 15px; }
+
+  /* Too narrow for a message column: let wrapped lines use the full width. */
+  .log-line.aligned { padding-left: 0; text-indent: 0; }
 }

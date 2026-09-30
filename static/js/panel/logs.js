@@ -1,5 +1,7 @@
 // Live server console, polled from /api/logs.
 
+import { alignLogLine } from './log-format.js';
+
 const MAX_DOM_LINES = 800;
 const POLL_MS = 2000;
 
@@ -17,11 +19,12 @@ function colorLine(line) {
 
 function appendLog(text) {
   const el = document.getElementById('log-output');
-  const span = document.createElement('span');
-  span.className = 'log-line ' + colorLine(text);
-  span.textContent = text;
-  el.appendChild(span);
-  el.appendChild(document.createTextNode('\n'));
+  const aligned = alignLogLine(text);
+  const line = document.createElement('div');
+  line.className = 'log-line ' + colorLine(text) + (aligned ? ' aligned' : '');
+  // A single space keeps an empty line one line tall.
+  line.textContent = (aligned ?? text) || ' ';
+  el.appendChild(line);
   // Auto-scroll only if the user is near the bottom
   if (el.scrollHeight - el.scrollTop < el.clientHeight + 120) {
     el.scrollTop = el.scrollHeight;
