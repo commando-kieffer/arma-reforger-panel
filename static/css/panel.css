@@ -75,6 +75,14 @@ body {
 }
 .card:hover { box-shadow: var(--shadow-card-hover); }
 
+/* Title with an action (e.g. a refresh link) aligned on its right. */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
 .card-title {
   width: fit-content;
   margin-bottom: 1.25rem;
@@ -441,6 +449,8 @@ body {
 }
 .log-live-dot.off { background-color: rgba(255, 255, 255, 0.35); box-shadow: none; animation: none; }
 
+.log-viewer-actions { display: flex; gap: 0.5rem; }
+
 #log-output {
   height: 340px;
   overflow-y: auto;
@@ -465,6 +475,41 @@ body {
 .log-line.warn { color: #FFD166; }
 .log-line.ok   { color: #7BD88F; }
 .log-line.sep  { color: rgba(255, 255, 255, 0.35); }
+
+/* Log history */
+.log-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.log-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-md);
+}
+
+.log-session-info { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.log-session-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 15px; }
+.log-session-files { font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); overflow-wrap: anywhere; }
+.log-session-size { font-weight: 400; font-size: 13px; color: var(--ink-soft); }
+
+.badge {
+  padding: 0.15rem 0.6rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 10.5px;
+  color: #FFFFFF;
+  background-image: var(--gradient-online);
+  border-radius: var(--radius-pill);
+}
 
 /* Last operation */
 .op-log { padding: 1.1rem 1.5rem; }

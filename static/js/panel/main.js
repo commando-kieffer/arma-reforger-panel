@@ -1,6 +1,7 @@
 // Entry point of the panel page.
 
 import { initLanguageSwitch } from '../i18n.js';
+import { initLogHistory } from './log-history.js';
 import { initLogViewer } from './logs.js';
 import { initMetrics } from './metrics.js';
 import { initMods } from './mods.js';
@@ -23,6 +24,7 @@ initServerControl();
 initServerConfig();
 initMods();
 initPersistence();
+initLogHistory();
 
 document.getElementById('btn-logout').addEventListener('click', doLogout);
 initLanguageSwitch();

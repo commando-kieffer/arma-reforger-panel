@@ -231,9 +231,23 @@
         <span class="log-live-dot off" id="log-live-dot"></span>
         {{ t('logs.title') }}
       </h2>
-      <button class="btn btn-light btn-sm" id="btn-clear-log">{{ t('logs.clear') }}</button>
+      <div class="log-viewer-actions">
+        <a class="btn btn-light btn-sm" id="btn-download-log" href="#" download hidden>{{ t('logs.download') }}</a>
+        <button class="btn btn-light btn-sm" id="btn-clear-log">{{ t('logs.clear') }}</button>
+      </div>
     </div>
     <div id="log-output"></div>
+  </section>
+
+  <!-- Log history -->
+  <section class="card">
+    <div class="card-header">
+      <h2 class="card-title">{{ t('logs.history_title') }}</h2>
+      <button type="button" class="link-btn" id="btn-refresh-log-history">{{ t('logs.refresh') }}</button>
+    </div>
+    <div id="log-history" class="log-history">
+      <div class="mods-placeholder">{{ t('logs.loading') }}</div>
+    </div>
   </section>
 
   <!-- Op log -->

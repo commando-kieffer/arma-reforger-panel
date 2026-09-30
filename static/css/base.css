@@ -87,6 +87,9 @@ body {
 
 code { font-family: var(--font-mono); font-size: 0.92em; }
 
+/* Components below set their own display, which would override [hidden]. */
+[hidden] { display: none !important; }
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -107,6 +110,7 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .btn:hover:not(:disabled) { transform: translateY(-1px); }
 .btn:active:not(:disabled) { transform: translateY(0); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+a.btn { text-decoration: none; }
 
 .btn-sm { padding: 0.45rem 1.1rem; font-size: 11px; }
 

@@ -1,11 +1,12 @@
 """Flask blueprints, one per area of the panel."""
 
-from . import auth, monitoring, mods, pages, persistence, scenarios, server, server_config
+from . import auth, logs, monitoring, mods, pages, persistence, scenarios, server, server_config
 
 BLUEPRINTS = (
     pages.bp,
     auth.bp,
     monitoring.bp,
+    logs.bp,
     server.bp,
     server_config.bp,
     mods.bp,

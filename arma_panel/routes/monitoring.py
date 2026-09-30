@@ -1,12 +1,11 @@
-"""Read-only endpoints polled by the dashboard: status, metrics and logs."""
+"""Read-only endpoints polled by the dashboard: status and metrics."""
 
 import time
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 
 from ..i18n import t
 from ..security import ensure_csrf, login_required
-from ..services import logs
 from ..services.metrics import get_cpu_ram, get_system_ram
 from ..services.process import format_uptime, get_process_uptime, get_server_pid
 from ..services.scenarios import all_scenarios_cached, count_by_source, get_map_name
@@ -61,16 +60,3 @@ def metrics():
         "ram_used": ram_used, "ram_total": ram_total,
         "running": pid is not None, "ts": int(time.time()),
     })
-
-
-@bp.get("/logs")
-@login_required
-def server_logs():
-    n = int(request.args.get("lines", 100))
-    path = logs.get_latest_log()
-    if not path:
-        return jsonify({"lines": [], "path": None})
-    try:
-        return jsonify({"lines": logs.tail(path, n), "path": path})
-    except Exception as e:
-        return jsonify({"lines": [], "error": str(e)})

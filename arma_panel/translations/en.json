@@ -157,7 +157,15 @@
   },
   "logs": {
     "title": "Server logs — live",
-    "clear": "Clear"
+    "clear": "Clear",
+    "download": "Download",
+    "history_title": "Log history",
+    "refresh": "Refresh",
+    "loading": "Loading…",
+    "current": "current",
+    "no_files": "no log files",
+    "history_empty": "No server sessions in {path} yet.",
+    "history_failed": "Could not load the log history."
   },
   "activity": {
     "title": "Last operation",

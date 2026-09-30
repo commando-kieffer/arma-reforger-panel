@@ -157,7 +157,15 @@
   },
   "logs": {
     "title": "Logs du serveur — en direct",
-    "clear": "Effacer"
+    "clear": "Effacer",
+    "download": "Télécharger",
+    "history_title": "Historique des logs",
+    "refresh": "Actualiser",
+    "loading": "Chargement…",
+    "current": "en cours",
+    "no_files": "aucun fichier de log",
+    "history_empty": "Aucune session du serveur dans {path} pour l'instant.",
+    "history_failed": "Impossible de charger l'historique des logs."
   },
   "activity": {
     "title": "Dernière opération",
