@@ -10,7 +10,9 @@
     "error": "Error: {error}",
     "connection_error": "Connection error",
     "save_changes": "Save changes",
-    "save_failed": "Save failed: {error}"
+    "save_failed": "Save failed: {error}",
+    "show_password": "Show",
+    "hide_password": "Hide"
   },
   "login": {
     "title": "Arma Reforger — Panel Login",

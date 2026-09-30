@@ -110,7 +110,7 @@
     <div class="config-grid">
       <div class="field-group">
         <label for="input-name">{{ t('config.server_name') }}</label>
-        <input type="text" id="input-name" placeholder="{{ t('config.server_name_placeholder') }}" maxlength="100" />
+        <input type="text" id="input-name" placeholder="{{ t('config.server_name_placeholder') }}" maxlength="100" autocomplete="off" />
       </div>
       <div class="field-group field-group--mission">
         <label for="input-mission">{{ t('config.scenario') }}</label>
@@ -122,11 +122,18 @@
       </div>
       <div class="field-group">
         <label for="input-password">{{ t('config.game_password') }}</label>
-        <input type="text" id="input-password" placeholder="{{ t('config.game_password_placeholder') }}" maxlength="64" />
+        {# autocomplete="new-password" keeps browsers from filling in the saved panel password #}
+        <div class="password-field">
+          <input type="password" id="input-password" placeholder="{{ t('config.game_password_placeholder') }}" maxlength="64" autocomplete="new-password" />
+          <button type="button" class="link-btn" data-password-toggle="input-password">{{ t('common.show_password') }}</button>
+        </div>
       </div>
       <div class="field-group">
         <label for="input-password-admin">{{ t('config.admin_password') }}</label>
-        <input type="text" id="input-password-admin" placeholder="{{ t('config.admin_password_placeholder') }}" maxlength="64" />
+        <div class="password-field">
+          <input type="password" id="input-password-admin" placeholder="{{ t('config.admin_password_placeholder') }}" maxlength="64" autocomplete="new-password" />
+          <button type="button" class="link-btn" data-password-toggle="input-password-admin">{{ t('common.show_password') }}</button>
+        </div>
       </div>
     </div>
     <div class="card-actions">

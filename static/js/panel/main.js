@@ -4,6 +4,7 @@ import { initLanguageSwitch } from '../i18n.js';
 import { initLogViewer } from './logs.js';
 import { initMetrics } from './metrics.js';
 import { initMods } from './mods.js';
+import { initPasswordToggles } from './password-toggle.js';
 import { fetchPersistence, initPersistence } from './persistence.js';
 import { initServerConfig } from './server-config.js';
 import { initServerControl } from './server-control.js';
@@ -25,6 +26,7 @@ initPersistence();
 
 document.getElementById('btn-logout').addEventListener('click', doLogout);
 initLanguageSwitch();
+initPasswordToggles();
 
 fetchStatus().then(() => { fetchPersistence(); startCountdown(); });
 

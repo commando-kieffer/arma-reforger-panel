@@ -330,6 +330,16 @@ body {
 .link-btn:hover:not(:disabled) { border-bottom-color: currentColor; }
 .link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Show/hide button placed inside the right end of a password input. */
+.password-field { position: relative; }
+.password-field input { padding-right: 5.5rem; }
+.password-field .link-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.9rem;
+  transform: translateY(-50%);
+}
+
 /* Mods */
 .mods-list { display: flex; flex-direction: column; gap: 0.6rem; }
 
