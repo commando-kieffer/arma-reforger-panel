@@ -5,13 +5,9 @@ from flask import Blueprint, jsonify, request
 from .. import config
 from ..i18n import t
 from ..security import csrf_protected, login_required
-from ..services.persistence import (
-    flush_saves,
-    get_persistence_block,
-    persistence_enabled,
-    scan_saves,
-    set_persistence_block,
-)
+from ..services import config_fields
+from ..services.config_fields import PERSISTENCE_FIELDS, FieldError
+from ..services.persistence import MODES, flush_saves, persistence_mode, scan_saves, set_persistence_mode
 from ..services.process import get_server_pid
 from ..services.server_config import read_config
 from .common import save_config
@@ -23,14 +19,11 @@ bp = Blueprint("persistence", __name__, url_prefix="/api/persistence")
 @login_required
 def get_persistence():
     cfg = read_config()
-    block = get_persistence_block(cfg) or {}
-    saves = scan_saves()
     return jsonify({
-        "enabled":          persistence_enabled(cfg),
-        "autoSaveInterval": block.get("autoSaveInterval", 10),
-        "hiveId":           block.get("hiveId", 1),
-        "saves":            saves,
-        "profile_dir":      config.PROFILE_DIR,
+        "mode":        persistence_mode(cfg),
+        **config_fields.form_values(cfg, PERSISTENCE_FIELDS),
+        "saves":       scan_saves(),
+        "profile_dir": config.PROFILE_DIR,
     })
 
 
@@ -39,44 +32,26 @@ def get_persistence():
 @csrf_protected
 def update_persistence():
     data = request.get_json(silent=True) or {}
-    enabled = bool(data.get("enabled"))
-    updates = {}
-    if enabled:
-        if "autoSaveInterval" in data:
-            try:
-                v = int(data["autoSaveInterval"])
-            except (TypeError, ValueError):
-                return jsonify({"ok": False, "error": t("api.autosave_not_int")})
-            if not 0 <= v <= 60:
-                return jsonify({"ok": False, "error": t("api.autosave_range")})
-            updates["autoSaveInterval"] = v
-        if "hiveId" in data:
-            try:
-                v = int(data["hiveId"])
-            except (TypeError, ValueError):
-                return jsonify({"ok": False, "error": t("api.hive_not_int")})
-            if not 0 <= v <= 16383:
-                return jsonify({"ok": False, "error": t("api.hive_range")})
-            updates["hiveId"] = v
+    mode = data.get("mode")
+    if mode not in MODES:
+        return jsonify({"ok": False, "error": t("api.invalid_persistence_mode")}), 400
+    try:
+        fields = config_fields.parse_form(PERSISTENCE_FIELDS, data) if mode == "custom" else {}
+    except FieldError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
 
     def change(cfg):
-        if enabled:
-            block = get_persistence_block(cfg) or {}
-            block.update(updates)
-            block.setdefault("autoSaveInterval", 10)
-            block.setdefault("hiveId", 1)
-            set_persistence_block(cfg, block)
-        else:
-            set_persistence_block(cfg, None)
-        return persistence_enabled(cfg)
+        set_persistence_mode(cfg, mode)
+        config_fields.apply(cfg, PERSISTENCE_FIELDS, fields)
+        return persistence_mode(cfg)
 
-    now_enabled, error = save_config(change)
+    new_mode, error = save_config(change)
     if error:
         return error
     return jsonify({
         "ok": True,
         "restart_required": get_server_pid() is not None,
-        "enabled":          now_enabled,
+        "mode":             new_mode,
     })
 
 

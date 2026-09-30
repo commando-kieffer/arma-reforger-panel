@@ -159,6 +159,7 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(15, 14, 51, 0.12);
 }
 input::placeholder, textarea::placeholder { color: var(--ink-muted); }
+input:disabled, textarea:disabled, select:disabled { opacity: 0.55; cursor: not-allowed; }
 
 textarea { resize: vertical; }
 

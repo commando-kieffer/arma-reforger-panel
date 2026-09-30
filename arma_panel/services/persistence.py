@@ -1,17 +1,26 @@
 """Reforger session save/load.
 
-The toggle is the presence of the `persistence` block under
-game.gameProperties in config.json (autosave); `-loadSessionSave` is always
-passed at launch so any existing save loads on start. Save files live under
-PROFILE_DIR/.save/ on Linux dedicated installs (Conflict / Combat Ops layout).
-Subdirs underneath: game/ (world/session), playersave/ (per-player), settings/.
+The panel offers three modes (see the persistence section of the Bohemia wiki):
+  default   no `persistence` block: the server's defaults apply, which
+            already autosave in scenarios that support it
+  custom    the `persistence` block under game.gameProperties
+  disabled  game.gameProperties.missionHeader.m_eSaveTypes = 0, the documented
+            way to turn saving off
+
+`-loadSessionSave` is always passed at launch so any existing save loads on
+start. Save files live under PROFILE_DIR/.save/ on Linux dedicated installs
+(Conflict / Combat Ops layout). Subdirs underneath: game/ (world/session),
+playersave/ (per-player), settings/.
 """
 
 import os
 import shutil
 
 from .. import config
-from .server_config import read_config
+from ..i18n import t
+from .server_config import ChangeRejected
+
+MODES = ("default", "custom", "disabled")
 
 SAVE_SUBDIRS = (".save", "save", "saves")
 
@@ -40,10 +49,55 @@ def set_persistence_block(cfg, block):
         gp["persistence"] = block
 
 
-def persistence_enabled(cfg=None):
-    if cfg is None:
-        cfg = read_config()
-    return get_persistence_block(cfg) is not None
+def _game_properties(cfg):
+    game = cfg.setdefault("game", {})
+    props = game.setdefault("gameProperties", {}) if isinstance(game, dict) else None
+    if not isinstance(props, dict):
+        raise ChangeRejected(t("api.config_unexpected", path="game.gameProperties"))
+    return props
+
+
+def _saving_disabled(cfg):
+    props = (cfg.get("game") or {}).get("gameProperties") or {}
+    header = props.get("missionHeader")
+    if not isinstance(header, dict):
+        return False
+    value = header.get("m_eSaveTypes")
+    return isinstance(value, int) and not isinstance(value, bool) and value == 0
+
+
+def persistence_mode(cfg):
+    if _saving_disabled(cfg):
+        return "disabled"
+    return "custom" if get_persistence_block(cfg) is not None else "default"
+
+
+def set_persistence_mode(cfg, mode):
+    """Switch cfg to `mode`.
+
+    Disabling keeps the `persistence` block, so going back to custom restores
+    the previous settings. Leaving the disabled mode only removes the
+    m_eSaveTypes value it set, and the missionHeader if nothing else is left
+    in it, so other header overrides stay.
+    """
+    if mode == "disabled":
+        header = _game_properties(cfg).setdefault("missionHeader", {})
+        if not isinstance(header, dict):
+            raise ChangeRejected(t("api.config_unexpected", path="game.gameProperties.missionHeader"))
+        header["m_eSaveTypes"] = 0
+        return
+
+    if _saving_disabled(cfg):
+        props = cfg["game"]["gameProperties"]
+        del props["missionHeader"]["m_eSaveTypes"]
+        if not props["missionHeader"]:
+            del props["missionHeader"]
+    if mode == "default":
+        if get_persistence_block(cfg) is not None or "persistence" in cfg:
+            set_persistence_block(cfg, None)
+    elif get_persistence_block(cfg) is None:
+        _game_properties(cfg)
+        set_persistence_block(cfg, {})
 
 
 def save_root():

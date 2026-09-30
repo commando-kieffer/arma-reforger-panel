@@ -82,6 +82,16 @@ GAMEPLAY_FIELDS = {
 # card only warns when it's off.
 FAST_VALIDATION = Field(_PROPS + ("fastValidation",), bool, True)
 
+_PERSISTENCE = _PROPS + ("persistence",)
+
+# Persistence card, custom mode.
+PERSISTENCE_FIELDS = {
+    "auto_save_interval": Field(_PERSISTENCE + ("autoSaveInterval",), int, 10, ((0, 60),)),
+    "save_retention":     Field(_PERSISTENCE + ("saveRetention",), int, 10, ((1, 128),)),
+    "keep_session_save":  Field(_PERSISTENCE + ("keepSessionSave",), bool, False),
+    "hive_id":            Field(_PERSISTENCE + ("hiveId",), int, 0, ((0, 16383),)),
+}
+
 
 def form_values(cfg, fields):
     return {name: field.read(cfg) for name, field in fields.items()}

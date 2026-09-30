@@ -1,11 +1,27 @@
-// Persistence card: autosave settings and the session save files on disk.
+// Persistence card: save mode and settings, and the session save files on disk.
 
 import { t, tn } from '../i18n.js';
 import { postJson } from './api.js';
 import { setBusy, setLog } from './activity.js';
+import { fillFields, readFields } from './fields.js';
 import { escHtml, fmtAge, fmtBytes } from './format.js';
 
 const BUCKETS = ['game', 'playersave', 'settings'];
+
+function card() {
+  return document.getElementById('persistence-card');
+}
+
+function modeSelect() {
+  return document.getElementById('input-persist-mode');
+}
+
+// The settings only apply in custom mode; in the other modes they show the
+// values the server uses (defaults, or the saved block while disabled).
+function updateFieldsState() {
+  const custom = modeSelect().value === 'custom';
+  card().querySelectorAll('[data-field]').forEach(el => { el.disabled = !custom; });
+}
 
 function renderPersistStats(s) {
   const el = document.getElementById('persist-stats');
@@ -31,24 +47,24 @@ export async function fetchPersistence() {
     const r = await fetch('/api/persistence');
     if (!r.ok) return;
     const d = await r.json();
-    document.getElementById('input-persist-enabled').value  = d.enabled ? 'true' : 'false';
-    document.getElementById('input-persist-interval').value = d.autoSaveInterval;
-    document.getElementById('input-persist-hive').value     = d.hiveId;
+    modeSelect().value = d.mode;
+    fillFields(card(), d);
+    updateFieldsState();
     renderPersistStats(d);
   } catch (e) { /* panel is the source of truth; silent on transient errors */ }
 }
 
 async function savePersistence() {
-  const enabled  = document.getElementById('input-persist-enabled').value === 'true';
-  const interval = parseInt(document.getElementById('input-persist-interval').value, 10);
-  const hive     = parseInt(document.getElementById('input-persist-hive').value, 10);
+  const mode = modeSelect().value;
+  // Settings are only sent, and checked, in custom mode.
+  const body = mode === 'custom' ? { mode, ...readFields(card()) } : { mode };
   setBusy(true);
   setLog(t('persistence.saving'), 'info');
   try {
-    const r = await postJson('/api/persistence', { enabled, autoSaveInterval: interval, hiveId: hive });
+    const r = await postJson('/api/persistence', body);
     const d = await r.json();
     if (d.ok) {
-      setLog(enabled ? t('persistence.now_enabled') : t('persistence.now_disabled'), 'ok');
+      setLog(t('persistence.saved'), 'ok');
       document.getElementById('persist-restart-notice').classList.toggle('visible', !!d.restart_required);
       await fetchPersistence();
     } else {
@@ -76,6 +92,7 @@ async function flushPersistence() {
 }
 
 export function initPersistence() {
+  modeSelect().addEventListener('change', updateFieldsState);
   document.getElementById('btn-persist-save').addEventListener('click', savePersistence);
   document.getElementById('btn-persist-flush').addEventListener('click', flushPersistence);
 }

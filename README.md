@@ -16,6 +16,7 @@ A lightweight, self-hosted web panel for managing your **Arma Reforger dedicated
 - **Players** — Player count and list of connected players, read from the server's A2S (Steam query) port; shown as unavailable rather than guessed when the server doesn't answer
 - **Mission selector** — 41 built-in missions including all vanilla and RHS — Status Quo scenarios
 - **Gameplay settings** — View distances, third-person view, voice chat UI, BattlEye, join queue size and AI limit
+- **Persistence** — Keep the server's save defaults, set custom autosave settings or turn saving off, and flush the session saves
 - **Mod management** — Add and remove Workshop mods directly from the panel
 - **Config editor** — Edit server name, scenario, passwords, max players, server browser visibility and crossplay without touching the filesystem
 - **PWA support** — Installable as a native app on Android and iOS

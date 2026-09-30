@@ -11,8 +11,8 @@ SERVER_BINARY = "./ArmaReforgerServer"
 def build_server_args():
     """Build the launch arguments. `-loadSessionSave` is always passed: with no
     save files it's a no-op, and including it keeps panel-launched and
-    systemd-launched starts behaving the same way. The 'enabled' toggle in the
-    UI controls only the `persistence` block in config.json (autosave)."""
+    systemd-launched starts behaving the same way. Whether new saves are made
+    is set in config.json by the Persistence card (services/persistence.py)."""
     args = ["-config", config.SERVER_CONFIG, "-loadSessionSave"]
     if config.MAX_FPS:
         args.append(f"-maxFPS={config.MAX_FPS}")

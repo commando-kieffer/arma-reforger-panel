@@ -39,7 +39,7 @@ class ParseTest(unittest.TestCase):
             FIELDS["ai_limit"].parse(-2)
 
     def test_panel_defaults_are_valid(self):
-        for fields in (config_fields.SERVER_FIELDS, config_fields.GAMEPLAY_FIELDS):
+        for fields in (config_fields.SERVER_FIELDS, config_fields.GAMEPLAY_FIELDS, config_fields.PERSISTENCE_FIELDS):
             for name, field in fields.items():
                 self.assertEqual(field.parse(field.default), field.default, name)
 
