@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Arma Reforger — Management Panel</title>
+<title>{{ t('panel.title') }}</title>
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -24,39 +24,42 @@
 
   <header>
     <div class="header-left">
-      <div class="tag">&#9632; Server Management Panel</div>
+      <div class="tag">&#9632; {{ t('common.panel_tag') }}</div>
       <h1>ARMA <span>REFORGER</span></h1>
     </div>
-    <button class="btn-logout" id="btn-logout">Logout ↗</button>
+    <div class="header-actions">
+      {% include 'partials/lang_switch.html' %}
+      <button class="btn-logout" id="btn-logout">{{ t('panel.logout') }}</button>
+    </div>
   </header>
 
   <!-- Status -->
   <div class="card clip">
     <div class="card-corner"></div>
-    <div class="card-label">Server Status</div>
+    <div class="card-label">{{ t('status.title') }}</div>
     <div class="status-row">
       <div class="status-indicator">
         <div class="dot loading" id="dot"></div>
-        <div class="status-text loading" id="status-text">LOADING...</div>
+        <div class="status-text loading" id="status-text">{{ t('status.loading') }}</div>
       </div>
       <div class="divider-v"></div>
       <div class="stat-item">
-        <div class="label">Name</div>
+        <div class="label">{{ t('status.name') }}</div>
         <div class="value" id="server-name-display">—</div>
       </div>
       <div class="divider-v"></div>
       <div class="stat-item">
-        <div class="label">IP : Port</div>
+        <div class="label">{{ t('status.address') }}</div>
         <div class="value" id="ip-port-display">—</div>
       </div>
       <div class="divider-v"></div>
       <div class="stat-item">
-        <div class="label">Mission</div>
+        <div class="label">{{ t('status.mission') }}</div>
         <div class="value" id="map-name">—</div>
       </div>
       <div class="divider-v"></div>
       <div class="stat-item">
-        <div class="label">Uptime</div>
+        <div class="label">{{ t('status.uptime') }}</div>
         <div class="value" id="uptime-display">—</div>
       </div>
     </div>
@@ -65,13 +68,13 @@
   <!-- Controls -->
   <div class="controls-grid">
     <button class="ctrl-btn start" id="btn-start" data-server-action="start" disabled>
-      <span class="ctrl-icon">▶</span>START
+      <span class="ctrl-icon">▶</span>{{ t('controls.start') }}
     </button>
     <button class="ctrl-btn stop" id="btn-stop" data-server-action="stop" disabled>
-      <span class="ctrl-icon">■</span>STOP
+      <span class="ctrl-icon">■</span>{{ t('controls.stop') }}
     </button>
     <button class="ctrl-btn reset" id="btn-reset" data-server-action="restart" disabled>
-      <span class="ctrl-icon">↺</span>RESTART
+      <span class="ctrl-icon">↺</span>{{ t('controls.restart') }}
     </button>
   </div>
 
@@ -80,8 +83,8 @@
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">CPU — System</div>
-          <div class="chart-sub" id="proc-cpu-sub">Arma: —%</div>
+          <div class="chart-title">{{ t('metrics.cpu_title') }}</div>
+          <div class="chart-sub" id="proc-cpu-sub">{{ t('metrics.process_cpu', value='—%') }}</div>
         </div>
         <div>
           <div class="chart-value cpu" id="cpu-val">—%</div>
@@ -92,8 +95,8 @@
     <div class="chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">RAM — System</div>
-          <div class="chart-sub" id="proc-ram-sub">Arma: — MB</div>
+          <div class="chart-title">{{ t('metrics.ram_title') }}</div>
+          <div class="chart-sub" id="proc-ram-sub">{{ t('metrics.process_ram_idle') }}</div>
         </div>
         <div>
           <div class="chart-value ram" id="ram-val">—%</div>
@@ -105,121 +108,111 @@
 
   <!-- Config -->
   <div class="card card--config">
-    <div class="card-label">Server Configuration</div>
+    <div class="card-label">{{ t('config.title') }}</div>
     <div class="config-grid">
       <div class="field-group">
-        <label for="input-name">Server name</label>
-        <input type="text" id="input-name" placeholder="e.g. LEM Arma" maxlength="64" />
+        <label for="input-name">{{ t('config.server_name') }}</label>
+        <input type="text" id="input-name" placeholder="{{ t('config.server_name_placeholder') }}" maxlength="64" />
       </div>
       <div class="field-group field-group--mission">
-        <label for="input-mission">Scenario / Mission</label>
+        <label for="input-mission">{{ t('config.scenario') }}</label>
         <div class="field-aux">
           <span id="scenario-source-badge"></span>
-          <button type="button" id="btn-rescan-scenarios" class="link-btn">Rescan from mods</button>
+          <button type="button" id="btn-rescan-scenarios" class="link-btn">{{ t('config.rescan') }}</button>
         </div>
         <select id="input-mission"></select>
       </div>
       <div class="field-group">
-        <label for="input-password">Game password (empty = no password)</label>
-        <input type="text" id="input-password" placeholder="Leave empty to remove the password" maxlength="64" />
+        <label for="input-password">{{ t('config.game_password') }}</label>
+        <input type="text" id="input-password" placeholder="{{ t('config.game_password_placeholder') }}" maxlength="64" />
       </div>
       <div class="field-group">
-        <label for="input-password-admin">Admin password</label>
-        <input type="text" id="input-password-admin" placeholder="Admin password" maxlength="64" />
+        <label for="input-password-admin">{{ t('config.admin_password') }}</label>
+        <input type="text" id="input-password-admin" placeholder="{{ t('config.admin_password_placeholder') }}" maxlength="64" />
       </div>
     </div>
-    <button class="btn-save" id="btn-save">Save changes</button>
-    <div class="restart-notice" id="restart-notice">⚠ Changes will be applied after server restart</div>
+    <button class="btn-save" id="btn-save">{{ t('common.save_changes') }}</button>
+    <div class="restart-notice" id="restart-notice">{{ t('config.restart_notice') }}</div>
   </div>
 
   <!-- Mods -->
   <div class="card card--mods">
-    <div class="card-label">Server Mods</div>
+    <div class="card-label">{{ t('mods.title') }}</div>
 
     <!-- Active mods -->
     <div id="mods-list" class="mods-list">
-      <div class="mods-placeholder">Loading mods...</div>
+      <div class="mods-placeholder">{{ t('mods.loading') }}</div>
     </div>
 
     <!-- Bulk import (paste JSON or upload file) -->
     <div class="card-section card-section--tight">
-      <div class="card-section-label">Bulk import</div>
+      <div class="card-section-label">{{ t('mods.bulk_import') }}</div>
       <textarea id="mods-import-text" class="import-textarea" rows="6" maxlength="200000" placeholder='[
   { "modId": "595F2BF2F44836FB", "name": "RHS - Status Quo", "version": "0.14.4899" }
 ]'></textarea>
       <div class="import-actions">
         <select id="mods-import-mode" class="field-input import-mode">
-          <option value="replace">Replace full list</option>
-          <option value="merge">Merge with existing</option>
+          <option value="replace">{{ t('mods.mode_replace') }}</option>
+          <option value="merge">{{ t('mods.mode_merge') }}</option>
         </select>
-        <button class="btn-save btn-inline" type="button" id="btn-import-text">Import pasted JSON</button>
+        <button class="btn-save btn-inline" type="button" id="btn-import-text">{{ t('mods.import_pasted') }}</button>
         <label class="btn-save btn-inline btn-ghost">
-          Upload .json file
+          {{ t('mods.upload_file') }}
           <input type="file" id="mods-import-file" accept="application/json,.json" hidden />
         </label>
       </div>
-      <div class="card-help">
-        Format: a JSON array of <code>{ "modId": "&lt;hex&gt;", "name": "&lt;optional&gt;", "version": "&lt;optional&gt;" }</code>.
-        File limit 2 MB. Replace overwrites the whole mod list; merge adds missing entries only.
-      </div>
+      <div class="card-help">{{ t('mods.import_help')|safe }}</div>
     </div>
 
     <!-- Single-add form -->
     <div class="card-section">
-      <div class="card-section-label">Add a single mod</div>
+      <div class="card-section-label">{{ t('mods.add_single') }}</div>
       <div class="config-grid">
         <div class="field-group">
-          <label for="mod-id">Mod ID <span class="required">*</span></label>
-          <input type="text" id="mod-id" placeholder="e.g. 595F2BF2F44836FB" maxlength="64" />
+          <label for="mod-id">{{ t('mods.mod_id') }} <span class="required">*</span></label>
+          <input type="text" id="mod-id" placeholder="{{ t('mods.mod_id_placeholder') }}" maxlength="64" />
         </div>
         <div class="field-group">
-          <label for="mod-name">Name <span class="required">*</span></label>
-          <input type="text" id="mod-name" placeholder="e.g. RHS - Status Quo" maxlength="128" />
+          <label for="mod-name">{{ t('mods.name') }} <span class="required">*</span></label>
+          <input type="text" id="mod-name" placeholder="{{ t('mods.name_placeholder') }}" maxlength="128" />
         </div>
         <div class="field-group">
-          <label for="mod-version">Version (optional)</label>
-          <input type="text" id="mod-version" placeholder="e.g. 0.14.4795" maxlength="32" />
+          <label for="mod-version">{{ t('mods.version') }}</label>
+          <input type="text" id="mod-version" placeholder="{{ t('mods.version_placeholder') }}" maxlength="32" />
         </div>
       </div>
-      <button class="btn-save" id="btn-add-mod">Add mod</button>
-      <div class="restart-notice" id="mods-restart-notice">⚠ Mod changes will be applied after server restart</div>
+      <button class="btn-save" id="btn-add-mod">{{ t('mods.add') }}</button>
+      <div class="restart-notice" id="mods-restart-notice">{{ t('mods.restart_notice') }}</div>
     </div>
   </div>
 
   <!-- Persistence -->
   <div class="card card--persistence">
-    <div class="card-label">Persistence</div>
-    <div class="card-description">
-      Server launches always pass <code>-loadSessionSave</code>, so any existing save is loaded on
-      start. This toggle writes the <code>game.gameProperties.persistence</code> block in
-      <code>config.json</code> — enable to autosave every N minutes, disable to stop writing new
-      saves (existing saves still load on start; use <strong>Flush saves</strong> to start fresh).
-      Session save only works in scenarios that implement it (Conflict, Combat Ops); Game Master
-      needs manual saves from Esc.
-    </div>
+    <div class="card-label">{{ t('persistence.title') }}</div>
+    <div class="card-description">{{ t('persistence.description')|safe }}</div>
     <div class="config-grid">
       <div class="field-group">
-        <label for="input-persist-enabled">Enabled</label>
+        <label for="input-persist-enabled">{{ t('persistence.enabled_label') }}</label>
         <select id="input-persist-enabled">
-          <option value="false">Disabled</option>
-          <option value="true">Enabled</option>
+          <option value="false">{{ t('persistence.disabled') }}</option>
+          <option value="true">{{ t('persistence.enabled') }}</option>
         </select>
       </div>
       <div class="field-group">
-        <label for="input-persist-interval">Auto-save interval (minutes, 0–60)</label>
+        <label for="input-persist-interval">{{ t('persistence.interval') }}</label>
         <input type="number" id="input-persist-interval" min="0" max="60" step="1" value="10" />
       </div>
       <div class="field-group">
-        <label for="input-persist-hive">Hive ID (0–16383)</label>
+        <label for="input-persist-hive">{{ t('persistence.hive_id') }}</label>
         <input type="number" id="input-persist-hive" min="0" max="16383" step="1" value="1" />
       </div>
     </div>
     <div id="persist-stats" class="persist-stats"></div>
     <div class="card-actions">
-      <button class="btn-save" id="btn-persist-save">Save changes</button>
-      <button class="btn-save btn-danger" id="btn-persist-flush">Flush saves</button>
+      <button class="btn-save" id="btn-persist-save">{{ t('common.save_changes') }}</button>
+      <button class="btn-save btn-danger" id="btn-persist-flush">{{ t('persistence.flush') }}</button>
     </div>
-    <div class="restart-notice" id="persist-restart-notice">⚠ Restart required for persistence changes to take effect</div>
+    <div class="restart-notice" id="persist-restart-notice">{{ t('persistence.restart_notice') }}</div>
   </div>
 
   <!-- Live Logs -->
@@ -227,25 +220,26 @@
     <div class="log-viewer-header">
       <div class="log-viewer-title">
         <div class="log-live-dot off" id="log-live-dot"></div>
-        Server logs — live
+        {{ t('logs.title') }}
       </div>
-      <button class="btn-clear-log" id="btn-clear-log">Clear</button>
+      <button class="btn-clear-log" id="btn-clear-log">{{ t('logs.clear') }}</button>
     </div>
     <div id="log-output"></div>
   </div>
 
   <!-- Op log -->
   <div class="op-log">
-    <div class="log-label">Last operation</div>
-    <div class="log-entry info" id="log-msg">Waiting for server data...</div>
+    <div class="log-label">{{ t('activity.title') }}</div>
+    <div class="log-entry info" id="log-msg">{{ t('activity.waiting') }}</div>
   </div>
 
   <footer>
-    Refresh in <span id="refresh-timer">10</span>s &nbsp;|&nbsp; Panel v3.0
+    {{ t('footer.refresh_in') }} <span id="refresh-timer">10</span>{{ t('footer.seconds_unit') }} &nbsp;|&nbsp; Panel v3.0
   </footer>
 
 </div>
 
+{% include 'partials/i18n_data.html' %}
 <script type="module" src="{{ url_for('static', filename='js/panel/main.js') }}"></script>
 </body>
 </html>

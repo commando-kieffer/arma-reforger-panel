@@ -4,6 +4,7 @@ import time
 
 from flask import Blueprint, jsonify
 
+from ..i18n import t
 from ..security import csrf_protected, login_required
 from ..services.process import get_server_pid, start_server, stop_server
 
@@ -15,7 +16,7 @@ bp = Blueprint("server", __name__, url_prefix="/api")
 @csrf_protected
 def start():
     if get_server_pid():
-        return jsonify({"ok": False, "error": "Server is already running"})
+        return jsonify({"ok": False, "error": t("api.server_running")})
     try:
         start_server()
         return jsonify({"ok": True})
@@ -29,7 +30,7 @@ def start():
 def stop():
     pid = get_server_pid()
     if not pid:
-        return jsonify({"ok": False, "error": "Server is not running"})
+        return jsonify({"ok": False, "error": t("api.server_not_running")})
     try:
         stop_server(pid)
         return jsonify({"ok": True})
@@ -47,7 +48,7 @@ def restart():
             stop_server(pid)
             time.sleep(3)
         except Exception as e:
-            return jsonify({"ok": False, "error": f"Stop failed: {e}"})
+            return jsonify({"ok": False, "error": t("api.stop_failed", error=e)})
     try:
         start_server()
         return jsonify({"ok": True})

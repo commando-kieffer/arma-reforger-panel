@@ -194,12 +194,13 @@ def count_by_source(scenarios):
 
 
 def get_map_name(cfg=None):
+    """Display name of the configured scenario, or None if it isn't set."""
     try:
         if cfg is None:
             cfg = read_config()
         sid = cfg.get("game", {}).get("scenarioId", "")
         if not sid:
-            return "Unknown"
+            return None
         # Consult the full merged list (vanilla + discovered, with overrides
         # already applied) so the dashboard tile matches the dropdown.
         for m in all_scenarios_cached():
@@ -207,4 +208,4 @@ def get_map_name(cfg=None):
                 return m["name"]
         return sid.split("/")[-1].replace(".conf", "")
     except Exception:
-        return "Unknown"
+        return None

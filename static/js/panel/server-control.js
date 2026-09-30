@@ -1,15 +1,19 @@
 // Server status card and the start / stop / restart buttons.
 
+import { t } from '../i18n.js';
 import { postJson } from './api.js';
 import { isBusy, setBusy, setLog } from './activity.js';
 import { fetchStatus, onStatus } from './status.js';
+
+const PENDING_KEYS = { start: 'controls.starting', stop: 'controls.stopping', restart: 'controls.restarting' };
+const DONE_KEYS = { start: 'controls.started', stop: 'controls.stopped', restart: 'controls.restarted' };
 
 function renderStatus(d) {
   const dot = document.getElementById('dot');
   const txt = document.getElementById('status-text');
   dot.className = 'dot ' + (d.running ? 'online' : 'offline');
   txt.className = 'status-text ' + (d.running ? 'online' : 'offline');
-  txt.textContent = d.running ? 'ONLINE' : 'OFFLINE';
+  txt.textContent = d.running ? t('status.online') : t('status.offline');
 
   document.getElementById('server-name-display').textContent = d.server_name || '—';
   document.getElementById('ip-port-display').textContent = (d.ip && d.port) ? d.ip + ':' + d.port : '—';
@@ -24,21 +28,19 @@ function renderStatus(d) {
 }
 
 async function serverAction(action) {
-  const labels = { start: 'Starting server...', stop: 'Stopping server...', restart: 'Restarting server...' };
   setBusy(true);
-  setLog(labels[action], 'info');
+  setLog(t(PENDING_KEYS[action]), 'info');
   try {
     const r = await postJson('/api/' + action, {});
     const d = await r.json();
     if (d.ok) {
-      const success = { start: 'Server started', stop: 'Server stopped', restart: 'Server restarted' };
-      setLog(success[action], 'ok');
+      setLog(t(DONE_KEYS[action]), 'ok');
       await new Promise(res => setTimeout(res, 1500));
       await fetchStatus();
     } else {
-      setLog('Error: ' + (d.error || 'unknown'), 'error');
+      setLog(t('common.error', { error: d.error || t('common.unknown') }), 'error');
     }
-  } catch (e) { setLog('Connection error', 'error'); }
+  } catch (e) { setLog(t('common.connection_error'), 'error'); }
   setBusy(false);
 }
 

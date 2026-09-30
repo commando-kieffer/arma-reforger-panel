@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "locale": "en-GB",
+    "language": "Language"
+  },
+  "common": {
+    "panel_tag": "Server Management Panel",
+    "unknown": "unknown",
+    "error": "Error: {error}",
+    "connection_error": "Connection error",
+    "save_changes": "Save changes",
+    "save_failed": "Save failed: {error}"
+  },
+  "login": {
+    "title": "Arma Reforger — Panel Login",
+    "password_label": "Panel Password",
+    "password_placeholder": "Enter password...",
+    "submit": "Login ↗",
+    "invalid_password": "Invalid password",
+    "too_many_attempts": "Too many attempts — wait a minute and retry"
+  },
+  "panel": {
+    "title": "Arma Reforger — Management Panel",
+    "logout": "Logout ↗"
+  },
+  "status": {
+    "title": "Server Status",
+    "loading": "LOADING...",
+    "online": "ONLINE",
+    "offline": "OFFLINE",
+    "name": "Name",
+    "address": "IP : Port",
+    "mission": "Mission",
+    "uptime": "Uptime",
+    "unknown_mission": "Unknown"
+  },
+  "controls": {
+    "start": "START",
+    "stop": "STOP",
+    "restart": "RESTART",
+    "starting": "Starting server...",
+    "stopping": "Stopping server...",
+    "restarting": "Restarting server...",
+    "started": "Server started",
+    "stopped": "Server stopped",
+    "restarted": "Server restarted"
+  },
+  "metrics": {
+    "cpu_title": "CPU — System",
+    "ram_title": "RAM — System",
+    "process_cpu": "Arma: {value}",
+    "process_ram": "Arma: {used} MB / {total} MB",
+    "process_ram_idle": "Arma: — MB"
+  },
+  "config": {
+    "title": "Server Configuration",
+    "server_name": "Server name",
+    "server_name_placeholder": "e.g. LEM Arma",
+    "scenario": "Scenario / Mission",
+    "rescan": "Rescan from mods",
+    "game_password": "Game password (empty = no password)",
+    "game_password_placeholder": "Leave empty to remove the password",
+    "admin_password": "Admin password",
+    "admin_password_placeholder": "Admin password",
+    "restart_notice": "⚠ Changes will be applied after server restart",
+    "base_game": "Base game",
+    "scenario_counts": "{vanilla} vanilla · {mods} from mods",
+    "scanning": "Scanning installed mods for scenarios…",
+    "scan_summary": "Vanilla: {vanilla} · From mods: {mods}",
+    "scan_details": {
+      "one": " (scanned {count} addon in {dirs})",
+      "other": " (scanned {count} addons in {dirs})"
+    },
+    "scan_nothing_found": ". No .pak files found. Tried: {tried}. Run the server once so it downloads workshop mods, or set WORKSHOP_DIR in config.env.",
+    "rescan_failed": "Rescan failed: {error}",
+    "rescan_error": "Rescan error",
+    "name_required": "Server name cannot be empty",
+    "admin_password_required": "Admin password cannot be empty",
+    "saving": "Saving configuration...",
+    "saved": "Configuration saved"
+  },
+  "mods": {
+    "title": "Server Mods",
+    "loading": "Loading mods...",
+    "empty": "No mods installed",
+    "remove": "Remove ✕",
+    "bulk_import": "Bulk import",
+    "mode_replace": "Replace full list",
+    "mode_merge": "Merge with existing",
+    "import_pasted": "Import pasted JSON",
+    "upload_file": "Upload .json file",
+    "import_help": "Format: a JSON array of <code>{ \"modId\": \"&lt;hex&gt;\", \"name\": \"&lt;optional&gt;\", \"version\": \"&lt;optional&gt;\" }</code>. File limit 2 MB. Replace overwrites the whole mod list; merge adds missing entries only.",
+    "add_single": "Add a single mod",
+    "mod_id": "Mod ID",
+    "mod_id_placeholder": "e.g. 595F2BF2F44836FB",
+    "name": "Name",
+    "name_placeholder": "e.g. RHS - Status Quo",
+    "version": "Version (optional)",
+    "version_placeholder": "e.g. 0.14.4795",
+    "add": "Add mod",
+    "restart_notice": "⚠ Mod changes will be applied after server restart",
+    "id_required": "Mod ID is required",
+    "name_required": "Mod name is required",
+    "adding": "Adding mod…",
+    "added": "Mod \"{name}\" added",
+    "confirm_remove": "Remove this mod from the configuration?",
+    "removing": "Removing mod…",
+    "removed": "Mod removed",
+    "paste_first": "Paste a JSON array first",
+    "file_too_large": "File too large (max 2 MB)",
+    "uploading": "Uploading {file}…",
+    "upload_error": "Upload error",
+    "importing": "Importing mods…",
+    "imported": {
+      "one": "{count} mod imported",
+      "other": "{count} mods imported"
+    },
+    "skipped": {
+      "one": " ({count} skipped: {entries})",
+      "other": " ({count} skipped: {entries})"
+    },
+    "import_failed": "Import failed: {error}"
+  },
+  "persistence": {
+    "title": "Persistence",
+    "description": "Server launches always pass <code>-loadSessionSave</code>, so any existing save is loaded on start. This toggle writes the <code>game.gameProperties.persistence</code> block in <code>config.json</code> — enable to autosave every N minutes, disable to stop writing new saves (existing saves still load on start; use <strong>Flush saves</strong> to start fresh). Session save only works in scenarios that implement it (Conflict, Combat Ops); Game Master needs manual saves from Esc.",
+    "enabled_label": "Enabled",
+    "disabled": "Disabled",
+    "enabled": "Enabled",
+    "interval": "Auto-save interval (minutes, 0–60)",
+    "hive_id": "Hive ID (0–16383)",
+    "flush": "Flush saves",
+    "restart_notice": "⚠ Restart required for persistence changes to take effect",
+    "no_saves": "No saves yet under {path}.",
+    "bucket_game": "World session",
+    "bucket_playersave": "Player saves",
+    "bucket_settings": "Settings",
+    "bucket_stats": {
+      "one": "{label}: {count} file, {size} (newest {age})",
+      "other": "{label}: {count} files, {size} (newest {age})"
+    },
+    "empty": "empty",
+    "saving": "Saving persistence settings...",
+    "now_enabled": "Persistence enabled",
+    "now_disabled": "Persistence disabled",
+    "confirm_flush": "Delete the world-session save (.save/game) and per-player saves (.save/playersave)? Server settings are kept. The next launch starts a fresh world. This cannot be undone.",
+    "flushing": "Flushing saves...",
+    "flushed": {
+      "one": "Removed {count} save file",
+      "other": "Removed {count} save files"
+    },
+    "flush_failed": "Flush failed: {error}"
+  },
+  "logs": {
+    "title": "Server logs — live",
+    "clear": "Clear"
+  },
+  "activity": {
+    "title": "Last operation",
+    "waiting": "Waiting for server data..."
+  },
+  "footer": {
+    "refresh_in": "Refresh in",
+    "seconds_unit": "s"
+  },
+  "format": {
+    "never": "never",
+    "seconds_ago": "{n}s ago",
+    "minutes_ago": "{n}m ago",
+    "hours_ago": "{n}h ago",
+    "days_ago": "{n}d ago",
+    "unit_b": "B",
+    "unit_kb": "KB",
+    "unit_mb": "MB",
+    "unit_gb": "GB"
+  },
+  "api": {
+    "csrf_invalid": "CSRF token invalid",
+    "too_many_attempts": "Too many attempts. Wait a minute.",
+    "invalid_password": "Invalid password",
+    "unknown_scenario": "Unknown scenario",
+    "no_changes": "No changes",
+    "server_running": "Server is already running",
+    "server_not_running": "Server is not running",
+    "stop_failed": "Stop failed: {error}",
+    "autosave_not_int": "autoSaveInterval must be an integer",
+    "autosave_range": "autoSaveInterval must be between 0 and 60",
+    "hive_not_int": "hiveId must be an integer",
+    "hive_range": "hiveId must be between 0 and 16383",
+    "stop_before_flush": "Stop the server before flushing saves",
+    "invalid_mod_entry": "Invalid mod entry (modId must be 1-32 hex chars)",
+    "mod_name_required": "name is required for manual entry",
+    "mod_exists": "Mod with this ID already exists",
+    "missing_mod_id": "Missing modId",
+    "mod_not_found": "Mod not found",
+    "file_not_utf8": "File must be UTF-8 encoded JSON",
+    "invalid_mode": "mode must be 'replace' or 'merge'",
+    "empty_payload": "Empty payload",
+    "invalid_json": "Invalid JSON: {reason} at line {line} col {col}",
+    "not_an_array": "Top-level value must be a JSON array",
+    "skipped_invalid": "#{position}: invalid",
+    "skipped_duplicate": "#{position}: duplicate modId {mod_id}",
+    "import_merged": "Merged: {added} added, {present} already present",
+    "import_replaced": {
+      "one": "Replaced full mod list with {count} entry",
+      "other": "Replaced full mod list with {count} entries"
+    }
+  }
+}

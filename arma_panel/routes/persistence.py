@@ -3,6 +3,7 @@
 from flask import Blueprint, jsonify, request
 
 from .. import config
+from ..i18n import t
 from ..security import csrf_protected, login_required
 from ..services.persistence import (
     flush_saves,
@@ -45,9 +46,9 @@ def update_persistence():
             try:
                 v = int(data["autoSaveInterval"])
             except (TypeError, ValueError):
-                return jsonify({"ok": False, "error": "autoSaveInterval must be an integer"})
+                return jsonify({"ok": False, "error": t("api.autosave_not_int")})
             if not 0 <= v <= 60:
-                return jsonify({"ok": False, "error": "autoSaveInterval must be between 0 and 60"})
+                return jsonify({"ok": False, "error": t("api.autosave_range")})
             block["autoSaveInterval"] = v
         else:
             block.setdefault("autoSaveInterval", 10)
@@ -55,9 +56,9 @@ def update_persistence():
             try:
                 v = int(data["hiveId"])
             except (TypeError, ValueError):
-                return jsonify({"ok": False, "error": "hiveId must be an integer"})
+                return jsonify({"ok": False, "error": t("api.hive_not_int")})
             if not 0 <= v <= 16383:
-                return jsonify({"ok": False, "error": "hiveId must be between 0 and 16383"})
+                return jsonify({"ok": False, "error": t("api.hive_range")})
             block["hiveId"] = v
         else:
             block.setdefault("hiveId", 1)
@@ -82,7 +83,7 @@ def flush():
     # Refuse to delete saves while the server is running — the game holds file
     # handles and may rewrite them mid-flush, which leaves us with partials.
     if get_server_pid():
-        return jsonify({"ok": False, "error": "Stop the server before flushing saves"})
+        return jsonify({"ok": False, "error": t("api.stop_before_flush")})
     try:
         removed = flush_saves()
         return jsonify({"ok": True, "removed": removed, "saves": scan_saves()})

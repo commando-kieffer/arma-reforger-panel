@@ -1,5 +1,6 @@
 // Polls /api/status and passes each response to the registered listeners.
 
+import { t } from '../i18n.js';
 import { setCsrfToken } from './api.js';
 import { setLog } from './activity.js';
 
@@ -21,7 +22,7 @@ export async function fetchStatus() {
     if (d.csrf) setCsrfToken(d.csrf);
     listeners.forEach(listener => listener(d));
   } catch (e) {
-    setLog('Connection error', 'error');
+    setLog(t('common.connection_error'), 'error');
   }
 }
 

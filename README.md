@@ -16,6 +16,7 @@ A lightweight, self-hosted web panel for managing your **Arma Reforger dedicated
 - **Mod management** — Add and remove Workshop mods directly from the panel
 - **Config editor** — Edit server name, scenario, passwords without touching the filesystem
 - **PWA support** — Installable as a native app on Android and iOS
+- **English and French** — Switch the interface language from the panel header or the login screen
 - **Single config file** — All settings in one `config.env`, no code editing required
 
 ---
@@ -164,12 +165,15 @@ arma-reforger-panel/
 ├── arma_panel/              # Flask application
 │   ├── __init__.py              # App factory
 │   ├── config.py                # Settings loaded from config.env
+│   ├── i18n.py                  # Translation helpers
+│   ├── translations/            # en.json, fr.json
 │   ├── security.py              # Auth, CSRF, rate limiting, headers
 │   ├── routes/                  # Blueprints: pages, auth, status, server, config, mods, persistence, scenarios
 │   └── services/                # Server process, config.json, metrics, logs, mods, saves, scenario discovery
 ├── templates/
 │   ├── index.html               # Main panel UI
-│   └── login.html               # Login screen
+│   ├── login.html               # Login screen
+│   └── partials/                # Language switch, embedded translations
 ├── static/
 │   ├── css/                     # Stylesheets
 │   ├── js/                      # Front-end scripts (ES modules)

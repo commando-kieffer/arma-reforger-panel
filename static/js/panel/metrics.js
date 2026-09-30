@@ -1,5 +1,7 @@
 // CPU and RAM charts, fed by /api/metrics every few seconds.
 
+import { t } from '../i18n.js';
+
 const MAX_POINTS = 60;
 const POLL_MS = 3000;
 
@@ -57,8 +59,11 @@ async function fetchMetrics() {
 
     document.getElementById('cpu-val').textContent = (d.cpu ?? 0).toFixed(1) + '%';
     document.getElementById('ram-val').textContent = ramPct + '%';
-    document.getElementById('proc-cpu-sub').textContent = 'Arma: ' + (d.running ? (d.cpu ?? 0).toFixed(1) + '%' : '—%');
-    document.getElementById('proc-ram-sub').textContent = 'Arma: ' + (d.running ? (d.ram_process ?? 0) + ' MB / ' + d.ram_total + ' MB' : '— MB');
+    document.getElementById('proc-cpu-sub').textContent =
+      t('metrics.process_cpu', { value: d.running ? (d.cpu ?? 0).toFixed(1) + '%' : '—%' });
+    document.getElementById('proc-ram-sub').textContent = d.running
+      ? t('metrics.process_ram', { used: d.ram_process ?? 0, total: d.ram_total })
+      : t('metrics.process_ram_idle');
 
     pushChart(cpuChart, d.cpu ?? 0);
     pushChart(ramChart, ramPct);

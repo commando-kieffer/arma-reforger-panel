@@ -4,6 +4,7 @@ import time
 
 from flask import Blueprint, jsonify, render_template, request, session
 
+from ..i18n import t
 from ..security import client_ip, ensure_csrf, login_rate_ok, login_required, verify_password
 
 bp = Blueprint("auth", __name__)
@@ -18,7 +19,7 @@ def login_page():
 def login():
     ip = client_ip()
     if not login_rate_ok(ip):
-        return jsonify({"ok": False, "error": "Too many attempts. Wait a minute."}), 429
+        return jsonify({"ok": False, "error": t("api.too_many_attempts")}), 429
     data = request.get_json(silent=True) or {}
     # bcrypt is intentionally slow — even on a successful login it adds ~100ms,
     # which is also a natural defense against brute force.
@@ -29,7 +30,7 @@ def login():
         session["login_at"] = int(time.time())
         ensure_csrf()
         return jsonify({"ok": True, "csrf": session["csrf"]})
-    return jsonify({"ok": False, "error": "Invalid password"}), 401
+    return jsonify({"ok": False, "error": t("api.invalid_password")}), 401
 
 
 @bp.post("/logout")

@@ -10,6 +10,7 @@ import bcrypt
 from flask import jsonify, request, session
 
 from . import config
+from .i18n import t
 from .log import logger
 
 LOGIN_WINDOW_SEC = 60.0
@@ -97,7 +98,7 @@ def csrf_protected(view):
             or request.form.get("_csrf", "")
         )
         if not expected or not supplied or not hmac.compare_digest(expected, supplied):
-            return jsonify({"ok": False, "error": "CSRF token invalid"}), 403
+            return jsonify({"ok": False, "error": t("api.csrf_invalid")}), 403
         return view(*args, **kwargs)
     return wrapper
 

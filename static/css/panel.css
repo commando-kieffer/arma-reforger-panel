@@ -55,6 +55,8 @@ header {
 
 .header-left h1 span { color: var(--accent); }
 
+.header-actions { display: flex; align-items: center; gap: 12px; }
+
 .btn-logout {
   background: transparent;
   border: 1px solid var(--border);

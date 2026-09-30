@@ -1,4 +1,4 @@
-/* Reset and design tokens shared by the login page and the panel. */
+/* Reset, design tokens and components shared by the login page and the panel. */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,3 +17,14 @@
   --cpu-color: #4c9fd6;
   --ram-color: #c8a84b;
 }
+
+/* Language switch */
+.lang-switch { display: inline-flex; border: 1px solid var(--border); }
+.lang-option {
+  background: transparent; border: none; color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.2em;
+  padding: 8px 10px; cursor: pointer; transition: color 0.2s, background 0.2s;
+}
+.lang-option + .lang-option { border-left: 1px solid var(--border); }
+.lang-option:hover { color: var(--accent); }
+.lang-option.active { background: var(--accent); color: var(--bg); cursor: default; }

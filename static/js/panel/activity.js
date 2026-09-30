@@ -1,6 +1,8 @@
 // Feedback on the operation in progress: the "Last operation" line, and the
 // busy flag that locks the action buttons while a request is running.
 
+import { locale } from '../i18n.js';
+
 const ACTION_BUTTON_IDS = ['btn-start', 'btn-stop', 'btn-reset', 'btn-save', 'btn-persist-save', 'btn-persist-flush'];
 
 let busy = false;
@@ -8,7 +10,7 @@ let busy = false;
 export function setLog(msg, type = 'info') {
   const el = document.getElementById('log-msg');
   el.className = 'log-entry ' + type;
-  const ts = new Date().toLocaleTimeString('en-GB');
+  const ts = new Date().toLocaleTimeString(locale);
   el.textContent = '[' + ts + '] ' + msg;
 }
 

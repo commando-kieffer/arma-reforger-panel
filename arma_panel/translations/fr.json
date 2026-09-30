@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "locale": "fr-FR",
+    "language": "Langue"
+  },
+  "common": {
+    "panel_tag": "Panel de gestion du serveur",
+    "unknown": "erreur inconnue",
+    "error": "Erreur : {error}",
+    "connection_error": "Erreur de connexion",
+    "save_changes": "Enregistrer",
+    "save_failed": "Échec de l'enregistrement : {error}"
+  },
+  "login": {
+    "title": "Arma Reforger — Connexion au panel",
+    "password_label": "Mot de passe du panel",
+    "password_placeholder": "Saisissez le mot de passe...",
+    "submit": "Connexion ↗",
+    "invalid_password": "Mot de passe incorrect",
+    "too_many_attempts": "Trop de tentatives — patientez une minute puis réessayez"
+  },
+  "panel": {
+    "title": "Arma Reforger — Panel de gestion",
+    "logout": "Déconnexion ↗"
+  },
+  "status": {
+    "title": "État du serveur",
+    "loading": "CHARGEMENT...",
+    "online": "EN LIGNE",
+    "offline": "HORS LIGNE",
+    "name": "Nom",
+    "address": "IP : Port",
+    "mission": "Mission",
+    "uptime": "En ligne depuis",
+    "unknown_mission": "Inconnue"
+  },
+  "controls": {
+    "start": "DÉMARRER",
+    "stop": "ARRÊTER",
+    "restart": "REDÉMARRER",
+    "starting": "Démarrage du serveur...",
+    "stopping": "Arrêt du serveur...",
+    "restarting": "Redémarrage du serveur...",
+    "started": "Serveur démarré",
+    "stopped": "Serveur arrêté",
+    "restarted": "Serveur redémarré"
+  },
+  "metrics": {
+    "cpu_title": "CPU — Système",
+    "ram_title": "RAM — Système",
+    "process_cpu": "Arma : {value}",
+    "process_ram": "Arma : {used} Mo / {total} Mo",
+    "process_ram_idle": "Arma : — Mo"
+  },
+  "config": {
+    "title": "Configuration du serveur",
+    "server_name": "Nom du serveur",
+    "server_name_placeholder": "ex. : LEM Arma",
+    "scenario": "Scénario / Mission",
+    "rescan": "Rescanner les mods",
+    "game_password": "Mot de passe du jeu (vide = aucun)",
+    "game_password_placeholder": "Laisser vide pour supprimer le mot de passe",
+    "admin_password": "Mot de passe admin",
+    "admin_password_placeholder": "Mot de passe admin",
+    "restart_notice": "⚠ Les modifications seront appliquées au redémarrage du serveur",
+    "base_game": "Jeu de base",
+    "scenario_counts": "{vanilla} de base · {mods} issus de mods",
+    "scanning": "Recherche de scénarios dans les mods installés…",
+    "scan_summary": "Jeu de base : {vanilla} · Mods : {mods}",
+    "scan_details": {
+      "one": " ({count} addon analysé dans {dirs})",
+      "other": " ({count} addons analysés dans {dirs})"
+    },
+    "scan_nothing_found": ". Aucun fichier .pak trouvé. Emplacements testés : {tried}. Lancez le serveur une première fois pour qu'il télécharge les mods du workshop, ou définissez WORKSHOP_DIR dans config.env.",
+    "rescan_failed": "Échec du rescan : {error}",
+    "rescan_error": "Erreur lors du rescan",
+    "name_required": "Le nom du serveur ne peut pas être vide",
+    "admin_password_required": "Le mot de passe admin ne peut pas être vide",
+    "saving": "Enregistrement de la configuration...",
+    "saved": "Configuration enregistrée"
+  },
+  "mods": {
+    "title": "Mods du serveur",
+    "loading": "Chargement des mods...",
+    "empty": "Aucun mod installé",
+    "remove": "Retirer ✕",
+    "bulk_import": "Import groupé",
+    "mode_replace": "Remplacer toute la liste",
+    "mode_merge": "Fusionner avec l'existant",
+    "import_pasted": "Importer le JSON collé",
+    "upload_file": "Envoyer un fichier .json",
+    "import_help": "Format : un tableau JSON de <code>{ \"modId\": \"&lt;hex&gt;\", \"name\": \"&lt;optionnel&gt;\", \"version\": \"&lt;optionnel&gt;\" }</code>. Fichier limité à 2 Mo. « Remplacer » écrase toute la liste des mods ; « Fusionner » n'ajoute que les entrées manquantes.",
+    "add_single": "Ajouter un mod",
+    "mod_id": "ID du mod",
+    "mod_id_placeholder": "ex. : 595F2BF2F44836FB",
+    "name": "Nom",
+    "name_placeholder": "ex. : RHS - Status Quo",
+    "version": "Version (facultative)",
+    "version_placeholder": "ex. : 0.14.4795",
+    "add": "Ajouter le mod",
+    "restart_notice": "⚠ Les modifications des mods seront appliquées au redémarrage du serveur",
+    "id_required": "L'ID du mod est obligatoire",
+    "name_required": "Le nom du mod est obligatoire",
+    "adding": "Ajout du mod…",
+    "added": "Mod « {name} » ajouté",
+    "confirm_remove": "Retirer ce mod de la configuration ?",
+    "removing": "Retrait du mod…",
+    "removed": "Mod retiré",
+    "paste_first": "Collez d'abord un tableau JSON",
+    "file_too_large": "Fichier trop volumineux (2 Mo max.)",
+    "uploading": "Envoi de {file}…",
+    "upload_error": "Erreur lors de l'envoi",
+    "importing": "Import des mods…",
+    "imported": {
+      "one": "{count} mod importé",
+      "other": "{count} mods importés"
+    },
+    "skipped": {
+      "one": " ({count} ignoré : {entries})",
+      "other": " ({count} ignorés : {entries})"
+    },
+    "import_failed": "Échec de l'import : {error}"
+  },
+  "persistence": {
+    "title": "Persistance",
+    "description": "Le serveur est toujours lancé avec <code>-loadSessionSave</code> : une sauvegarde existante est donc chargée au démarrage. Ce réglage écrit le bloc <code>game.gameProperties.persistence</code> dans <code>config.json</code> — activez-le pour sauvegarder automatiquement toutes les N minutes, désactivez-le pour ne plus écrire de nouvelles sauvegardes (les sauvegardes existantes sont toujours chargées au démarrage ; utilisez <strong>Purger les sauvegardes</strong> pour repartir de zéro). La sauvegarde de session ne fonctionne que dans les scénarios qui la gèrent (Conflict, Combat Ops) ; en Game Master, il faut sauvegarder manuellement depuis le menu Échap.",
+    "enabled_label": "Activation",
+    "disabled": "Désactivée",
+    "enabled": "Activée",
+    "interval": "Intervalle de sauvegarde auto (minutes, 0–60)",
+    "hive_id": "ID de hive (0–16383)",
+    "flush": "Purger les sauvegardes",
+    "restart_notice": "⚠ Redémarrage nécessaire pour appliquer les changements de persistance",
+    "no_saves": "Aucune sauvegarde pour l'instant dans {path}.",
+    "bucket_game": "Session du monde",
+    "bucket_playersave": "Sauvegardes des joueurs",
+    "bucket_settings": "Paramètres",
+    "bucket_stats": {
+      "one": "{label} : {count} fichier, {size} (dernier {age})",
+      "other": "{label} : {count} fichiers, {size} (dernier {age})"
+    },
+    "empty": "vide",
+    "saving": "Enregistrement des paramètres de persistance...",
+    "now_enabled": "Persistance activée",
+    "now_disabled": "Persistance désactivée",
+    "confirm_flush": "Supprimer la sauvegarde de session du monde (.save/game) et les sauvegardes des joueurs (.save/playersave) ? Les paramètres du serveur sont conservés. Le prochain lancement démarrera un monde vierge. Cette action est irréversible.",
+    "flushing": "Purge des sauvegardes...",
+    "flushed": {
+      "one": "{count} fichier de sauvegarde supprimé",
+      "other": "{count} fichiers de sauvegarde supprimés"
+    },
+    "flush_failed": "Échec de la purge : {error}"
+  },
+  "logs": {
+    "title": "Logs du serveur — en direct",
+    "clear": "Effacer"
+  },
+  "activity": {
+    "title": "Dernière opération",
+    "waiting": "En attente des données du serveur..."
+  },
+  "footer": {
+    "refresh_in": "Actualisation dans",
+    "seconds_unit": " s"
+  },
+  "format": {
+    "never": "jamais",
+    "seconds_ago": "il y a {n} s",
+    "minutes_ago": "il y a {n} min",
+    "hours_ago": "il y a {n} h",
+    "days_ago": "il y a {n} j",
+    "unit_b": "o",
+    "unit_kb": "Ko",
+    "unit_mb": "Mo",
+    "unit_gb": "Go"
+  },
+  "api": {
+    "csrf_invalid": "Jeton CSRF invalide",
+    "too_many_attempts": "Trop de tentatives. Patientez une minute.",
+    "invalid_password": "Mot de passe incorrect",
+    "unknown_scenario": "Scénario inconnu",
+    "no_changes": "Aucune modification",
+    "server_running": "Le serveur est déjà démarré",
+    "server_not_running": "Le serveur n'est pas démarré",
+    "stop_failed": "Échec de l'arrêt : {error}",
+    "autosave_not_int": "L'intervalle de sauvegarde doit être un nombre entier",
+    "autosave_range": "L'intervalle de sauvegarde doit être compris entre 0 et 60",
+    "hive_not_int": "L'ID de hive doit être un nombre entier",
+    "hive_range": "L'ID de hive doit être compris entre 0 et 16383",
+    "stop_before_flush": "Arrêtez le serveur avant de purger les sauvegardes",
+    "invalid_mod_entry": "Entrée de mod invalide (le modId doit contenir 1 à 32 caractères hexadécimaux)",
+    "mod_name_required": "Le nom est obligatoire pour un ajout manuel",
+    "mod_exists": "Un mod avec cet ID existe déjà",
+    "missing_mod_id": "modId manquant",
+    "mod_not_found": "Mod introuvable",
+    "file_not_utf8": "Le fichier doit être du JSON encodé en UTF-8",
+    "invalid_mode": "Le mode doit être « replace » ou « merge »",
+    "empty_payload": "Contenu vide",
+    "invalid_json": "JSON invalide : {reason} à la ligne {line}, colonne {col}",
+    "not_an_array": "La valeur de premier niveau doit être un tableau JSON",
+    "skipped_invalid": "n°{position} : invalide",
+    "skipped_duplicate": "n°{position} : modId {mod_id} en double",
+    "import_merged": "Fusion terminée — ajoutés : {added}, déjà présents : {present}",
+    "import_replaced": {
+      "one": "Liste des mods remplacée ({count} entrée)",
+      "other": "Liste des mods remplacée ({count} entrées)"
+    }
+  }
+}

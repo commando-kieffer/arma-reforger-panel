@@ -1,5 +1,6 @@
 // Server configuration card: name, scenario and passwords.
 
+import { t, tn } from '../i18n.js';
 import { postJson } from './api.js';
 import { setBusy, setLog } from './activity.js';
 import { fetchStatus, onStatus } from './status.js';
@@ -35,7 +36,7 @@ function renderMissionSelect(missions, counts, currentId) {
   });
   sourceKeys.forEach(src => {
     const og = document.createElement('optgroup');
-    og.label = src === 'vanilla' ? 'Base game' : src;
+    og.label = src === 'vanilla' ? t('config.base_game') : src;
     groups[src].forEach(m => {
       const opt = document.createElement('option');
       opt.value = m.id;
@@ -49,35 +50,36 @@ function renderMissionSelect(missions, counts, currentId) {
   // Update the badge near the select if present.
   const badge = document.getElementById('scenario-source-badge');
   if (badge && counts) {
-    badge.textContent = `${counts.vanilla} vanilla · ${counts.from_mods} from mods`;
+    badge.textContent = t('config.scenario_counts', { vanilla: counts.vanilla, mods: counts.from_mods });
   }
 }
 
 async function rescanScenarios() {
   const btn = document.getElementById('btn-rescan-scenarios');
   if (btn) btn.disabled = true;
-  setLog('Scanning installed mods for scenarios…', 'info');
+  setLog(t('config.scanning'), 'info');
   try {
     const r = await postJson('/api/scenarios/rescan', {});
     const d = await r.json();
     if (d.ok) {
       renderMissionSelect(d.missions, d.missions_count);
       const diag = d.diag || {};
-      let msg = `Vanilla: ${d.missions_count.vanilla} · From mods: ${d.missions_count.from_mods}`;
+      let msg = t('config.scan_summary', { vanilla: d.missions_count.vanilla, mods: d.missions_count.from_mods });
       if (diag.workshop_dir) {
         const n = diag.metas_found ?? diag.paks_found ?? 0;
-        msg += ` (scanned ${n} addon${n === 1 ? '' : 's'} in ${diag.workshop_dir})`;
+        msg += tn('config.scan_details', n, { dirs: diag.workshop_dir });
       } else {
-        const tried = (diag.candidates_tried || []).map(c => c.path).slice(0, 3).join(', ');
-        msg += `. No .pak files found. Tried: ${tried}${(diag.candidates_tried || []).length > 3 ? '…' : ''}. Run the server once so it downloads workshop mods, or set WORKSHOP_DIR in config.env.`;
+        const candidates = diag.candidates_tried || [];
+        const tried = candidates.map(c => c.path).slice(0, 3).join(', ') + (candidates.length > 3 ? '…' : '');
+        msg += t('config.scan_nothing_found', { tried });
       }
       setLog(msg, diag.workshop_dir ? 'ok' : 'error');
       // Stash full diagnostics in console for deep debugging.
       if (diag) console.log('[rescan diagnostics]', diag);
     } else {
-      setLog('Rescan failed: ' + (d.error || 'unknown'), 'error');
+      setLog(t('config.rescan_failed', { error: d.error || t('common.unknown') }), 'error');
     }
-  } catch (e) { setLog('Rescan error', 'error'); }
+  } catch (e) { setLog(t('config.rescan_error'), 'error'); }
   if (btn) btn.disabled = false;
 }
 
@@ -87,22 +89,22 @@ async function saveConfig() {
   const password = document.getElementById('input-password').value;
   const pwdAdmin = document.getElementById('input-password-admin').value.trim();
 
-  if (!name)     { setLog('Server name cannot be empty', 'error'); return; }
-  if (!pwdAdmin) { setLog('Admin password cannot be empty', 'error'); return; }
+  if (!name)     { setLog(t('config.name_required'), 'error'); return; }
+  if (!pwdAdmin) { setLog(t('config.admin_password_required'), 'error'); return; }
 
   setBusy(true);
-  setLog('Saving configuration...', 'info');
+  setLog(t('config.saving'), 'info');
   try {
     const r = await postJson('/api/config', { server_name: name, scenario_id: scenario, password, password_admin: pwdAdmin });
     const d = await r.json();
     if (d.ok) {
-      setLog('Configuration saved', 'ok');
+      setLog(t('config.saved'), 'ok');
       document.getElementById('restart-notice').classList.toggle('visible', !!d.restart_required);
       await fetchStatus();
     } else {
-      setLog('Save failed: ' + (d.error || 'unknown'), 'error');
+      setLog(t('common.save_failed', { error: d.error || t('common.unknown') }), 'error');
     }
-  } catch (e) { setLog('Connection error', 'error'); }
+  } catch (e) { setLog(t('common.connection_error'), 'error'); }
   setBusy(false);
 }
 

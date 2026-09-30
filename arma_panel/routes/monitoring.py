@@ -4,6 +4,7 @@ import time
 
 from flask import Blueprint, jsonify, request
 
+from ..i18n import t
 from ..security import ensure_csrf, login_required
 from ..services import logs
 from ..services.metrics import get_cpu_ram, get_system_ram
@@ -26,7 +27,7 @@ def status():
     return jsonify({
         "running":        pid is not None,
         "pid":            pid,
-        "map":            get_map_name(cfg),
+        "map":            get_map_name(cfg) or t("status.unknown_mission"),
         "players":        0,
         "uptime":         format_uptime(uptime_sec) if pid else "—",
         "uptime_sec":     uptime_sec,

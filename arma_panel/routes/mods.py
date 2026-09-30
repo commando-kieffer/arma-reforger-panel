@@ -4,6 +4,7 @@ import json
 
 from flask import Blueprint, jsonify, request
 
+from ..i18n import t, tn
 from ..security import csrf_protected, login_required
 from ..services.mods import collect_import_entries, merge_mods, normalize_mod_entry
 from ..services.process import get_server_pid
@@ -19,13 +20,13 @@ def add_mod():
     data = request.get_json(silent=True) or {}
     norm = normalize_mod_entry({"modId": data.get("modId",""), "name": data.get("name",""), "version": data.get("version","")})
     if not norm:
-        return jsonify({"ok": False, "error": "Invalid mod entry (modId must be 1-32 hex chars)"})
+        return jsonify({"ok": False, "error": t("api.invalid_mod_entry")})
     if "name" not in norm:
-        return jsonify({"ok": False, "error": "name is required for manual entry"})
+        return jsonify({"ok": False, "error": t("api.mod_name_required")})
     cfg  = read_config()
     mods = cfg.setdefault("game", {}).setdefault("mods", [])
     if any(m.get("modId", "").upper() == norm["modId"] for m in mods):
-        return jsonify({"ok": False, "error": "Mod with this ID already exists"})
+        return jsonify({"ok": False, "error": t("api.mod_exists")})
     mods.append(norm)
     try:
         write_config(cfg)
@@ -65,23 +66,24 @@ def import_mods():
     try:
         raw, mode = _read_import_request()
     except UnicodeDecodeError:
-        return jsonify({"ok": False, "error": "File must be UTF-8 encoded JSON"}), 400
+        return jsonify({"ok": False, "error": t("api.file_not_utf8")}), 400
 
     if mode not in ("replace", "merge"):
-        return jsonify({"ok": False, "error": "mode must be 'replace' or 'merge'"}), 400
+        return jsonify({"ok": False, "error": t("api.invalid_mode")}), 400
     if not raw or not raw.strip():
-        return jsonify({"ok": False, "error": "Empty payload"}), 400
+        return jsonify({"ok": False, "error": t("api.empty_payload")}), 400
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        return jsonify({"ok": False, "error": f"Invalid JSON: {e.msg} at line {e.lineno} col {e.colno}"}), 400
+        return jsonify({"ok": False, "error": t("api.invalid_json", reason=e.msg, line=e.lineno, col=e.colno)}), 400
     if not isinstance(data, list):
-        return jsonify({"ok": False, "error": "Top-level value must be a JSON array"}), 400
+        return jsonify({"ok": False, "error": t("api.not_an_array")}), 400
 
     valid, skipped_entries = collect_import_entries(data)
     skipped = [
-        f"#{pos}: duplicate modId {mod_id}" if mod_id else f"#{pos}: invalid"
+        t("api.skipped_duplicate", position=pos, mod_id=mod_id) if mod_id
+        else t("api.skipped_invalid", position=pos)
         for pos, mod_id in skipped_entries
     ]
 
@@ -90,10 +92,10 @@ def import_mods():
 
     if mode == "merge":
         g["mods"], added = merge_mods(g.get("mods", []), valid)
-        msg = f"Merged: {added} added, {len(valid) - added} already present"
+        msg = t("api.import_merged", added=added, present=len(valid) - added)
     else:
         g["mods"] = valid
-        msg = f"Replaced full mod list with {len(valid)} entries"
+        msg = tn("api.import_replaced", len(valid))
 
     try:
         write_config(cfg)
@@ -117,12 +119,12 @@ def remove_mod():
     data   = request.get_json(silent=True) or {}
     mod_id = data.get("modId", "").strip().upper()
     if not mod_id:
-        return jsonify({"ok": False, "error": "Missing modId"})
+        return jsonify({"ok": False, "error": t("api.missing_mod_id")})
     cfg  = read_config()
     mods = cfg.get("game", {}).get("mods", [])
     new  = [m for m in mods if str(m.get("modId", "")).upper() != mod_id]
     if len(new) == len(mods):
-        return jsonify({"ok": False, "error": "Mod not found"})
+        return jsonify({"ok": False, "error": t("api.mod_not_found")})
     cfg.setdefault("game", {})["mods"] = new
     try:
         write_config(cfg)

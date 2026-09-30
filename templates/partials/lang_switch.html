@@ -1,0 +1,5 @@
+<div class="lang-switch" role="group" aria-label="{{ t('meta.language') }}">
+  {%- for code in languages %}
+  <button type="button" class="lang-option{{ ' active' if code == lang }}" data-lang="{{ code }}" aria-pressed="{{ 'true' if code == lang else 'false' }}">{{ code|upper }}</button>
+  {%- endfor %}
+</div>

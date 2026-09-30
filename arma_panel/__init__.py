@@ -2,6 +2,7 @@
 
 Layout:
   config.py    settings read from config.env
+  i18n.py      interface translations (translations/*.json)
   security.py  authentication, CSRF and rate limiting
   services/    game server process, config.json, mods, saves, scenarios, logs
   routes/      Flask blueprints exposing the pages and the JSON API
@@ -11,7 +12,7 @@ import os
 
 from flask import Flask
 
-from . import config
+from . import config, i18n
 from .routes import register_blueprints
 from .security import add_security_headers, load_or_create_secret
 
@@ -31,5 +32,6 @@ def create_app():
         MAX_CONTENT_LENGTH=2 * 1024 * 1024,  # 2 MB cap on uploads
     )
     app.after_request(add_security_headers)
+    i18n.init_app(app)
     register_blueprints(app)
     return app
