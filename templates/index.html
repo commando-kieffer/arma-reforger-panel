@@ -64,6 +64,10 @@
         <div class="label">{{ t('status.uptime') }}</div>
         <div class="value" id="uptime-display">—</div>
       </div>
+      <div class="stat-item">
+        <div class="label">{{ t('status.players') }}</div>
+        <div class="value" id="players-display">—</div>
+      </div>
     </div>
   </section>
 
@@ -254,6 +258,13 @@
   <section class="card op-log">
     <h2 class="log-label">{{ t('activity.title') }}</h2>
     <div class="log-entry info" id="log-msg">{{ t('activity.waiting') }}</div>
+  </section>
+
+  <!-- Players -->
+  <section class="card">
+    <h2 class="card-title">{{ t('players.title') }}</h2>
+    <div class="players-summary" id="players-summary">{{ t('players.loading') }}</div>
+    <div id="players-list"></div>
   </section>
 
 </main>

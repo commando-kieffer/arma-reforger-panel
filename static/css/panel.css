@@ -529,6 +529,33 @@ body {
 .log-entry.error { color: var(--offline); }
 .log-entry.info  { color: var(--info); }
 
+/* Players */
+.players-summary { font-size: 14px; color: var(--ink-soft); }
+
+.players-table {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.players-table th {
+  padding-bottom: 0.5rem;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 12px;
+  text-align: left;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+}
+.players-table td {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line-faint);
+  overflow-wrap: anywhere;
+}
+.players-table th:nth-child(2),
+.players-table td:nth-child(2) { text-align: right; white-space: nowrap; padding-left: 1rem; }
+.players-table .connecting { font-style: italic; color: var(--ink-muted); }
+
 /* Footer */
 .site-footer {
   background-image: var(--gradient-night);

@@ -1,4 +1,4 @@
-"""Read-only endpoints polled by the dashboard: status and metrics."""
+"""Read-only endpoints polled by the dashboard: status, metrics and players."""
 
 import time
 
@@ -7,9 +7,10 @@ from flask import Blueprint, jsonify
 from ..i18n import t
 from ..security import ensure_csrf, login_required
 from ..services.metrics import get_cpu_ram, get_system_ram
+from ..services.players import get_players
 from ..services.process import format_uptime, get_process_uptime, get_server_pid
 from ..services.scenarios import all_scenarios_cached, count_by_source, get_map_name
-from ..services.server_config import ConfigError, load_config
+from ..services.server_config import ConfigError, load_config, read_config
 
 bp = Blueprint("monitoring", __name__, url_prefix="/api")
 
@@ -30,7 +31,6 @@ def status():
         "running":        pid is not None,
         "pid":            pid,
         "map":            get_map_name(cfg) or t("status.unknown_mission"),
-        "players":        0,
         "uptime":         format_uptime(uptime_sec) if pid else "—",
         "uptime_sec":     uptime_sec,
         "server_name":    cfg.get("game", {}).get("name", "—"),
@@ -60,3 +60,9 @@ def metrics():
         "ram_used": ram_used, "ram_total": ram_total,
         "running": pid is not None, "ts": int(time.time()),
     })
+
+
+@bp.get("/players")
+@login_required
+def players():
+    return jsonify(get_players(get_server_pid() is not None, read_config()))

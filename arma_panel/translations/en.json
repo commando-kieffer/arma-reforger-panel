@@ -35,7 +35,26 @@
     "address": "IP : Port",
     "mission": "Mission",
     "uptime": "Uptime",
+    "players": "Players",
     "unknown_mission": "Unknown"
+  },
+  "players": {
+    "title": "Players",
+    "loading": "Loading…",
+    "connected": {
+      "one": "{count} player connected (max {max})",
+      "other": "{count} players connected (max {max})"
+    },
+    "state_offline": "The server is offline.",
+    "state_not_configured": "Player information needs the A2S query, which isn't enabled in config.json (\"a2s\" block).",
+    "state_no_answer": "The server isn't answering player queries (still starting, or A2S unreachable).",
+    "no_list": "The server only reports the number of players, not their names.",
+    "col_name": "Player",
+    "col_duration": "Connected for",
+    "connecting": "connecting…",
+    "seconds": "{n} s",
+    "minutes": "{n} min",
+    "hours": "{h} h {m}"
   },
   "controls": {
     "start": "START",

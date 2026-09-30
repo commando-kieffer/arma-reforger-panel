@@ -35,7 +35,26 @@
     "address": "IP : Port",
     "mission": "Mission",
     "uptime": "En ligne depuis",
+    "players": "Joueurs",
     "unknown_mission": "Inconnue"
+  },
+  "players": {
+    "title": "Joueurs",
+    "loading": "Chargement…",
+    "connected": {
+      "one": "{count} joueur connecté (max. {max})",
+      "other": "{count} joueurs connectés (max. {max})"
+    },
+    "state_offline": "Le serveur est hors ligne.",
+    "state_not_configured": "Les informations sur les joueurs nécessitent la requête A2S, qui n'est pas activée dans config.json (bloc « a2s »).",
+    "state_no_answer": "Le serveur ne répond pas aux requêtes sur les joueurs (démarrage en cours, ou A2S injoignable).",
+    "no_list": "Le serveur indique seulement le nombre de joueurs, pas leurs noms.",
+    "col_name": "Joueur",
+    "col_duration": "Connecté depuis",
+    "connecting": "connexion…",
+    "seconds": "{n} s",
+    "minutes": "{n} min",
+    "hours": "{h} h {m}"
   },
   "controls": {
     "start": "DÉMARRER",

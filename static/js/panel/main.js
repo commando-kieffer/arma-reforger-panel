@@ -7,6 +7,7 @@ import { initMetrics } from './metrics.js';
 import { initMods } from './mods.js';
 import { initPasswordToggles } from './password-toggle.js';
 import { fetchPersistence, initPersistence } from './persistence.js';
+import { initPlayers } from './players.js';
 import { initServerConfig } from './server-config.js';
 import { initServerControl } from './server-control.js';
 import { fetchStatus, startCountdown } from './status.js';
@@ -25,6 +26,7 @@ initServerConfig();
 initMods();
 initPersistence();
 initLogHistory();
+initPlayers();
 
 document.getElementById('btn-logout').addEventListener('click', doLogout);
 initLanguageSwitch();

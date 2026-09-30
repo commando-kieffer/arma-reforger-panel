@@ -13,6 +13,7 @@ A lightweight, self-hosted web panel for managing your **Arma Reforger dedicated
 - **Real-time monitoring** — Live CPU and RAM charts updated every 3 seconds
 - **Live log streaming** — Server console logs with aligned columns and colour-coded output (errors, warnings, network events)
 - **Log history** — Every past server session, each downloadable as a zip of its console, error and script logs
+- **Players** — Player count and list of connected players, read from the server's A2S (Steam query) port; shown as unavailable rather than guessed when the server doesn't answer
 - **Mission selector** — 41 built-in missions including all vanilla and RHS — Status Quo scenarios
 - **Mod management** — Add and remove Workshop mods directly from the panel
 - **Config editor** — Edit server name, scenario, passwords without touching the filesystem
