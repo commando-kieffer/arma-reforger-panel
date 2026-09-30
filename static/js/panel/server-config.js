@@ -3,6 +3,7 @@
 import { t, tn } from '../i18n.js';
 import { postJson } from './api.js';
 import { setBusy, setLog } from './activity.js';
+import { fillFields, readFields } from './fields.js';
 import { fetchStatus, onStatus } from './status.js';
 
 // The form is filled when the page loads and after a save, never from the
@@ -17,6 +18,7 @@ async function loadConfig() {
     document.getElementById('input-password').value = d.password || '';
     document.getElementById('input-password-admin').value = d.password_admin || '';
     if (d.scenario_id) document.getElementById('input-mission').value = d.scenario_id;
+    fillFields(document.getElementById('config-card'), d);
   } catch (e) { setLog(t('common.connection_error'), 'error'); }
 }
 
@@ -103,7 +105,10 @@ async function saveConfig() {
   setBusy(true);
   setLog(t('config.saving'), 'info');
   try {
-    const r = await postJson('/api/config', { server_name: name, scenario_id: scenario, password, password_admin: pwdAdmin });
+    const r = await postJson('/api/config', {
+      ...readFields(document.getElementById('config-card')),
+      server_name: name, scenario_id: scenario, password, password_admin: pwdAdmin,
+    });
     const d = await r.json();
     if (d.ok) {
       setLog(t('config.saved'), 'ok');

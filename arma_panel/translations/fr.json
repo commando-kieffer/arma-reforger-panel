@@ -12,7 +12,9 @@
     "save_changes": "Enregistrer",
     "save_failed": "Échec de l'enregistrement : {error}",
     "show_password": "Afficher",
-    "hide_password": "Masquer"
+    "hide_password": "Masquer",
+    "yes": "Oui",
+    "no": "Non"
   },
   "login": {
     "title": "Arma Reforger — Connexion au panel",
@@ -84,6 +86,10 @@
     "game_password_placeholder": "Laisser vide pour supprimer le mot de passe",
     "admin_password": "Mot de passe admin",
     "admin_password_placeholder": "Mot de passe admin",
+    "max_players": "Joueurs max. (1–128)",
+    "visible": "Visible dans le navigateur de serveurs",
+    "cross_platform": "Crossplay",
+    "cross_platform_help": "Crossplay <strong>Oui</strong> accepte les joueurs PC, Xbox et PlayStation, <strong>Non</strong> uniquement les joueurs PC. Le modifier retire la liste <code>supportedPlatforms</code> de <code>config.json</code>, comme le recommande le wiki de Bohemia.",
     "restart_notice": "⚠ Les modifications seront appliquées au redémarrage du serveur",
     "base_game": "Jeu de base",
     "scenario_counts": "{vanilla} de base · {mods} issus de mods",
@@ -219,6 +225,10 @@
     "name_too_long": "Le nom du serveur est limité à {max} caractères",
     "admin_password_required": "Le mot de passe admin ne peut pas être vide",
     "admin_password_spaces": "Le mot de passe admin ne peut pas contenir d'espaces",
+    "field_not_int": "{field} doit être un nombre entier",
+    "field_not_bool": "{field} doit valoir oui ou non",
+    "field_range": "{field} : valeurs autorisées {allowed}",
+    "config_unexpected": "config.json contient une valeur inattendue à l'emplacement {path}",
     "server_running": "Le serveur est déjà démarré",
     "server_not_running": "Le serveur n'est pas démarré",
     "stop_failed": "Échec de l'arrêt : {error}",

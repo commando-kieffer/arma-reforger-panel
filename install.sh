@@ -235,7 +235,6 @@ if [[ "$MODE" == "full" ]]; then
 		"maxPlayers": ${MAX_PLAYERS},
 		"visible": true,
 		"crossPlatform": true,
-		"supportedPlatforms": ["PLATFORM_PC", "PLATFORM_XBL"],
 		"gameProperties": {
 			"serverMaxViewDistance": 2500,
 			"serverMinGrassDistance": 50,

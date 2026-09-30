@@ -12,7 +12,9 @@
     "save_changes": "Save changes",
     "save_failed": "Save failed: {error}",
     "show_password": "Show",
-    "hide_password": "Hide"
+    "hide_password": "Hide",
+    "yes": "Yes",
+    "no": "No"
   },
   "login": {
     "title": "Arma Reforger — Panel Login",
@@ -84,6 +86,10 @@
     "game_password_placeholder": "Leave empty to remove the password",
     "admin_password": "Admin password",
     "admin_password_placeholder": "Admin password",
+    "max_players": "Max players (1–128)",
+    "visible": "Visible in the server browser",
+    "cross_platform": "Crossplay",
+    "cross_platform_help": "Crossplay <strong>Yes</strong> accepts PC, Xbox and PlayStation players, <strong>No</strong> accepts PC only. Changing it removes the <code>supportedPlatforms</code> list from <code>config.json</code>, as the Bohemia wiki recommends.",
     "restart_notice": "⚠ Changes will be applied after server restart",
     "base_game": "Base game",
     "scenario_counts": "{vanilla} vanilla · {mods} from mods",
@@ -219,6 +225,10 @@
     "name_too_long": "Server name is limited to {max} characters",
     "admin_password_required": "Admin password cannot be empty",
     "admin_password_spaces": "The admin password cannot contain spaces",
+    "field_not_int": "{field} must be a whole number",
+    "field_not_bool": "{field} must be yes or no",
+    "field_range": "{field}: allowed values are {allowed}",
+    "config_unexpected": "config.json has an unexpected value at {path}",
     "server_running": "Server is already running",
     "server_not_running": "Server is not running",
     "stop_failed": "Stop failed: {error}",

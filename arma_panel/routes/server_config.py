@@ -1,9 +1,12 @@
-"""Editing the basic server settings (name, scenario, passwords)."""
+"""Editing the server settings: name, scenario, passwords and the
+table-driven fields of services/config_fields.py."""
 
 from flask import Blueprint, jsonify, request
 
 from ..i18n import t
 from ..security import csrf_protected, login_required
+from ..services import config_fields
+from ..services.config_fields import SERVER_FIELDS, FieldError
 from ..services.process import get_server_pid
 from ..services.scenarios import all_scenarios_cached
 from ..services.server_config import ConfigError, load_config
@@ -34,6 +37,7 @@ def get_config():
         "scenario_id":    game.get("scenarioId", ""),
         "password":       game.get("password", ""),
         "password_admin": game.get("passwordAdmin", ""),
+        **config_fields.form_values(cfg, SERVER_FIELDS),
     })
 
 
@@ -79,12 +83,21 @@ def update_config():
     data = request.get_json(silent=True) or {}
     try:
         changes = _game_changes(data)
-    except InvalidValue as e:
+        fields = config_fields.parse_form(SERVER_FIELDS, data)
+    except (InvalidValue, FieldError) as e:
         return jsonify({"ok": False, "error": str(e)}), 400
-    if not changes:
+    if not changes and not fields:
         return jsonify({"ok": False, "error": t("api.no_changes")})
 
-    _, error = save_config(lambda cfg: cfg.setdefault("game", {}).update(changes))
+    def change(cfg):
+        cfg.setdefault("game", {}).update(changes)
+        written = config_fields.apply(cfg, SERVER_FIELDS, fields)
+        # With crossPlatform set, the wiki recommends leaving supportedPlatforms
+        # out: true then means every platform and false means PC only.
+        if "cross_platform" in written:
+            cfg["game"].pop("supportedPlatforms", None)
+
+    _, error = save_config(change)
     if error:
         return error
     return jsonify({"ok": True, "restart_required": get_server_pid() is not None})
