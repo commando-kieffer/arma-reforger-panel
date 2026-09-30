@@ -62,6 +62,26 @@ SERVER_FIELDS = {
     "cross_platform": Field(("game", "crossPlatform"), bool, False),
 }
 
+_PROPS = ("game", "gameProperties")
+
+# Gameplay settings card.
+GAMEPLAY_FIELDS = {
+    "server_max_view_distance":       Field(_PROPS + ("serverMaxViewDistance",), int, 1600, ((500, 10000),)),
+    "network_view_distance":          Field(_PROPS + ("networkViewDistance",), int, 1500, ((500, 5000),)),
+    "server_min_grass_distance":      Field(_PROPS + ("serverMinGrassDistance",), int, 0, ((0, 0), (50, 150))),
+    "disable_third_person":           Field(_PROPS + ("disableThirdPerson",), bool, False),
+    "von_disable_ui":                 Field(_PROPS + ("VONDisableUI",), bool, False),
+    "von_disable_direct_speech_ui":   Field(_PROPS + ("VONDisableDirectSpeechUI",), bool, False),
+    "von_can_transmit_cross_faction": Field(_PROPS + ("VONCanTransmitCrossFaction",), bool, False),
+    "battleye":                       Field(_PROPS + ("battlEye",), bool, True),
+    "join_queue_max_size":            Field(("operating", "joinQueue", "maxSize"), int, 0, ((0, 50),)),
+    "ai_limit":                       Field(("operating", "aiLimit"), int, -1, ((-1, None),)),
+}
+
+# Not editable: the wiki says to always keep it true on a public server. The
+# card only warns when it's off.
+FAST_VALIDATION = Field(_PROPS + ("fastValidation",), bool, True)
+
 
 def form_values(cfg, fields):
     return {name: field.read(cfg) for name, field in fields.items()}

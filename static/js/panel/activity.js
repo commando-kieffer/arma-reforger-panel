@@ -3,7 +3,7 @@
 
 import { locale } from '../i18n.js';
 
-const ACTION_BUTTON_IDS = ['btn-start', 'btn-stop', 'btn-reset', 'btn-save', 'btn-persist-save', 'btn-persist-flush'];
+const ACTION_BUTTON_IDS = ['btn-start', 'btn-stop', 'btn-reset', 'btn-save', 'btn-gameplay-save', 'btn-persist-save', 'btn-persist-flush'];
 
 let busy = false;
 

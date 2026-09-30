@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request
 from ..i18n import t
 from ..security import csrf_protected, login_required
 from ..services import config_fields
-from ..services.config_fields import SERVER_FIELDS, FieldError
+from ..services.config_fields import FAST_VALIDATION, GAMEPLAY_FIELDS, SERVER_FIELDS, FieldError
 from ..services.process import get_server_pid
 from ..services.scenarios import all_scenarios_cached
 from ..services.server_config import ConfigError, load_config
@@ -98,6 +98,38 @@ def update_config():
             cfg["game"].pop("supportedPlatforms", None)
 
     _, error = save_config(change)
+    if error:
+        return error
+    return jsonify({"ok": True, "restart_required": get_server_pid() is not None})
+
+
+@bp.get("/gameplay")
+@login_required
+def get_gameplay():
+    try:
+        cfg = load_config()
+    except ConfigError as e:
+        return jsonify({"ok": False, "error": t("api.config_unreadable", error=e)}), 500
+    return jsonify({
+        "ok": True,
+        "fast_validation": FAST_VALIDATION.read(cfg),
+        **config_fields.form_values(cfg, GAMEPLAY_FIELDS),
+    })
+
+
+@bp.post("/gameplay")
+@login_required
+@csrf_protected
+def update_gameplay():
+    data = request.get_json(silent=True) or {}
+    try:
+        fields = config_fields.parse_form(GAMEPLAY_FIELDS, data)
+    except FieldError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    if not fields:
+        return jsonify({"ok": False, "error": t("api.no_changes")})
+
+    _, error = save_config(lambda cfg: config_fields.apply(cfg, GAMEPLAY_FIELDS, fields))
     if error:
         return error
     return jsonify({"ok": True, "restart_required": get_server_pid() is not None})

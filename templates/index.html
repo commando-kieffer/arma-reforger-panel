@@ -165,6 +165,75 @@
     <div class="restart-notice" id="restart-notice">{{ t('config.restart_notice') }}</div>
   </section>
 
+  <!-- Gameplay -->
+  <section class="card" id="gameplay-card">
+    <h2 class="card-title">{{ t('gameplay.title') }}</h2>
+    <p class="card-description">{{ t('gameplay.description') }}</p>
+    <div class="field-warning" id="fast-validation-warning" hidden>{{ t('gameplay.fast_validation_off')|safe }}</div>
+    <div class="config-grid">
+      <div class="field-group">
+        <label for="input-view-distance">{{ t('gameplay.server_max_view_distance') }}</label>
+        <input type="number" id="input-view-distance" data-field="server_max_view_distance" min="500" max="10000" step="1" />
+      </div>
+      <div class="field-group">
+        <label for="input-network-view-distance">{{ t('gameplay.network_view_distance') }}</label>
+        <input type="number" id="input-network-view-distance" data-field="network_view_distance" min="500" max="5000" step="1" />
+      </div>
+      <div class="field-group">
+        <label for="input-grass-distance">{{ t('gameplay.server_min_grass_distance') }}</label>
+        <input type="number" id="input-grass-distance" data-field="server_min_grass_distance" min="0" max="150" step="1" />
+      </div>
+      <div class="field-group">
+        <label for="input-third-person">{{ t('gameplay.disable_third_person') }}</label>
+        <select id="input-third-person" data-field="disable_third_person">
+          <option value="true">{{ t('common.yes') }}</option>
+          <option value="false">{{ t('common.no') }}</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="input-von-ui">{{ t('gameplay.von_disable_ui') }}</label>
+        <select id="input-von-ui" data-field="von_disable_ui">
+          <option value="true">{{ t('common.yes') }}</option>
+          <option value="false">{{ t('common.no') }}</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="input-von-direct-ui">{{ t('gameplay.von_disable_direct_speech_ui') }}</label>
+        <select id="input-von-direct-ui" data-field="von_disable_direct_speech_ui">
+          <option value="true">{{ t('common.yes') }}</option>
+          <option value="false">{{ t('common.no') }}</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="input-von-cross-faction">{{ t('gameplay.von_can_transmit_cross_faction') }}</label>
+        <select id="input-von-cross-faction" data-field="von_can_transmit_cross_faction">
+          <option value="true">{{ t('common.yes') }}</option>
+          <option value="false">{{ t('common.no') }}</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="input-battleye">{{ t('gameplay.battleye') }}</label>
+        <select id="input-battleye" data-field="battleye">
+          <option value="true">{{ t('common.yes') }}</option>
+          <option value="false">{{ t('common.no') }}</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="input-join-queue">{{ t('gameplay.join_queue_max_size') }}</label>
+        <input type="number" id="input-join-queue" data-field="join_queue_max_size" min="0" max="50" step="1" />
+      </div>
+      <div class="field-group">
+        <label for="input-ai-limit">{{ t('gameplay.ai_limit') }}</label>
+        <input type="number" id="input-ai-limit" data-field="ai_limit" min="-1" step="1" />
+      </div>
+    </div>
+    <div class="field-warning" id="battleye-warning" hidden>{{ t('gameplay.battleye_warning') }}</div>
+    <div class="card-actions">
+      <button class="btn btn-solid" id="btn-gameplay-save">{{ t('common.save_changes') }}</button>
+    </div>
+    <div class="restart-notice" id="gameplay-restart-notice">{{ t('config.restart_notice') }}</div>
+  </section>
+
   <!-- Mods -->
   <section class="card">
     <h2 class="card-title">{{ t('mods.title') }}</h2>

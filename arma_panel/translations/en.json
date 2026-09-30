@@ -108,6 +108,24 @@
     "saved": "Configuration saved",
     "unreadable_banner": "config.json could not be read ({error}). Settings can't be saved until the file is fixed."
   },
+  "gameplay": {
+    "title": "Gameplay Settings",
+    "description": "Settings missing from config.json are shown with the server default and only written once you change them.",
+    "server_max_view_distance": "Max view distance (m, 500–10000)",
+    "network_view_distance": "Network view distance (m, 500–5000)",
+    "server_min_grass_distance": "Min grass distance (m, 0 or 50–150, 0 = not forced)",
+    "disable_third_person": "Disable third-person view",
+    "von_disable_ui": "Hide the voice chat (VON) UI",
+    "von_disable_direct_speech_ui": "Hide the direct speech UI",
+    "von_can_transmit_cross_faction": "Allow transmitting on other factions' radios",
+    "battleye": "BattlEye anti-cheat",
+    "join_queue_max_size": "Join queue size (0–50, 0 = disabled)",
+    "ai_limit": "AI limit (-1 = no limit)",
+    "battleye_warning": "BattlEye is the server's anti-cheat. Only disable it on a private server.",
+    "fast_validation_off": "<code>fastValidation</code> is off in config.json. The Bohemia wiki says to always keep it on for a public server.",
+    "saving": "Saving gameplay settings...",
+    "saved": "Gameplay settings saved"
+  },
   "mods": {
     "title": "Server Mods",
     "loading": "Loading mods...",

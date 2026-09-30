@@ -108,6 +108,24 @@
     "saved": "Configuration enregistrée",
     "unreadable_banner": "Impossible de lire config.json ({error}). Les réglages ne peuvent pas être enregistrés tant que le fichier n'est pas corrigé."
   },
+  "gameplay": {
+    "title": "Paramètres de jeu",
+    "description": "Les réglages absents de config.json sont affichés avec la valeur par défaut du serveur et ne sont écrits qu'une fois modifiés.",
+    "server_max_view_distance": "Distance de vue max. (m, 500–10000)",
+    "network_view_distance": "Distance de vue réseau (m, 500–5000)",
+    "server_min_grass_distance": "Distance min. de l'herbe (m, 0 ou 50–150, 0 = non imposée)",
+    "disable_third_person": "Désactiver la vue à la troisième personne",
+    "von_disable_ui": "Masquer l'interface du chat vocal (VON)",
+    "von_disable_direct_speech_ui": "Masquer l'interface de la voix directe",
+    "von_can_transmit_cross_faction": "Autoriser l'émission sur les radios des autres factions",
+    "battleye": "Anti-triche BattlEye",
+    "join_queue_max_size": "Taille de la file d'attente (0–50, 0 = désactivée)",
+    "ai_limit": "Limite d'IA (-1 = aucune)",
+    "battleye_warning": "BattlEye est l'anti-triche du serveur. Ne le désactivez que sur un serveur privé.",
+    "fast_validation_off": "<code>fastValidation</code> est désactivé dans config.json. Le wiki de Bohemia recommande de toujours le laisser activé sur un serveur public.",
+    "saving": "Enregistrement des paramètres de jeu...",
+    "saved": "Paramètres de jeu enregistrés"
+  },
   "mods": {
     "title": "Mods du serveur",
     "loading": "Chargement des mods...",

@@ -38,6 +38,11 @@ class ParseTest(unittest.TestCase):
         with self.assertRaises(FieldError):
             FIELDS["ai_limit"].parse(-2)
 
+    def test_panel_defaults_are_valid(self):
+        for fields in (config_fields.SERVER_FIELDS, config_fields.GAMEPLAY_FIELDS):
+            for name, field in fields.items():
+                self.assertEqual(field.parse(field.default), field.default, name)
+
     def test_parse_form_ignores_absent_fields(self):
         self.assertEqual(config_fields.parse_form(FIELDS, {"visible": False, "other": 1}), {"visible": False})
 

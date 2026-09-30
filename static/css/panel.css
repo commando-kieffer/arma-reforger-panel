@@ -162,6 +162,17 @@ body {
 }
 .config-alert.visible { display: block; }
 
+.field-warning {
+  width: fit-content;
+  margin: 1rem 0;
+  padding: 0.6rem 1rem;
+  font-size: 13px;
+  color: var(--offline);
+  background-color: rgba(209, 72, 65, 0.08);
+  border: 1px solid rgba(209, 72, 65, 0.4);
+  border-radius: var(--radius-sm);
+}
+
 /* Status */
 .status-row {
   display: flex;

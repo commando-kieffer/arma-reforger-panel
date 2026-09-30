@@ -1,6 +1,7 @@
 // Entry point of the panel page.
 
 import { initLanguageSwitch } from '../i18n.js';
+import { initGameplay } from './gameplay.js';
 import { initLogHistory } from './log-history.js';
 import { initLogViewer } from './logs.js';
 import { initMetrics } from './metrics.js';
@@ -23,6 +24,7 @@ initLogViewer();
 // Status listeners run in registration order, top of the page first.
 initServerControl();
 initServerConfig();
+initGameplay();
 initMods();
 initPersistence();
 initLogHistory();
