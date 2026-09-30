@@ -1,30 +1,205 @@
-/* Reset, design tokens and components shared by the login page and the panel. */
+/* Fonts, design tokens and components shared by the login page and the panel.
+   The look follows the Commando Kieffer user panel (Zeus). */
+
+@font-face {
+  font-family: 'Marianne';
+  src: url('../fonts/marianne/Marianne-Thin.woff2') format('woff2');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marianne';
+  src: url('../fonts/marianne/Marianne-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marianne';
+  src: url('../fonts/marianne/Marianne-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ink:          #0F0E33;
+  --ink-soft:     rgba(15, 14, 51, 0.65);
+  --ink-muted:    rgba(15, 14, 51, 0.45);
+  --line:         rgba(15, 14, 51, 0.12);
+  --line-faint:   rgba(15, 14, 51, 0.06);
+  --field-border: rgba(15, 14, 51, 0.15);
+  --field-hover:  rgba(15, 14, 51, 0.35);
+  --surface:      rgba(255, 255, 255, 0.6);
+
+  --gradient-night:   linear-gradient(111.4deg, rgba(7, 7, 9, 1) 6.5%, rgba(27, 24, 113, 1) 93.2%);
+  --gradient-page:    radial-gradient(circle 993px at 0.5% 50.5%, rgba(137, 171, 245, 0.37) 0%, rgba(245, 247, 252, 1) 100.2%);
+  --gradient-online:  linear-gradient(109.6deg, rgba(61, 131, 97, 1) 11.2%, rgba(28, 103, 88, 1) 91.1%);
+  --gradient-offline: radial-gradient(circle farthest-corner at 17.1% 22.8%, rgba(226, 24, 24, 1) 0%, rgba(160, 6, 6, 1) 90%);
+  --gradient-warn:    radial-gradient(circle farthest-corner at 10% 20%, rgba(255, 209, 67, 1) 0%, rgba(255, 145, 83, 1) 90%);
+  --gradient-teal:    linear-gradient(109.6deg, rgba(0, 0, 0, 1) 11.2%, rgba(11, 132, 145, 1) 91.1%);
+
+  --online:  #3D8361;
+  --offline: #D14841;
+  --warn:    #D9822B;
+  --info:    #1B1871;
+
+  /* Read by the charts (static/js/panel/metrics.js); keep the colors in hex. */
+  --cpu-color:   #2591FB;
+  --ram-color:   #1B1871;
+  --chart-grid:  rgba(15, 14, 51, 0.08);
+  --chart-ticks: rgba(15, 14, 51, 0.45);
+
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-pill: 999px;
+
+  --shadow-card:       rgba(15, 14, 51, 0.16) 0px 20px 40px -14px, rgba(15, 14, 51, 0.12) 0px 6px 16px -6px;
+  --shadow-card-hover: rgba(15, 14, 51, 0.26) 0px 24px 44px -14px, rgba(15, 14, 51, 0.16) 0px 10px 20px -8px;
+  --shadow-float:      rgba(15, 14, 51, 0.35) 0px 14px 28px -10px;
+
+  --transition: 0.2s ease;
+
+  --font-sans:  'Marianne', 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Spectral', Georgia, serif;
+  --font-mono:  'Roboto Mono', ui-monospace, monospace;
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --bg:        #0a0c0f;
-  --surface:   #111418;
-  --surface2:  #161b22;
-  --border:    #1e2530;
-  --accent:    #c8a84b;
-  --accent2:   #e8c96a;
-  --text:      #d4cfc6;
-  --muted:     #5a6070;
-  --online:    #4caf7d;
-  --offline:   #d64c4c;
-  --warn:      #e0913a;
-  --cpu-color: #4c9fd6;
-  --ram-color: #c8a84b;
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Language switch */
-.lang-switch { display: inline-flex; border: 1px solid var(--border); }
-.lang-option {
-  background: transparent; border: none; color: var(--muted);
-  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.2em;
-  padding: 8px 10px; cursor: pointer; transition: color 0.2s, background 0.2s;
+::selection { background-color: var(--ink); color: #FFFFFF; }
+
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+code { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  padding: 0.7rem 1.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
 }
-.lang-option + .lang-option { border-left: 1px solid var(--border); }
-.lang-option:hover { color: var(--accent); }
-.lang-option.active { background: var(--accent); color: var(--bg); cursor: default; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-sm { padding: 0.45rem 1.1rem; font-size: 11px; }
+
+.btn-solid {
+  background-color: var(--ink);
+  border-color: var(--ink);
+  color: #FFFFFF;
+  box-shadow: rgba(15, 14, 51, 0.35) 0px 10px 20px -10px;
+}
+.btn-solid:hover:not(:disabled) { background-color: transparent; color: var(--ink); box-shadow: none; }
+
+.btn-outline { background-color: transparent; border-color: var(--ink); color: var(--ink); }
+.btn-outline:hover:not(:disabled) { background-color: var(--ink); color: #FFFFFF; }
+
+.btn-danger { background-color: transparent; border-color: var(--offline); color: var(--offline); }
+.btn-danger:hover:not(:disabled) { background-color: var(--offline); color: #FFFFFF; }
+
+/* For dark backgrounds (header, login) */
+.btn-light { background-color: transparent; border-color: #FFFFFF; color: #FFFFFF; }
+.btn-light:hover:not(:disabled) { background-color: #FFFFFF; color: #000000; }
+
+/* Form controls */
+label {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+input, textarea, select {
+  width: 100%;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 13px;
+  color: var(--ink);
+  background-color: #FFFFFF;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.9rem;
+  transition: var(--transition);
+}
+input:hover, textarea:hover, select:hover { border-color: var(--field-hover); }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(15, 14, 51, 0.12);
+}
+input::placeholder, textarea::placeholder { color: var(--ink-muted); }
+
+textarea { resize: vertical; }
+
+select {
+  height: 2.65rem;
+  padding-right: 2rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%230F0E33' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 10px 6px;
+}
+
+/* Language switch, shown on the dark header and on the login card */
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-pill);
+}
+.lang-option {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: gainsboro;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.lang-option:hover { color: #FFFFFF; }
+.lang-option.active { background-color: #FFFFFF; color: var(--ink); cursor: default; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

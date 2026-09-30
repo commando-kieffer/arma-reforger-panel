@@ -301,7 +301,7 @@ for f in app.py arma_panel templates; do
         echo -e "      ${RED}WARNING: $f not found in script directory.${NC}"
     fi
 done
-for f in manifest.json service-worker.js icon-192.png icon-512.png css js; do
+for f in manifest.json service-worker.js icon-192.png icon-512.png css js fonts img; do
     if [ -e "$SCRIPT_DIR/static/$f" ]; then
         cp -r "$SCRIPT_DIR/static/$f" "$PANEL_DIR/static/"
     fi

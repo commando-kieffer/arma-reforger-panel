@@ -5,6 +5,7 @@
   },
   "common": {
     "panel_tag": "Server Management Panel",
+    "logo_alt": "Commando Kieffer logo",
     "unknown": "unknown",
     "error": "Error: {error}",
     "connection_error": "Connection error",
@@ -15,13 +16,13 @@
     "title": "Arma Reforger — Panel Login",
     "password_label": "Panel Password",
     "password_placeholder": "Enter password...",
-    "submit": "Login ↗",
+    "submit": "Log in",
     "invalid_password": "Invalid password",
     "too_many_attempts": "Too many attempts — wait a minute and retry"
   },
   "panel": {
     "title": "Arma Reforger — Management Panel",
-    "logout": "Logout ↗"
+    "logout": "Log out"
   },
   "status": {
     "title": "Server Status",

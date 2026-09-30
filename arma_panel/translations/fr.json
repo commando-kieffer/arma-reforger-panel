@@ -5,6 +5,7 @@
   },
   "common": {
     "panel_tag": "Panel de gestion du serveur",
+    "logo_alt": "Logo du Commando Kieffer",
     "unknown": "erreur inconnue",
     "error": "Erreur : {error}",
     "connection_error": "Erreur de connexion",
@@ -15,13 +16,13 @@
     "title": "Arma Reforger — Connexion au panel",
     "password_label": "Mot de passe du panel",
     "password_placeholder": "Saisissez le mot de passe...",
-    "submit": "Connexion ↗",
+    "submit": "Se connecter",
     "invalid_password": "Mot de passe incorrect",
     "too_many_attempts": "Trop de tentatives — patientez une minute puis réessayez"
   },
   "panel": {
     "title": "Arma Reforger — Panel de gestion",
-    "logout": "Déconnexion ↗"
+    "logout": "Se déconnecter"
   },
   "status": {
     "title": "État du serveur",

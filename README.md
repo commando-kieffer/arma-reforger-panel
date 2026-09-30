@@ -177,6 +177,8 @@ arma-reforger-panel/
 ├── static/
 │   ├── css/                     # Stylesheets
 │   ├── js/                      # Front-end scripts (ES modules)
+│   ├── fonts/                   # Marianne web fonts
+│   ├── img/                     # Commando Kieffer logo
 │   ├── manifest.json            # PWA manifest
 │   ├── service-worker.js        # PWA service worker
 │   ├── icon-192.png             # App icon

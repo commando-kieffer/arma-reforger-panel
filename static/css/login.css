@@ -1,34 +1,100 @@
-body {
-  background: var(--bg); color: var(--text);
-  font-family: 'Barlow', sans-serif;
-  min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: 20px;
+.connection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background-image: var(--gradient-night);
 }
-body::before {
-  content: ''; position: fixed; inset: 0;
-  background-image:
-    linear-gradient(rgba(200,168,75,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200,168,75,0.03) 1px, transparent 1px);
-  background-size: 40px 40px; pointer-events: none;
-}
+
 .login-box {
-  position: relative; width: 100%; max-width: 380px;
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 40px 36px;
-  clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 640px;
+  padding: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   animation: fadeUp 0.5s ease both;
 }
-.corner { position: absolute; top: 0; right: 0; width: 28px; height: 28px; background: var(--accent); clip-path: polygon(100% 0, 0 0, 100% 100%); }
-.tag { font-size: 10px; font-weight: 600; letter-spacing: 0.35em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
-h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 36px; letter-spacing: 0.08em; color: #fff; line-height: 1; margin-bottom: 32px; }
-h1 span { color: var(--accent); }
-.field { margin-bottom: 20px; }
-.field label { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
-.field input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; padding: 11px 14px; outline: none; transition: border-color 0.2s; }
-.field input:focus { border-color: var(--accent); }
-.field input.invalid { border-color: #d64c4c; }
-.btn { width: 100%; background: var(--accent); border: none; color: #0a0c0f; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.25em; text-transform: uppercase; padding: 13px; cursor: pointer; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: background 0.2s; }
-.btn:hover { background: var(--accent2); }
-.login-box .lang-switch { display: flex; width: fit-content; margin: 16px auto 0; }
-.error { margin-top: 12px; font-size: 12px; color: var(--offline); text-align: center; min-height: 18px; }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.login-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 2rem;
+}
+
+.login-logo img { display: block; height: 150px; }
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 260px;
+  color: #FFFFFF;
+}
+
+.login-tag {
+  font-weight: 100;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  color: gainsboro;
+}
+
+.login-title {
+  margin-bottom: 1rem;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.15;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.field input.invalid,
+.field input.invalid:focus {
+  border-color: var(--offline);
+  box-shadow: 0 0 0 3px rgba(209, 72, 65, 0.25);
+}
+
+.login-form .btn { margin-top: 1rem; }
+
+.error {
+  margin-top: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 14px;
+  text-align: center;
+  color: #FFB4AE;
+  background-color: rgba(209, 72, 65, 0.22);
+  border: 1px solid rgba(255, 180, 174, 0.35);
+  border-radius: var(--radius-sm);
+}
+/* Keep the space reserved so the card doesn't jump when an error shows up. */
+.error:empty { visibility: hidden; }
+
+.login-foot {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+  .login-box { padding: 2rem 1.5rem; }
+  .login-head { flex-direction: column; }
+  .login-logo img { height: 110px; }
+}

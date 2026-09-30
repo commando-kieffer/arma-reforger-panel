@@ -1,5 +1,6 @@
 import { initLanguageSwitch, t } from './i18n.js';
 
+const form = document.getElementById('login-form');
 const passwordInput = document.getElementById('pwd');
 const loginButton = document.getElementById('btn-login');
 const errorBox = document.getElementById('err');
@@ -24,9 +25,9 @@ async function doLogin() {
   }
 }
 
-loginButton.addEventListener('click', doLogin);
-passwordInput.addEventListener('keydown', event => {
-  if (event.key === 'Enter') doLogin();
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  doLogin();
 });
 initLanguageSwitch();
 

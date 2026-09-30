@@ -7,63 +7,63 @@
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#c8a84b">
+<meta name="theme-color" content="#0F0E33">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arma Panel">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
 </head>
 <body>
-<div class="layout">
 
-  <header>
-    <div class="header-left">
-      <div class="tag">&#9632; {{ t('common.panel_tag') }}</div>
-      <h1>ARMA <span>REFORGER</span></h1>
+<header class="site-header">
+  <div class="header-bar">
+    <div class="header-brand">
+      <div class="header-tag">{{ t('common.panel_tag') }}</div>
+      <div class="header-title">Arma Reforger</div>
     </div>
+    <img class="header-logo" src="{{ url_for('static', filename='img/logo-ck.png') }}" alt="{{ t('common.logo_alt') }}">
     <div class="header-actions">
       {% include 'partials/lang_switch.html' %}
-      <button class="btn-logout" id="btn-logout">{{ t('panel.logout') }}</button>
+      <button class="btn btn-light btn-sm" id="btn-logout">{{ t('panel.logout') }}</button>
     </div>
-  </header>
+  </div>
+</header>
+
+<main class="layout">
 
   <!-- Status -->
-  <div class="card clip">
-    <div class="card-corner"></div>
-    <div class="card-label">{{ t('status.title') }}</div>
+  <section class="card card--status">
+    <h2 class="card-title">{{ t('status.title') }}</h2>
     <div class="status-row">
       <div class="status-indicator">
         <div class="dot loading" id="dot"></div>
         <div class="status-text loading" id="status-text">{{ t('status.loading') }}</div>
       </div>
-      <div class="divider-v"></div>
       <div class="stat-item">
         <div class="label">{{ t('status.name') }}</div>
         <div class="value" id="server-name-display">—</div>
       </div>
-      <div class="divider-v"></div>
       <div class="stat-item">
         <div class="label">{{ t('status.address') }}</div>
         <div class="value" id="ip-port-display">—</div>
       </div>
-      <div class="divider-v"></div>
       <div class="stat-item">
         <div class="label">{{ t('status.mission') }}</div>
         <div class="value" id="map-name">—</div>
       </div>
-      <div class="divider-v"></div>
       <div class="stat-item">
         <div class="label">{{ t('status.uptime') }}</div>
         <div class="value" id="uptime-display">—</div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Controls -->
   <div class="controls-grid">
@@ -80,35 +80,31 @@
 
   <!-- Charts -->
   <div class="charts-row">
-    <div class="chart-card">
+    <section class="card chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">{{ t('metrics.cpu_title') }}</div>
+          <h2 class="chart-title">{{ t('metrics.cpu_title') }}</h2>
           <div class="chart-sub" id="proc-cpu-sub">{{ t('metrics.process_cpu', value='—%') }}</div>
         </div>
-        <div>
-          <div class="chart-value cpu" id="cpu-val">—%</div>
-        </div>
+        <div class="chart-value cpu" id="cpu-val">—%</div>
       </div>
       <div class="chart-wrap"><canvas id="chart-cpu"></canvas></div>
-    </div>
-    <div class="chart-card">
+    </section>
+    <section class="card chart-card">
       <div class="chart-header">
         <div>
-          <div class="chart-title">{{ t('metrics.ram_title') }}</div>
+          <h2 class="chart-title">{{ t('metrics.ram_title') }}</h2>
           <div class="chart-sub" id="proc-ram-sub">{{ t('metrics.process_ram_idle') }}</div>
         </div>
-        <div>
-          <div class="chart-value ram" id="ram-val">—%</div>
-        </div>
+        <div class="chart-value ram" id="ram-val">—%</div>
       </div>
       <div class="chart-wrap"><canvas id="chart-ram"></canvas></div>
-    </div>
+    </section>
   </div>
 
   <!-- Config -->
-  <div class="card card--config">
-    <div class="card-label">{{ t('config.title') }}</div>
+  <section class="card">
+    <h2 class="card-title">{{ t('config.title') }}</h2>
     <div class="config-grid">
       <div class="field-group">
         <label for="input-name">{{ t('config.server_name') }}</label>
@@ -131,13 +127,15 @@
         <input type="text" id="input-password-admin" placeholder="{{ t('config.admin_password_placeholder') }}" maxlength="64" />
       </div>
     </div>
-    <button class="btn-save" id="btn-save">{{ t('common.save_changes') }}</button>
+    <div class="card-actions">
+      <button class="btn btn-solid" id="btn-save">{{ t('common.save_changes') }}</button>
+    </div>
     <div class="restart-notice" id="restart-notice">{{ t('config.restart_notice') }}</div>
-  </div>
+  </section>
 
   <!-- Mods -->
-  <div class="card card--mods">
-    <div class="card-label">{{ t('mods.title') }}</div>
+  <section class="card">
+    <h2 class="card-title">{{ t('mods.title') }}</h2>
 
     <!-- Active mods -->
     <div id="mods-list" class="mods-list">
@@ -145,18 +143,18 @@
     </div>
 
     <!-- Bulk import (paste JSON or upload file) -->
-    <div class="card-section card-section--tight">
-      <div class="card-section-label">{{ t('mods.bulk_import') }}</div>
+    <div class="card-section">
+      <h3 class="card-subtitle">{{ t('mods.bulk_import') }}</h3>
       <textarea id="mods-import-text" class="import-textarea" rows="6" maxlength="200000" placeholder='[
   { "modId": "595F2BF2F44836FB", "name": "RHS - Status Quo", "version": "0.14.4899" }
 ]'></textarea>
       <div class="import-actions">
-        <select id="mods-import-mode" class="field-input import-mode">
+        <select id="mods-import-mode" class="import-mode">
           <option value="replace">{{ t('mods.mode_replace') }}</option>
           <option value="merge">{{ t('mods.mode_merge') }}</option>
         </select>
-        <button class="btn-save btn-inline" type="button" id="btn-import-text">{{ t('mods.import_pasted') }}</button>
-        <label class="btn-save btn-inline btn-ghost">
+        <button class="btn btn-solid" type="button" id="btn-import-text">{{ t('mods.import_pasted') }}</button>
+        <label class="btn btn-outline">
           {{ t('mods.upload_file') }}
           <input type="file" id="mods-import-file" accept="application/json,.json" hidden />
         </label>
@@ -166,7 +164,7 @@
 
     <!-- Single-add form -->
     <div class="card-section">
-      <div class="card-section-label">{{ t('mods.add_single') }}</div>
+      <h3 class="card-subtitle">{{ t('mods.add_single') }}</h3>
       <div class="config-grid">
         <div class="field-group">
           <label for="mod-id">{{ t('mods.mod_id') }} <span class="required">*</span></label>
@@ -181,15 +179,17 @@
           <input type="text" id="mod-version" placeholder="{{ t('mods.version_placeholder') }}" maxlength="32" />
         </div>
       </div>
-      <button class="btn-save" id="btn-add-mod">{{ t('mods.add') }}</button>
+      <div class="card-actions">
+        <button class="btn btn-solid" id="btn-add-mod">{{ t('mods.add') }}</button>
+      </div>
       <div class="restart-notice" id="mods-restart-notice">{{ t('mods.restart_notice') }}</div>
     </div>
-  </div>
+  </section>
 
   <!-- Persistence -->
-  <div class="card card--persistence">
-    <div class="card-label">{{ t('persistence.title') }}</div>
-    <div class="card-description">{{ t('persistence.description')|safe }}</div>
+  <section class="card">
+    <h2 class="card-title">{{ t('persistence.title') }}</h2>
+    <p class="card-description">{{ t('persistence.description')|safe }}</p>
     <div class="config-grid">
       <div class="field-group">
         <label for="input-persist-enabled">{{ t('persistence.enabled_label') }}</label>
@@ -209,35 +209,35 @@
     </div>
     <div id="persist-stats" class="persist-stats"></div>
     <div class="card-actions">
-      <button class="btn-save" id="btn-persist-save">{{ t('common.save_changes') }}</button>
-      <button class="btn-save btn-danger" id="btn-persist-flush">{{ t('persistence.flush') }}</button>
+      <button class="btn btn-solid" id="btn-persist-save">{{ t('common.save_changes') }}</button>
+      <button class="btn btn-danger" id="btn-persist-flush">{{ t('persistence.flush') }}</button>
     </div>
     <div class="restart-notice" id="persist-restart-notice">{{ t('persistence.restart_notice') }}</div>
-  </div>
+  </section>
 
   <!-- Live Logs -->
-  <div class="log-viewer-card">
+  <section class="card log-viewer-card">
     <div class="log-viewer-header">
-      <div class="log-viewer-title">
-        <div class="log-live-dot off" id="log-live-dot"></div>
+      <h2 class="log-viewer-title">
+        <span class="log-live-dot off" id="log-live-dot"></span>
         {{ t('logs.title') }}
-      </div>
-      <button class="btn-clear-log" id="btn-clear-log">{{ t('logs.clear') }}</button>
+      </h2>
+      <button class="btn btn-light btn-sm" id="btn-clear-log">{{ t('logs.clear') }}</button>
     </div>
     <div id="log-output"></div>
-  </div>
+  </section>
 
   <!-- Op log -->
-  <div class="op-log">
-    <div class="log-label">{{ t('activity.title') }}</div>
+  <section class="card op-log">
+    <h2 class="log-label">{{ t('activity.title') }}</h2>
     <div class="log-entry info" id="log-msg">{{ t('activity.waiting') }}</div>
-  </div>
+  </section>
 
-  <footer>
-    {{ t('footer.refresh_in') }} <span id="refresh-timer">10</span>{{ t('footer.seconds_unit') }} &nbsp;|&nbsp; Panel v3.0
-  </footer>
+</main>
 
-</div>
+<footer class="site-footer">
+  <p>{{ t('footer.refresh_in') }} <span id="refresh-timer">10</span>{{ t('footer.seconds_unit') }} &nbsp;|&nbsp; Panel v3.0</p>
+</footer>
 
 {% include 'partials/i18n_data.html' %}
 <script type="module" src="{{ url_for('static', filename='js/panel/main.js') }}"></script>

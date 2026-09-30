@@ -5,29 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{{ t('login.title') }}</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#c8a84b">
+<meta name="theme-color" content="#0F0E33">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arma Panel">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
-<div class="login-box">
-  <div class="corner"></div>
-  <div class="tag">&#9632; {{ t('common.panel_tag') }}</div>
-  <h1>ARMA <span>REFORGER</span></h1>
-  <div class="field">
-    <label for="pwd">{{ t('login.password_label') }}</label>
-    <input type="password" id="pwd" placeholder="{{ t('login.password_placeholder') }}" autofocus />
+<main class="connection">
+  <div class="login-box">
+    <div class="login-head">
+      <div class="login-logo">
+        <img src="{{ url_for('static', filename='img/logo-ck.png') }}" alt="{{ t('common.logo_alt') }}">
+      </div>
+      <form class="login-form" id="login-form">
+        <div class="login-tag">{{ t('common.panel_tag') }}</div>
+        <h1 class="login-title">Arma Reforger</h1>
+        <div class="field">
+          <label for="pwd">{{ t('login.password_label') }}</label>
+          <input type="password" id="pwd" placeholder="{{ t('login.password_placeholder') }}" autocomplete="current-password" autofocus />
+        </div>
+        <button type="submit" class="btn btn-light" id="btn-login">{{ t('login.submit') }}</button>
+        <p class="error" id="err" role="alert"></p>
+      </form>
+    </div>
+    <div class="login-foot">
+      {% include 'partials/lang_switch.html' %}
+    </div>
   </div>
-  <button class="btn" id="btn-login">{{ t('login.submit') }}</button>
-  <div class="error" id="err"></div>
-  {% include 'partials/lang_switch.html' %}
-</div>
+</main>
 {% include 'partials/i18n_data.html' %}
 <script type="module" src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
