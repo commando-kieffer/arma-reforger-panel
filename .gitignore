@@ -6,3 +6,4 @@ __pycache__/
 config.env
 .panel-secret
 .scenario-cache.json
+config-backups/

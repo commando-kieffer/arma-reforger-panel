@@ -8,7 +8,8 @@ from ..i18n import t, tn
 from ..security import csrf_protected, login_required
 from ..services.mods import collect_import_entries, merge_mods, normalize_mod_entry
 from ..services.process import get_server_pid
-from ..services.server_config import read_config, write_config
+from ..services.server_config import ChangeRejected
+from .common import save_config
 
 bp = Blueprint("mods", __name__, url_prefix="/api/mods")
 
@@ -23,16 +24,18 @@ def add_mod():
         return jsonify({"ok": False, "error": t("api.invalid_mod_entry")})
     if "name" not in norm:
         return jsonify({"ok": False, "error": t("api.mod_name_required")})
-    cfg  = read_config()
-    mods = cfg.setdefault("game", {}).setdefault("mods", [])
-    if any(m.get("modId", "").upper() == norm["modId"] for m in mods):
-        return jsonify({"ok": False, "error": t("api.mod_exists")})
-    mods.append(norm)
-    try:
-        write_config(cfg)
-        return jsonify({"ok": True, "restart_required": get_server_pid() is not None, "mods": mods})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
+
+    def add(cfg):
+        mods = cfg.setdefault("game", {}).setdefault("mods", [])
+        if any(str(m.get("modId", "")).upper() == norm["modId"] for m in mods):
+            raise ChangeRejected(t("api.mod_exists"))
+        mods.append(norm)
+        return mods
+
+    mods, error = save_config(add)
+    if error:
+        return error
+    return jsonify({"ok": True, "restart_required": get_server_pid() is not None, "mods": mods})
 
 
 def _read_import_request():
@@ -87,27 +90,24 @@ def import_mods():
         for pos, mod_id in skipped_entries
     ]
 
-    cfg = read_config()
-    g   = cfg.setdefault("game", {})
-
-    if mode == "merge":
-        g["mods"], added = merge_mods(g.get("mods", []), valid)
-        msg = t("api.import_merged", added=added, present=len(valid) - added)
-    else:
+    def import_into(cfg):
+        g = cfg.setdefault("game", {})
+        if mode == "merge":
+            g["mods"], added = merge_mods(g.get("mods", []), valid)
+            return g["mods"], t("api.import_merged", added=added, present=len(valid) - added)
         g["mods"] = valid
-        msg = tn("api.import_replaced", len(valid))
+        return g["mods"], tn("api.import_replaced", len(valid))
 
-    try:
-        write_config(cfg)
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
+    result, error = save_config(import_into)
+    if error:
+        return error
+    mods, msg = result
     return jsonify({
         "ok": True,
         "message": msg,
         "imported": len(valid),
         "skipped": skipped,
-        "mods": g["mods"],
+        "mods": mods,
         "restart_required": get_server_pid() is not None,
     })
 
@@ -117,17 +117,19 @@ def import_mods():
 @csrf_protected
 def remove_mod():
     data   = request.get_json(silent=True) or {}
-    mod_id = data.get("modId", "").strip().upper()
+    mod_id = str(data.get("modId", "")).strip().upper()
     if not mod_id:
         return jsonify({"ok": False, "error": t("api.missing_mod_id")})
-    cfg  = read_config()
-    mods = cfg.get("game", {}).get("mods", [])
-    new  = [m for m in mods if str(m.get("modId", "")).upper() != mod_id]
-    if len(new) == len(mods):
-        return jsonify({"ok": False, "error": t("api.mod_not_found")})
-    cfg.setdefault("game", {})["mods"] = new
-    try:
-        write_config(cfg)
-        return jsonify({"ok": True, "restart_required": get_server_pid() is not None, "mods": new})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
+
+    def remove(cfg):
+        mods = cfg.get("game", {}).get("mods", [])
+        kept = [m for m in mods if str(m.get("modId", "")).upper() != mod_id]
+        if len(kept) == len(mods):
+            raise ChangeRejected(t("api.mod_not_found"))
+        cfg["game"]["mods"] = kept
+        return kept
+
+    mods, error = save_config(remove)
+    if error:
+        return error
+    return jsonify({"ok": True, "restart_required": get_server_pid() is not None, "mods": mods})

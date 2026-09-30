@@ -38,6 +38,8 @@
 
 <main class="layout">
 
+  <div class="config-alert" id="config-alert" role="alert"></div>
+
   <!-- Status -->
   <section class="card card--status">
     <h2 class="card-title">{{ t('status.title') }}</h2>
@@ -108,7 +110,7 @@
     <div class="config-grid">
       <div class="field-group">
         <label for="input-name">{{ t('config.server_name') }}</label>
-        <input type="text" id="input-name" placeholder="{{ t('config.server_name_placeholder') }}" maxlength="64" />
+        <input type="text" id="input-name" placeholder="{{ t('config.server_name_placeholder') }}" maxlength="100" />
       </div>
       <div class="field-group field-group--mission">
         <label for="input-mission">{{ t('config.scenario') }}</label>

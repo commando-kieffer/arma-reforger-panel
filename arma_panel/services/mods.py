@@ -23,6 +23,10 @@ def normalize_mod_entry(entry):
         if len(version) > 32 or any(c in version for c in '\n\r"\\'):
             return None
         out["version"] = version
+    # Workshop exports can mark a mod as optional; keep that choice.
+    required = entry.get("required")
+    if isinstance(required, bool):
+        out["required"] = required
     return out
 
 

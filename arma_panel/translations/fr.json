@@ -78,7 +78,8 @@
     "name_required": "Le nom du serveur ne peut pas être vide",
     "admin_password_required": "Le mot de passe admin ne peut pas être vide",
     "saving": "Enregistrement de la configuration...",
-    "saved": "Configuration enregistrée"
+    "saved": "Configuration enregistrée",
+    "unreadable_banner": "Impossible de lire config.json ({error}). Les réglages ne peuvent pas être enregistrés tant que le fichier n'est pas corrigé."
   },
   "mods": {
     "title": "Mods du serveur",
@@ -181,6 +182,14 @@
     "invalid_password": "Mot de passe incorrect",
     "unknown_scenario": "Scénario inconnu",
     "no_changes": "Aucune modification",
+    "config_unreadable": "Impossible de lire config.json : {error}",
+    "config_not_saved": "Impossible de lire config.json, rien n'a été enregistré : {error}",
+    "config_write_failed": "Impossible d'écrire config.json : {error}",
+    "not_a_string": "{field} doit être du texte",
+    "name_required": "Le nom du serveur ne peut pas être vide",
+    "name_too_long": "Le nom du serveur est limité à {max} caractères",
+    "admin_password_required": "Le mot de passe admin ne peut pas être vide",
+    "admin_password_spaces": "Le mot de passe admin ne peut pas contenir d'espaces",
     "server_running": "Le serveur est déjà démarré",
     "server_not_running": "Le serveur n'est pas démarré",
     "stop_failed": "Échec de l'arrêt : {error}",

@@ -78,7 +78,8 @@
     "name_required": "Server name cannot be empty",
     "admin_password_required": "Admin password cannot be empty",
     "saving": "Saving configuration...",
-    "saved": "Configuration saved"
+    "saved": "Configuration saved",
+    "unreadable_banner": "config.json could not be read ({error}). Settings can't be saved until the file is fixed."
   },
   "mods": {
     "title": "Server Mods",
@@ -181,6 +182,14 @@
     "invalid_password": "Invalid password",
     "unknown_scenario": "Unknown scenario",
     "no_changes": "No changes",
+    "config_unreadable": "config.json could not be read: {error}",
+    "config_not_saved": "config.json could not be read, nothing was written: {error}",
+    "config_write_failed": "Could not write config.json: {error}",
+    "not_a_string": "{field} must be text",
+    "name_required": "Server name cannot be empty",
+    "name_too_long": "Server name is limited to {max} characters",
+    "admin_password_required": "Admin password cannot be empty",
+    "admin_password_spaces": "The admin password cannot contain spaces",
     "server_running": "Server is already running",
     "server_not_running": "Server is not running",
     "stop_failed": "Stop failed: {error}",

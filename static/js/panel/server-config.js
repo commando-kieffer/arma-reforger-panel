@@ -5,17 +5,25 @@ import { postJson } from './api.js';
 import { setBusy, setLog } from './activity.js';
 import { fetchStatus, onStatus } from './status.js';
 
-function fillForm(d) {
-  const nameInput = document.getElementById('input-name');
-  if (document.activeElement !== nameInput) nameInput.value = d.server_name || '';
+// The form is filled when the page loads and after a save, never from the
+// status poll: refilling it every 10 s would wipe edits that aren't saved yet.
+async function loadConfig() {
+  try {
+    const r = await fetch('/api/config');
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const d = await r.json();
+    if (!d.ok) { setLog(t('common.error', { error: d.error || t('common.unknown') }), 'error'); return; }
+    document.getElementById('input-name').value = d.server_name || '';
+    document.getElementById('input-password').value = d.password || '';
+    document.getElementById('input-password-admin').value = d.password_admin || '';
+    if (d.scenario_id) document.getElementById('input-mission').value = d.scenario_id;
+  } catch (e) { setLog(t('common.connection_error'), 'error'); }
+}
 
-  const pwdInput = document.getElementById('input-password');
-  if (document.activeElement !== pwdInput) pwdInput.value = d.password || '';
-
-  const pwdAdminInput = document.getElementById('input-password-admin');
-  if (document.activeElement !== pwdAdminInput) pwdAdminInput.value = d.password_admin || '';
-
-  renderMissionSelect(d.missions || [], d.missions_count, d.scenario_id);
+function showConfigError(error) {
+  const el = document.getElementById('config-alert');
+  el.textContent = error ? t('config.unreadable_banner', { error }) : '';
+  el.classList.toggle('visible', !!error);
 }
 
 function renderMissionSelect(missions, counts, currentId) {
@@ -100,6 +108,7 @@ async function saveConfig() {
     if (d.ok) {
       setLog(t('config.saved'), 'ok');
       document.getElementById('restart-notice').classList.toggle('visible', !!d.restart_required);
+      await loadConfig();
       await fetchStatus();
     } else {
       setLog(t('common.save_failed', { error: d.error || t('common.unknown') }), 'error');
@@ -109,7 +118,11 @@ async function saveConfig() {
 }
 
 export function initServerConfig() {
-  onStatus(fillForm);
+  onStatus(d => {
+    showConfigError(d.config_error);
+    renderMissionSelect(d.missions || [], d.missions_count, d.scenario_id);
+  });
   document.getElementById('btn-rescan-scenarios').addEventListener('click', rescanScenarios);
   document.getElementById('btn-save').addEventListener('click', saveConfig);
+  loadConfig();
 }

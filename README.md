@@ -114,6 +114,10 @@ After editing, restart the panel:
 sudo systemctl restart arma-panel
 ```
 
+### config.json backups
+
+Before each change it makes to the server's `config.json`, the panel copies the current file to `config-backups/` in the panel directory and keeps the 20 most recent copies. To roll back, copy one of them over `config.json`. If `config.json` can't be parsed (e.g. after a manual edit), the panel shows a warning and refuses to save until the file is fixed.
+
 ---
 
 ## Useful Commands
@@ -183,10 +187,19 @@ arma-reforger-panel/
 │   ├── service-worker.js        # PWA service worker
 │   ├── icon-192.png             # App icon
 │   └── icon-512.png             # App icon (large)
+├── tests/                   # Unit tests (standard library unittest)
 ├── config.env               # Your local config (excluded from git)
 ├── config.env.example       # Config template
 ├── install.sh               # All-in-one installer
 └── README.md
+```
+
+## Tests
+
+The tests need Flask and bcrypt, which the installer already provides on the server:
+
+```bash
+python3 -m unittest discover tests
 ```
 
 ---

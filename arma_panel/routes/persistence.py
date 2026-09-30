@@ -13,7 +13,8 @@ from ..services.persistence import (
     set_persistence_block,
 )
 from ..services.process import get_server_pid
-from ..services.server_config import read_config, write_config
+from ..services.server_config import read_config
+from .common import save_config
 
 bp = Blueprint("persistence", __name__, url_prefix="/api/persistence")
 
@@ -38,10 +39,9 @@ def get_persistence():
 @csrf_protected
 def update_persistence():
     data = request.get_json(silent=True) or {}
-    cfg  = read_config()
     enabled = bool(data.get("enabled"))
+    updates = {}
     if enabled:
-        block = get_persistence_block(cfg) or {}
         if "autoSaveInterval" in data:
             try:
                 v = int(data["autoSaveInterval"])
@@ -49,9 +49,7 @@ def update_persistence():
                 return jsonify({"ok": False, "error": t("api.autosave_not_int")})
             if not 0 <= v <= 60:
                 return jsonify({"ok": False, "error": t("api.autosave_range")})
-            block["autoSaveInterval"] = v
-        else:
-            block.setdefault("autoSaveInterval", 10)
+            updates["autoSaveInterval"] = v
         if "hiveId" in data:
             try:
                 v = int(data["hiveId"])
@@ -59,21 +57,27 @@ def update_persistence():
                 return jsonify({"ok": False, "error": t("api.hive_not_int")})
             if not 0 <= v <= 16383:
                 return jsonify({"ok": False, "error": t("api.hive_range")})
-            block["hiveId"] = v
-        else:
+            updates["hiveId"] = v
+
+    def change(cfg):
+        if enabled:
+            block = get_persistence_block(cfg) or {}
+            block.update(updates)
+            block.setdefault("autoSaveInterval", 10)
             block.setdefault("hiveId", 1)
-        set_persistence_block(cfg, block)
-    else:
-        set_persistence_block(cfg, None)
-    try:
-        write_config(cfg)
-        return jsonify({
-            "ok": True,
-            "restart_required": get_server_pid() is not None,
-            "enabled":           persistence_enabled(cfg),
-        })
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
+            set_persistence_block(cfg, block)
+        else:
+            set_persistence_block(cfg, None)
+        return persistence_enabled(cfg)
+
+    now_enabled, error = save_config(change)
+    if error:
+        return error
+    return jsonify({
+        "ok": True,
+        "restart_required": get_server_pid() is not None,
+        "enabled":          now_enabled,
+    })
 
 
 @bp.post("/flush")
