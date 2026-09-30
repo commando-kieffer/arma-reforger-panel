@@ -24,21 +24,21 @@ function renderStatus(d) {
 }
 
 async function serverAction(action) {
-  const labels = { start: 'Uruchamianie serwera...', stop: 'Zatrzymywanie serwera...', restart: 'Restartowanie serwera...' };
+  const labels = { start: 'Starting server...', stop: 'Stopping server...', restart: 'Restarting server...' };
   setBusy(true);
   setLog(labels[action], 'info');
   try {
     const r = await postJson('/api/' + action, {});
     const d = await r.json();
     if (d.ok) {
-      const success = { start: 'Serwer uruchomiony', stop: 'Serwer zatrzymany', restart: 'Serwer zrestartowany' };
+      const success = { start: 'Server started', stop: 'Server stopped', restart: 'Server restarted' };
       setLog(success[action], 'ok');
       await new Promise(res => setTimeout(res, 1500));
       await fetchStatus();
     } else {
-      setLog('Błąd: ' + (d.error || 'nieznany'), 'error');
+      setLog('Error: ' + (d.error || 'unknown'), 'error');
     }
-  } catch (e) { setLog('Błąd połączenia', 'error'); }
+  } catch (e) { setLog('Connection error', 'error'); }
   setBusy(false);
 }
 

@@ -37,7 +37,7 @@
     <div class="status-row">
       <div class="status-indicator">
         <div class="dot loading" id="dot"></div>
-        <div class="status-text loading" id="status-text">ŁADOWANIE...</div>
+        <div class="status-text loading" id="status-text">LOADING...</div>
       </div>
       <div class="divider-v"></div>
       <div class="stat-item">
@@ -108,8 +108,8 @@
     <div class="card-label">Server Configuration</div>
     <div class="config-grid">
       <div class="field-group">
-        <label for="input-name">Name serwera</label>
-        <input type="text" id="input-name" placeholder="np. LEM Arma" maxlength="64" />
+        <label for="input-name">Server name</label>
+        <input type="text" id="input-name" placeholder="e.g. LEM Arma" maxlength="64" />
       </div>
       <div class="field-group field-group--mission">
         <label for="input-mission">Scenario / Mission</label>
@@ -120,23 +120,23 @@
         <select id="input-mission"></select>
       </div>
       <div class="field-group">
-        <label for="input-password">Game password (puste = brak hasła)</label>
-        <input type="text" id="input-password" placeholder="Zostaw puste aby usunąć hasło" maxlength="64" />
+        <label for="input-password">Game password (empty = no password)</label>
+        <input type="text" id="input-password" placeholder="Leave empty to remove the password" maxlength="64" />
       </div>
       <div class="field-group">
         <label for="input-password-admin">Admin password</label>
-        <input type="text" id="input-password-admin" placeholder="Hasło admina" maxlength="64" />
+        <input type="text" id="input-password-admin" placeholder="Admin password" maxlength="64" />
       </div>
     </div>
     <button class="btn-save" id="btn-save">Save changes</button>
-    <div class="restart-notice" id="restart-notice">⚠ Zmiany zostaną zastosowane po restarcie serwera</div>
+    <div class="restart-notice" id="restart-notice">⚠ Changes will be applied after server restart</div>
   </div>
 
   <!-- Mods -->
   <div class="card card--mods">
     <div class="card-label">Server Mods</div>
 
-    <!-- Lista aktywnych modów -->
+    <!-- Active mods -->
     <div id="mods-list" class="mods-list">
       <div class="mods-placeholder">Loading mods...</div>
     </div>
@@ -237,7 +237,7 @@
   <!-- Op log -->
   <div class="op-log">
     <div class="log-label">Last operation</div>
-    <div class="log-entry info" id="log-msg">Oczekiwanie na dane serwera...</div>
+    <div class="log-entry info" id="log-msg">Waiting for server data...</div>
   </div>
 
   <footer>

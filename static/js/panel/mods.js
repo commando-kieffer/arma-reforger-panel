@@ -10,7 +10,7 @@ const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
 function renderMods(mods) {
   const container = document.getElementById('mods-list');
   if (mods.length === 0) {
-    container.innerHTML = '<div class="mods-placeholder is-empty">Brak zainstalowanych modów</div>';
+    container.innerHTML = '<div class="mods-placeholder is-empty">No mods installed</div>';
     return;
   }
   container.innerHTML = '';
@@ -120,7 +120,7 @@ function afterImport(d) {
 }
 
 export function initMods() {
-  // Render listy modów
+  // Render the mod list
   onStatus(d => renderMods(d.mods || []));
 
   document.getElementById('btn-add-mod').addEventListener('click', addMod);

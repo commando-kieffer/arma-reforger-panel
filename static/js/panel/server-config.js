@@ -87,22 +87,22 @@ async function saveConfig() {
   const password = document.getElementById('input-password').value;
   const pwdAdmin = document.getElementById('input-password-admin').value.trim();
 
-  if (!name)     { setLog('Name serwera nie może być pusta', 'error'); return; }
-  if (!pwdAdmin) { setLog('Admin password nie może być puste', 'error'); return; }
+  if (!name)     { setLog('Server name cannot be empty', 'error'); return; }
+  if (!pwdAdmin) { setLog('Admin password cannot be empty', 'error'); return; }
 
   setBusy(true);
-  setLog('Zapisywanie konfiguracji...', 'info');
+  setLog('Saving configuration...', 'info');
   try {
     const r = await postJson('/api/config', { server_name: name, scenario_id: scenario, password, password_admin: pwdAdmin });
     const d = await r.json();
     if (d.ok) {
-      setLog('Konfiguracja zapisana', 'ok');
+      setLog('Configuration saved', 'ok');
       document.getElementById('restart-notice').classList.toggle('visible', !!d.restart_required);
       await fetchStatus();
     } else {
-      setLog('Błąd zapisu: ' + (d.error || 'nieznany'), 'error');
+      setLog('Save failed: ' + (d.error || 'unknown'), 'error');
     }
-  } catch (e) { setLog('Błąd połączenia', 'error'); }
+  } catch (e) { setLog('Connection error', 'error'); }
   setBusy(false);
 }
 

@@ -26,7 +26,7 @@ document.getElementById('btn-logout').addEventListener('click', doLogout);
 
 fetchStatus().then(() => { fetchPersistence(); startCountdown(); });
 
-// PWA — rejestracja service workera
+// PWA — service worker registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')

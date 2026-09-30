@@ -22,11 +22,11 @@ function appendLog(text) {
   span.textContent = text;
   el.appendChild(span);
   el.appendChild(document.createTextNode('\n'));
-  // Auto-scroll tylko jeśli użytkownik jest blisko dołu
+  // Auto-scroll only if the user is near the bottom
   if (el.scrollHeight - el.scrollTop < el.clientHeight + 120) {
     el.scrollTop = el.scrollHeight;
   }
-  // Limit linii w DOM
+  // Cap the number of lines kept in the DOM
   const lines = el.querySelectorAll('.log-line');
   if (lines.length > MAX_DOM_LINES) lines[0].remove();
 }
@@ -45,7 +45,7 @@ async function fetchLogs(count) {
     const el = document.getElementById('log-output');
     const lastNew = d.lines[d.lines.length - 1];
 
-    // Przy pierwszym załadowaniu wyczyść i wstaw wszystko
+    // First load: clear and insert everything
     if (lastLogLine === '') {
       el.innerHTML = '';
       d.lines.forEach(line => appendLog(line));
@@ -53,7 +53,7 @@ async function fetchLogs(count) {
       return;
     }
 
-    // Przy kolejnych odpytaniach — dodaj tylko linie które są nowe
+    // Later polls: append only the lines that are new
     if (lastNew === lastLogLine) return;
 
     const idx = d.lines.lastIndexOf(lastLogLine);
@@ -67,9 +67,9 @@ export function initLogViewer() {
   document.getElementById('btn-clear-log').addEventListener('click', clearLog);
 
   clearInterval(pollTimer);
-  // Pobierz ostatnie 80 linii od razu
+  // Fetch the last 80 lines right away,
   fetchLogs(80);
-  // Następnie odpytuj co 2 sekundy po nowe linie
+  // then poll for new lines every 2 seconds
   pollTimer = setInterval(() => fetchLogs(30), POLL_MS);
   document.getElementById('log-live-dot').classList.remove('off');
 }

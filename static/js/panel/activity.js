@@ -8,7 +8,7 @@ let busy = false;
 export function setLog(msg, type = 'info') {
   const el = document.getElementById('log-msg');
   el.className = 'log-entry ' + type;
-  const ts = new Date().toLocaleTimeString('pl-PL');
+  const ts = new Date().toLocaleTimeString('en-GB');
   el.textContent = '[' + ts + '] ' + msg;
 }
 
