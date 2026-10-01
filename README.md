@@ -13,7 +13,7 @@ A lightweight, self-hosted web panel for managing your **Arma Reforger dedicated
 - **Real-time monitoring** — Live CPU and RAM charts updated every 3 seconds
 - **Live log streaming** — Server console logs with aligned columns and colour-coded output (errors, warnings, network events)
 - **Log history** — Every past server session, each downloadable as a zip of its console, error and script logs
-- **Players** — Player count and list of connected players, read from the server's A2S (Steam query) port; shown as unavailable rather than guessed when the server doesn't answer
+- **Players** — Player count read from the server's A2S (Steam query) port, and the names and identity IDs of connected players read over RCON when it is enabled in `config.json`; shown as unavailable rather than guessed when the server doesn't answer
 - **Mission selector** — 41 built-in missions including all vanilla and RHS — Status Quo scenarios
 - **Gameplay settings** — View distances, third-person view, voice chat UI, BattlEye, join queue size and AI limit
 - **Persistence** — Keep the server's save defaults, set custom autosave settings or turn saving off, and flush the session saves
@@ -117,6 +117,23 @@ After editing, restart the panel:
 ```bash
 sudo systemctl restart arma-panel
 ```
+
+### Player names (RCON)
+
+The player count comes from the server's A2S port. The names and identity IDs of the connected players are read over RCON, which the server only starts when `config.json` has an `rcon` block with a password:
+
+```json
+"rcon": {
+    "address": "127.0.0.1",
+    "port": 19999,
+    "password": "a-random-password",
+    "permission": "monitor"
+}
+```
+
+Add it at the top level, next to `a2s`, and restart the server. The password needs at least 3 characters and no spaces. With `127.0.0.1` the port is only reachable from the server itself, and `monitor` is read-only. The panel reads the address, port and password from `config.json`, so nothing has to be added to `config.env`.
+
+The names are only shown when the server's answer is complete and lists as many players as the A2S count. Otherwise the Players card keeps the count and says why, and `journalctl -u arma-panel` has the details.
 
 ### config.json backups
 

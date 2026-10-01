@@ -13,17 +13,21 @@ function fmtDuration(seconds) {
 }
 
 function renderTable(players) {
+  // Identity IDs come with the RCON list, durations with the A2S one.
+  const showId = players.some(p => p.uid);
   // Some servers report 0 for every player; the column is useless then.
   const showDuration = players.some(p => p.duration > 0);
   const rows = players.map(p => {
     const name = p.name ? escHtml(p.name) : `<span class="connecting">${t('players.connecting')}</span>`;
-    const duration = showDuration ? `<td>${p.duration ? fmtDuration(p.duration) : '—'}</td>` : '';
-    return `<tr><td>${name}</td>${duration}</tr>`;
+    const id = showId ? `<td class="player-id">${escHtml(p.uid || '')}</td>` : '';
+    const duration = showDuration ? `<td class="duration">${p.duration ? fmtDuration(p.duration) : '—'}</td>` : '';
+    return `<tr><td>${name}</td>${id}${duration}</tr>`;
   }).join('');
-  const durationHeader = showDuration ? `<th>${t('players.col_duration')}</th>` : '';
+  const idHeader = showId ? `<th>${t('players.col_id')}</th>` : '';
+  const durationHeader = showDuration ? `<th class="duration">${t('players.col_duration')}</th>` : '';
   return `
     <table class="players-table">
-      <thead><tr><th>${t('players.col_name')}</th>${durationHeader}</tr></thead>
+      <thead><tr><th>${t('players.col_name')}</th>${idHeader}${durationHeader}</tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
@@ -40,7 +44,7 @@ function render(d) {
   }
   summary.textContent = tn('players.connected', d.count, { max: d.max });
   if (d.players === null) {
-    list.innerHTML = `<div class="card-help">${t('players.no_list')}</div>`;
+    list.innerHTML = `<div class="card-help">${t('players.list_' + d.list_state)}</div>`;
   } else {
     list.innerHTML = d.players.length ? renderTable(d.players) : '';
   }

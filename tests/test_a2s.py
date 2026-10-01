@@ -130,7 +130,7 @@ class GetPlayersTest(unittest.TestCase):
     CFG = {"a2s": {"address": "0.0.0.0", "port": 17777}}
 
     def setUp(self):
-        players._cache.update(address=None, at=0.0, result=None)
+        players._cache.update(key=None, at=0.0, result=None)
 
     def test_address(self):
         self.assertEqual(players.a2s_address(self.CFG), ("127.0.0.1", 17777))
@@ -150,12 +150,13 @@ class GetPlayersTest(unittest.TestCase):
         with mock.patch.object(a2s, "query_info", return_value={"players": 4, "max_players": 32}), \
              mock.patch.object(a2s, "query_players", side_effect=A2SError("bad")):
             result = players.get_players(True, self.CFG)
-        self.assertEqual(result, {"state": "ok", "count": 4, "max": 32, "players": None})
+        self.assertEqual(result, {"state": "ok", "count": 4, "max": 32, "players": None, "list_state": "rcon_disabled"})
 
     def test_count_only_when_no_names(self):
         with mock.patch.object(a2s, "query_info", return_value={"players": 2, "max_players": 32}), \
              mock.patch.object(a2s, "query_players", return_value=[{"name": "", "duration": 5}] * 2):
-            self.assertIsNone(players.get_players(True, self.CFG)["players"])
+            result = players.get_players(True, self.CFG)
+        self.assertEqual((result["players"], result["list_state"]), (None, "rcon_disabled"))
 
     def test_list_sorted_and_cached(self):
         entries = [{"name": "A", "duration": 10}, {"name": "B", "duration": 300}]
@@ -164,6 +165,7 @@ class GetPlayersTest(unittest.TestCase):
             first = players.get_players(True, self.CFG)
             second = players.get_players(True, self.CFG)
         self.assertEqual([p["name"] for p in first["players"]], ["B", "A"])
+        self.assertEqual(first["list_state"], "ok")
         self.assertIs(first, second)
         self.assertEqual(info.call_count, 1)
 
