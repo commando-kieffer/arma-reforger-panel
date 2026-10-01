@@ -15,7 +15,10 @@ import re
 from ... import config
 
 SCENARIO_GAME_ID_RE = re.compile(r'^\{[0-9A-Fa-f]{16}\}.+\.conf$')
-RDB_PATH_RE = re.compile(rb'Missions/[A-Za-z0-9_./\-]+\.conf')
+# Any printable ASCII after the prefix: file names can contain spaces
+# ("Missions/Scenario CK.conf"). The length-prefix check in
+# scenarios_from_rdb is what rejects false matches, not this character set.
+RDB_PATH_RE = re.compile(rb'Missions/[\x20-\x7e]+\.conf')
 
 
 def candidate_addon_roots():
