@@ -3,9 +3,13 @@
 Used to read the names and identity IDs of the connected players with the
 `#players` command. Protocol: https://www.battleye.com/downloads/BERConProtocol.txt
 
-The text of the server's answers isn't documented. Anything unexpected, in a
-packet or in the player list, raises RconError, so callers show the list as
-unavailable instead of showing one that might be wrong.
+The way Reforger answers a command isn't documented. As observed on a live
+server, it acknowledges the command with an empty answer, then sends two
+server messages: "Processing Command: <command>", and the output.
+
+Anything else, in a packet or in the player list, raises RconError, so
+callers show the list as unavailable instead of showing one that might be
+wrong.
 """
 
 import binascii
@@ -23,11 +27,11 @@ LOGIN = 0x00
 COMMAND = 0x01
 SERVER_MESSAGE = 0x02
 
+PROCESSING_PREFIX = "Processing Command: "
 PLAYERS_COMMAND = "#players"
-PLAYERS_HEADER = "Players on server:"
-PLAYERS_LEGEND = "[Player#] ; [Player UID] ; [Player Name]"
+PLAYERS_HEADER = "Players on server: [Player#] ; [Player UID] ; [Player Name]"
 PLAYER_ROW_RE = re.compile(
-    r"^\d+\s*;\s*([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\s*;\s*(.*)$")
+    r"^\d+ ; ([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}) ; ?(.*)$")
 
 
 class RconError(Exception):
@@ -52,25 +56,17 @@ def parse_packet(packet):
     return packet[7:]
 
 
-def parse_players(reply):
-    """Parse the answer to `#players` into [{"uid": ..., "name": ...}].
+def parse_players(output):
+    """Parse the output of `#players` into [{"uid": ..., "name": ...}].
 
-    Expected: an optional "Processing Command" line, the "Players on server:"
-    header and its column legend, then one "<number> ; <identity ID> ; <name>"
-    line per player. Any other line rejects the whole answer.
+    Expected: the header line, then one "<number> ; <identity ID> ; <name>"
+    line per player. Any other line rejects the whole output.
     """
     # Not splitlines(): it also splits on characters a player name may contain.
-    lines = [line.strip() for line in reply.split("\n")]
+    lines = [line.strip() for line in output.split("\n")]
     lines = [line for line in lines if line]
-    if lines and lines[0].startswith("Processing Command:"):
-        lines.pop(0)
-    if not lines or not lines[0].startswith(PLAYERS_HEADER):
+    if not lines or lines.pop(0) != PLAYERS_HEADER:
         raise RconError("no player list header")
-    legend = lines.pop(0)[len(PLAYERS_HEADER):].strip()
-    if not legend and lines and lines[0] == PLAYERS_LEGEND:
-        legend = lines.pop(0)
-    if legend not in ("", PLAYERS_LEGEND):
-        raise RconError("unexpected player list header")
     players = []
     for line in lines:
         match = PLAYER_ROW_RE.match(line)
@@ -92,14 +88,15 @@ class Client:
         self.address = address
         self.password = password
         self.timeout = timeout
-        # Server messages received while waiting for the last answer.
+        # Server messages received since the last command that weren't part
+        # of an output, such as "Logged In! Client ID: #0" after a login.
         self.messages = []
         self._sock = None
         self._sequence = 0
         self._last_sent = 0.0
 
     def command(self, text):
-        """Send a command and return its complete answer as text."""
+        """Send a command and return its output."""
         if self._sock is not None and time.monotonic() - self._last_sent > SESSION_SECONDS:
             self.close()
         try:
@@ -134,47 +131,45 @@ class Client:
     def _command(self, text):
         sequence = self._sequence
         self._sequence = (sequence + 1) % 256
-        self.messages = []
         deadline = time.monotonic() + self.timeout
         self._send(bytes([COMMAND, sequence]) + text.encode("utf-8"))
-        parts, total = {}, None
+        self.messages = []
+        acknowledged = processing = False
         while True:
             payload = self._receive(deadline)
-            # Commands are sent one at a time, so a packet for another one
-            # means the previous answer wasn't what it seemed to be.
-            if payload[0] != COMMAND or payload[1:2] != bytes([sequence]):
+            if payload[0] == COMMAND:
+                # The acknowledgement: the number of the command, nothing else.
+                if acknowledged or payload[1:] != bytes([sequence]):
+                    raise RconError("unexpected answer to the command")
+                acknowledged = True
+            elif payload[0] == SERVER_MESSAGE:
+                message = self._server_message(payload)
+                if processing:
+                    if not acknowledged:
+                        raise RconError("output received before the acknowledgement")
+                    return message
+                if message == PROCESSING_PREFIX + text:
+                    processing = True
+                else:
+                    self.messages.append(message)
+            else:
                 raise RconError("unexpected packet")
-            body = payload[2:]
-            if not body.startswith(b"\x00"):
-                return body.decode("utf-8", errors="replace")
-            # Answer split over several packets: 0x00, number of parts, index.
-            if len(body) < 3:
-                raise RconError("malformed split answer")
-            count, index = body[1], body[2]
-            if total is None:
-                total = count
-            if count != total or index >= total:
-                raise RconError("inconsistent split answer")
-            parts[index] = body[3:]
-            if len(parts) == total:
-                return b"".join(parts[i] for i in range(total)).decode("utf-8", errors="replace")
+
+    def _server_message(self, payload):
+        """Text of a server message. The server sends it again, then drops the
+        client, unless it is acknowledged."""
+        if len(payload) < 2:
+            raise RconError("malformed server message")
+        self._send(bytes([SERVER_MESSAGE, payload[1]]))
+        return payload[2:].decode("utf-8", errors="replace")
 
     def _send(self, payload):
         self._sock.send(build_packet(payload))
         self._last_sent = time.monotonic()
 
     def _receive(self, deadline):
-        """Next login or command packet. Server messages are acknowledged, as
-        the protocol requires, and set aside."""
-        while True:
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise socket.timeout("no answer from the RCON port")
-            self._sock.settimeout(remaining)
-            payload = parse_packet(self._sock.recv(65535))
-            if payload[0] != SERVER_MESSAGE:
-                return payload
-            if len(payload) < 2:
-                raise RconError("malformed server message")
-            self._send(bytes([SERVER_MESSAGE, payload[1]]))
-            self.messages.append(payload[2:].decode("utf-8", errors="replace"))
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise socket.timeout("no answer from the RCON port")
+        self._sock.settimeout(remaining)
+        return parse_packet(self._sock.recv(65535))

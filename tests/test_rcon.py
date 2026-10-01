@@ -11,27 +11,36 @@ UID_A = "b6955d91-4749-4cdb-9a51-e69f630ec435"
 UID_B = "0f3a1c22-9d4e-4b7a-8c1d-2e5f6a7b8c9d"
 HEADER = "Players on server: [Player#] ; [Player UID] ; [Player Name]\n"
 
+# Payloads sent by a real server for a login followed by `#players`, with one
+# player connected (name and identity ID replaced).
+CAPTURED_LOGIN = [
+    b"\x00\x01",
+    b"\x02\x00Logged In! Client ID: #0",
+]
+CAPTURED_PLAYERS = [
+    b"\x01\x00",
+    b"\x02\x01Processing Command: #players",
+    b"\x02\x02Players on server: [Player#] ; [Player UID] ; [Player Name]\n"
+    b"1 ; b6955d91-4749-4cdb-9a51-e69f630ec435 ; Cpt. Jerry - Fox",
+]
 
-def reply(sequence, text):
-    return build_packet(bytes([rcon.COMMAND, sequence]) + text.encode("utf-8"))
 
-
-def split_reply(sequence, text, size):
-    data = text.encode("utf-8")
-    chunks = [data[i:i + size] for i in range(0, len(data), size)]
-    return [build_packet(bytes([rcon.COMMAND, sequence, 0, len(chunks), n]) + chunk)
-            for n, chunk in enumerate(chunks)]
+def output(text, command="#players"):
+    """Server messages a real server sends once it has run `command`."""
+    return ["Processing Command: " + command, text]
 
 
 class FakeServer:
-    """RCON server on localhost. Logins are checked against PASSWORD and each
-    command is answered with the packets `handler(sequence, command)` returns."""
+    """RCON server on localhost behaving like the game server: a login is
+    answered then followed by a "Logged In!" message, a command is
+    acknowledged then followed by the messages `handler(command)` returns."""
 
-    def __init__(self, handler):
+    def __init__(self, handler, acknowledge=lambda sequence: bytes([rcon.COMMAND, sequence])):
         self.handler = handler
+        self.acknowledge = acknowledge
         self.logins = 0
         self.acks = []
-        self.clients = set()
+        self.messages = 0
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(("127.0.0.1", 0))
         self.sock.settimeout(0.1)
@@ -39,6 +48,10 @@ class FakeServer:
         self.running = True
         self.thread = threading.Thread(target=self._serve, daemon=True)
         self.thread.start()
+
+    def _message(self, text):
+        self.messages += 1
+        return bytes([rcon.SERVER_MESSAGE, self.messages - 1]) + text.encode("utf-8")
 
     def _serve(self):
         while self.running:
@@ -49,16 +62,20 @@ class FakeServer:
             payload = parse_packet(packet)
             if payload[0] == rcon.LOGIN:
                 self.logins += 1
-                self.clients.add(client)
-                accepted = payload[1:] == PASSWORD.encode()
-                answers = [build_packet(bytes([rcon.LOGIN, accepted]))]
+                self.messages = 0
+                if payload[1:] == PASSWORD.encode():
+                    answers = [b"\x00\x01", self._message("Logged In! Client ID: #0")]
+                else:
+                    answers = [b"\x00\x00"]
             elif payload[0] == rcon.COMMAND:
-                answers = self.handler(payload[1], payload[2:].decode())
+                answers = [self.acknowledge(payload[1])]
+                answers += [self._message(text) for text in self.handler(payload[2:].decode())]
             else:
                 self.acks.append(payload[1])
                 answers = []
             for answer in answers:
-                self.sock.sendto(answer, client)
+                if answer:
+                    self.sock.sendto(build_packet(answer), client)
 
     def close(self):
         self.running = False
@@ -82,19 +99,17 @@ class PacketTest(unittest.TestCase):
 
 
 class ParsePlayersTest(unittest.TestCase):
+    def test_captured_output(self):
+        text = CAPTURED_PLAYERS[2][2:].decode()
+        self.assertEqual(rcon.parse_players(text), [{"uid": UID_A, "name": "Cpt. Jerry - Fox"}])
+
     def test_list(self):
-        text = HEADER + f"1 ; {UID_A} ; Jerry\n12 ; {UID_B} ; Orzeł ; 04 \n"
+        text = HEADER + f"1 ; {UID_A} ; Jerry\r\n12 ; {UID_B} ; Orzeł ; 04 \n3 ; {UID_A} ; \n"
         self.assertEqual(rcon.parse_players(text), [
             {"uid": UID_A, "name": "Jerry"},
             {"uid": UID_B, "name": "Orzeł ; 04"},
+            {"uid": UID_A, "name": ""},
         ])
-
-    def test_accepted_headers(self):
-        row = f"3 ; {UID_A} ; Jerry"
-        for header in ("Players on server:\n",
-                       "Players on server:\r\n[Player#] ; [Player UID] ; [Player Name]\r\n",
-                       "Processing Command: #players\n" + HEADER):
-            self.assertEqual(len(rcon.parse_players(header + row)), 1, header)
 
     def test_no_players(self):
         self.assertEqual(rcon.parse_players(HEADER), [])
@@ -105,11 +120,12 @@ class ParsePlayersTest(unittest.TestCase):
                      "Processing Command: #players",
                      row,
                      "Unknown command",
+                     "Players on server:\n" + row,
                      HEADER + row + "\nsomething else",
                      HEADER + "1 ; 76561198000000000 ; Jerry",
+                     HEADER + f"1;{UID_A};Jerry",
                      # Without line breaks the rows can't be told apart from the header.
-                     HEADER.strip() + " " + row,
-                     "Players on server: 2\n" + row):
+                     HEADER.strip() + " " + row):
             with self.assertRaises(RconError, msg=text):
                 rcon.parse_players(text)
 
@@ -120,8 +136,8 @@ class ParsePlayersTest(unittest.TestCase):
 
 
 class ClientTest(unittest.TestCase):
-    def serve(self, handler):
-        server = FakeServer(handler)
+    def serve(self, handler, **kwargs):
+        server = FakeServer(handler, **kwargs)
         self.addCleanup(server.close)
         return server
 
@@ -130,73 +146,99 @@ class ClientTest(unittest.TestCase):
         self.addCleanup(client.close)
         return client
 
+    def test_captured_exchange(self):
+        """Replay the packets of a real server, in the order it sent them."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(("127.0.0.1", 0))
+        self.addCleanup(sock.close)
+        received = []
+
+        def replay():
+            for answers in (CAPTURED_LOGIN, CAPTURED_PLAYERS):
+                packet, client = sock.recvfrom(65535)
+                received.append(parse_packet(packet))
+                for answer in answers:
+                    sock.sendto(build_packet(answer), client)
+            sock.settimeout(1)
+            for _ in range(3):
+                received.append(parse_packet(sock.recvfrom(65535)[0]))
+
+        thread = threading.Thread(target=replay, daemon=True)
+        thread.start()
+        client = self.client(mock.Mock(address=sock.getsockname()))
+        text = client.command("#players")
+        thread.join()
+        self.assertEqual(rcon.parse_players(text), [{"uid": UID_A, "name": "Cpt. Jerry - Fox"}])
+        self.assertEqual(client.messages, ["Logged In! Client ID: #0"])
+        # Login, command, then one acknowledgement per server message.
+        self.assertEqual(received, [b"\x00" + PASSWORD.encode(), b"\x01\x00#players",
+                                    b"\x02\x00", b"\x02\x01", b"\x02\x02"])
+
     def test_command(self):
-        server = self.serve(lambda seq, command: [reply(seq, "you sent " + command)])
+        server = self.serve(lambda command: output("you sent " + command, command))
         self.assertEqual(self.client(server).command("#players"), "you sent #players")
 
     def test_login_is_reused(self):
-        server = self.serve(lambda seq, command: [reply(seq, str(seq))])
+        server = self.serve(lambda command: output("list"))
         client = self.client(server)
-        self.assertEqual([client.command("#players") for _ in range(3)], ["0", "1", "2"])
+        self.assertEqual([client.command("#players") for _ in range(3)], ["list"] * 3)
         self.assertEqual(server.logins, 1)
-        self.assertEqual(len(server.clients), 1)
 
     def test_login_refused(self):
-        server = self.serve(lambda seq, command: [reply(seq, "")])
+        server = self.serve(lambda command: output("list"))
         with self.assertRaises(rcon.LoginRefused):
             self.client(server, password="wrong").command("#players")
 
-    def test_split_answer_out_of_order(self):
-        text = HEADER + "".join(f"{i} ; {UID_A} ; Player {i}\n" for i in range(60))
-        server = self.serve(lambda seq, command: list(reversed(split_reply(seq, text, 400))))
+    def test_long_output(self):
+        text = HEADER + "".join(f"{i} ; {UID_A} ; Player {i}\n" for i in range(128))
+        server = self.serve(lambda command: output(text))
         self.assertEqual(self.client(server).command("#players"), text)
 
-    def test_split_answer_cut_inside_a_character(self):
-        text = "é" * 10
-        server = self.serve(lambda seq, command: split_reply(seq, text, 3))
-        self.assertEqual(self.client(server).command("#players"), text)
+    def test_messages_before_the_output_are_set_aside(self):
+        server = self.serve(lambda command: ["Something else"] + output("list"))
+        client = self.client(server)
+        self.assertEqual(client.command("#players"), "list")
+        self.assertEqual(client.messages, ["Logged In! Client ID: #0", "Something else"])
 
-    def test_missing_part_times_out(self):
-        server = self.serve(lambda seq, command: split_reply(seq, "x" * 100, 40)[:-1])
+    def test_server_messages_are_acknowledged(self):
+        server = self.serve(lambda command: output("list"))
+        client = self.client(server)
+        client.command("#players")
+        # The last acknowledgement was sent before command() returned; a
+        # second exchange makes sure the server has read it.
+        client.command("#players")
+        self.assertEqual(server.acks[:3], [0, 1, 2])
+
+    def test_no_output_times_out(self):
+        for messages in ([], ["Processing Command: #players"], ["list"]):
+            server = self.serve(lambda command: messages)
+            with self.assertRaises(socket.timeout, msg=messages):
+                self.client(server, timeout=0.3).command("#players")
+
+    def test_processing_line_of_another_command(self):
+        server = self.serve(lambda command: output("list", "#ban list"))
         with self.assertRaises(socket.timeout):
             self.client(server, timeout=0.3).command("#players")
 
-    def test_inconsistent_split_answer(self):
-        server = self.serve(lambda seq, command: [
-            build_packet(bytes([rcon.COMMAND, seq, 0, 2, 0]) + b"a"),
-            build_packet(bytes([rcon.COMMAND, seq, 0, 3, 1]) + b"b"),
-        ])
-        with self.assertRaises(RconError):
-            self.client(server).command("#players")
+    def test_unexpected_acknowledgement(self):
+        for acknowledge in (lambda seq: bytes([rcon.COMMAND, seq + 1]),
+                            lambda seq: bytes([rcon.COMMAND, seq]) + b"text",
+                            lambda seq: b"\x07"):
+            server = self.serve(lambda command: output("list"), acknowledge=acknowledge)
+            with self.assertRaises(RconError):
+                self.client(server).command("#players")
 
-    def test_server_message_is_acknowledged(self):
-        server = self.serve(lambda seq, command: [
-            build_packet(bytes([rcon.SERVER_MESSAGE, 7]) + b"Player connected"),
-            reply(seq, "done"),
-        ])
-        client = self.client(server)
-        self.assertEqual(client.command("#players"), "done")
-        self.assertEqual(client.messages, ["Player connected"])
-        # The acknowledgement was sent before the answer was read; let the server see it.
-        client.command("#players")
-        self.assertEqual(server.acks[:1], [7])
-
-    def test_answer_to_another_command_is_rejected(self):
-        server = self.serve(lambda seq, command: [reply(seq + 1, "stray")])
-        with self.assertRaises(RconError):
-            self.client(server).command("#players")
-
-    def test_corrupted_packet_is_rejected(self):
-        server = self.serve(lambda seq, command: [reply(seq, "hello")[:-1]])
+    def test_output_without_acknowledgement(self):
+        server = self.serve(lambda command: output("list"), acknowledge=lambda seq: b"")
         with self.assertRaises(RconError):
             self.client(server).command("#players")
 
     def test_new_login_after_a_failure(self):
         commands = []
 
-        def handler(seq, command):
+        def handler(command):
             commands.append(command)
-            return [] if len(commands) == 1 else [reply(seq, "back")]
+            return [] if len(commands) == 1 else output("back")
 
         server = self.serve(handler)
         client = self.client(server, timeout=0.3)
@@ -206,7 +248,7 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(server.logins, 2)
 
     def test_new_login_after_a_long_silence(self):
-        server = self.serve(lambda seq, command: [reply(seq, "ok")])
+        server = self.serve(lambda command: output("list"))
         client = self.client(server)
         client.command("#players")
         with mock.patch.object(rcon, "SESSION_SECONDS", -1):
@@ -252,7 +294,7 @@ class RconPlayersTest(unittest.TestCase):
 
     def serve(self, text):
         """Start a server answering `#players` with `text`; returns a config.json pointing at it."""
-        self.server = FakeServer(lambda seq, command: [reply(seq, text)] if command == "#players" else [])
+        self.server = FakeServer(lambda command: output(text) if command == "#players" else [])
         self.addCleanup(self.server.close)
         return self.config(self.server.address)
 
@@ -266,7 +308,7 @@ class RconPlayersTest(unittest.TestCase):
             return players.get_players(True, cfg)
 
     def test_list(self):
-        cfg = self.serve(HEADER + f"1 ; {UID_A} ; Jerry\n2 ; {UID_B} ; Hubert\n")
+        cfg = self.serve(HEADER + f"1 ; {UID_A} ; Jerry\n2 ; {UID_B} ; Hubert")
         self.assertEqual(self.query(cfg, 2), {"state": "ok", "count": 2, "max": 64, "list_state": "ok", "players": [
             {"uid": UID_A, "name": "Jerry"}, {"uid": UID_B, "name": "Hubert"}]})
         self.warning.assert_not_called()
@@ -277,7 +319,7 @@ class RconPlayersTest(unittest.TestCase):
         self.assertEqual(self.server.logins, 0)
 
     def test_list_shorter_than_the_count(self):
-        result = self.query(self.serve(HEADER + f"1 ; {UID_A} ; Jerry\n"), 2)
+        result = self.query(self.serve(HEADER + f"1 ; {UID_A} ; Jerry"), 2)
         self.assertEqual((result["count"], result["players"], result["list_state"]), (2, None, "rcon_mismatch"))
 
     def test_answer_not_understood(self):
@@ -306,13 +348,13 @@ class RconPlayersTest(unittest.TestCase):
         self.assertEqual(self.warning.call_count, 1)
 
     def test_recovers_after_a_problem(self):
-        cfg = self.serve(HEADER + f"1 ; {UID_A} ; Jerry\n")
+        cfg = self.serve(HEADER + f"1 ; {UID_A} ; Jerry")
         self.assertEqual(self.query(cfg, 2)["list_state"], "rcon_mismatch")
         self.assertEqual(self.query(cfg, 1)["players"], [{"uid": UID_A, "name": "Jerry"}])
         self.assertEqual(self.server.logins, 1)
 
     def test_client_closed_when_the_server_stops(self):
-        self.query(self.serve(HEADER + f"1 ; {UID_A} ; Jerry\n"), 1)
+        self.query(self.serve(HEADER + f"1 ; {UID_A} ; Jerry"), 1)
         self.assertIsNotNone(players._rcon["client"])
         self.assertEqual(players.get_players(False, {}), {"state": "offline"})
         self.assertIsNone(players._rcon["client"])
