@@ -47,6 +47,14 @@ valid_email() {
     [[ $1 =~ $re ]]
 }
 
+# Reads a setting from config.env the way the panel does (load_env in
+# arma_panel/config.py): the last line for the key wins, and spaces, a Windows
+# line ending or quotes around the value are dropped.
+env_value() {
+    sed -n "s/^[[:space:]]*$1[[:space:]]*=//p" "$2" 2>/dev/null | tail -n 1 \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"*//' -e 's/"*$//' -e "s/^'*//" -e "s/'*\$//"
+}
+
 MODE="full"
 if [[ "$1" == "--panel-only" ]]; then MODE="panel"; fi
 if [[ "$1" == "--update" ]];      then MODE="update"; fi
@@ -111,7 +119,7 @@ if [[ "$MODE" == "update" ]]; then
     # Panels put behind nginx by hand predate PANEL_BEHIND_PROXY. config.env
     # is the user's file, so point the change out rather than making it.
     PANEL_ENV="$PANEL_DIR_EXISTING/config.env"
-    EXISTING_PORT=$(grep "^PANEL_PORT=" "$PANEL_ENV" 2>/dev/null | cut -d= -f2)
+    EXISTING_PORT=$(env_value PANEL_PORT "$PANEL_ENV")
     if ! grep -q "^PANEL_BEHIND_PROXY=" "$PANEL_ENV" 2>/dev/null \
         && grep -qs "proxy_pass http://127.0.0.1:${EXISTING_PORT:-8888}" /etc/nginx/sites-enabled/*; then
         echo -e "${YELLOW}nginx forwards requests to this panel, but config.env doesn't say so.${NC}"
@@ -123,12 +131,13 @@ if [[ "$MODE" == "update" ]]; then
         echo ""
     fi
     # Older installs set WORKSHOP_DIR to a folder the server doesn't use.
-    EXISTING_WORKSHOP=$(grep "^WORKSHOP_DIR=" "$PANEL_ENV" 2>/dev/null | cut -d= -f2-)
+    EXISTING_WORKSHOP=$(env_value WORKSHOP_DIR "$PANEL_ENV")
     ADDONS_DIR="/home/${EXISTING_USER:-arma}/.config/ArmaReforger/addons"
     if [ -n "$EXISTING_WORKSHOP" ] && [ ! -d "$EXISTING_WORKSHOP" ] && [ -d "$ADDONS_DIR" ]; then
-        echo -e "${YELLOW}WORKSHOP_DIR in config.env points to a folder that doesn't exist.${NC}"
-        echo -e "  The server downloads mods to ${ADDONS_DIR}. Change this line in"
-        echo -e "  ${PANEL_ENV}, then run ${YELLOW}sudo systemctl restart arma-panel${NC}:"
+        echo -e "${YELLOW}WORKSHOP_DIR in config.env points to a folder that doesn't exist:${NC}"
+        echo -e "    ${EXISTING_WORKSHOP}"
+        echo -e "  The server downloads mods to ${ADDONS_DIR}. In ${PANEL_ENV},"
+        echo -e "  change the WORKSHOP_DIR line to this, then run ${YELLOW}sudo systemctl restart arma-panel${NC}:"
         echo -e "    ${CYAN}WORKSHOP_DIR=${ADDONS_DIR}${NC}"
         echo -e "  ${DIM}Without it, mod set exports can't include the downloaded version of each mod.${NC}"
         echo ""
