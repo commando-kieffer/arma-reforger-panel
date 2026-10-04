@@ -122,6 +122,17 @@ if [[ "$MODE" == "update" ]]; then
         echo -e "  ${DIM}the panel can still be reached on port ${EXISTING_PORT:-8888} without going through nginx.${NC}"
         echo ""
     fi
+    # Older installs set WORKSHOP_DIR to a folder the server doesn't use.
+    EXISTING_WORKSHOP=$(grep "^WORKSHOP_DIR=" "$PANEL_ENV" 2>/dev/null | cut -d= -f2-)
+    ADDONS_DIR="/home/${EXISTING_USER:-arma}/.config/ArmaReforger/addons"
+    if [ -n "$EXISTING_WORKSHOP" ] && [ ! -d "$EXISTING_WORKSHOP" ] && [ -d "$ADDONS_DIR" ]; then
+        echo -e "${YELLOW}WORKSHOP_DIR in config.env points to a folder that doesn't exist.${NC}"
+        echo -e "  The server downloads mods to ${ADDONS_DIR}. Change this line in"
+        echo -e "  ${PANEL_ENV}, then run ${YELLOW}sudo systemctl restart arma-panel${NC}:"
+        echo -e "    ${CYAN}WORKSHOP_DIR=${ADDONS_DIR}${NC}"
+        echo -e "  ${DIM}Without it, mod set exports can't include the downloaded version of each mod.${NC}"
+        echo ""
+    fi
     exit 0
 fi
 
@@ -391,7 +402,7 @@ print(bcrypt.hashpw(sys.argv[1].encode(), bcrypt.gensalt()).decode())
 " "$PANEL_PASSWORD" 2>/dev/null || true)
 
 # Default workshop dir for the addons that the Reforger server downloads.
-WORKSHOP_DIR="${ARMA_HOME}/.local/share/Arma Reforger/addons"
+WORKSHOP_DIR="${ARMA_HOME}/.config/ArmaReforger/addons"
 # Default profile dir: where Reforger writes session saves. Linux dedicated
 # layout puts them under `{ARMA_HOME}/.config/ArmaReforger/profile/.save/`.
 PROFILE_DIR="${ARMA_HOME}/.config/ArmaReforger/profile"

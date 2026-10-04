@@ -60,7 +60,7 @@ if PANEL_BEHIND_PROXY and PANEL_HOST not in ("127.0.0.1", "localhost", "::1"):
 SERVER_DIR     = _env.get("SERVER_DIR",    "/home/arma/server")
 SERVER_CONFIG  = _env.get("SERVER_CONFIG", "/home/arma/server/config.json")
 LOG_DIR        = _env.get("LOG_DIR",       "/home/arma/.config/ArmaReforger/logs")
-WORKSHOP_DIR   = _env.get("WORKSHOP_DIR",  os.path.expanduser("~/.local/share/Arma Reforger/addons"))
+WORKSHOP_DIR   = _env.get("WORKSHOP_DIR",  "/home/arma/.config/ArmaReforger/addons")
 # Where Reforger writes session saves. The real layout produced by the server
 # under install.sh defaults is `{LOG_DIR_parent}/profile/.save/`, e.g.
 # `/home/arma/.config/ArmaReforger/profile/.save/{game,playersave,settings}/`.
