@@ -20,7 +20,7 @@ def normalize_mod_entry(entry):
         out["name"] = name
     version = str(entry.get("version", "")).strip()
     if version:
-        if len(version) > 32 or any(c in version for c in '\n\r"\\'):
+        if not valid_version(version):
             return None
         out["version"] = version
     # Workshop exports can mark a mod as optional; keep that choice.
@@ -28,6 +28,10 @@ def normalize_mod_entry(entry):
     if isinstance(required, bool):
         out["required"] = required
     return out
+
+
+def valid_version(version):
+    return 0 < len(version) <= 32 and not any(c in version for c in '\n\r"\\')
 
 
 def collect_import_entries(data):
@@ -65,3 +69,19 @@ def merge_mods(existing, incoming):
             existing_ids.add(m["modId"])
             added += 1
     return merged, added
+
+
+def fill_versions(mods, installed):
+    """Copy of `mods` where the entries without a version get the one from
+    `installed` (upper-case mod id -> version). Returns (mods, the entries
+    still without a version)."""
+    filled, missing = [], []
+    for mod in mods:
+        if not mod.get("version"):
+            version = installed.get(str(mod.get("modId", "")).upper())
+            if version:
+                mod = {**mod, "version": version}
+            else:
+                missing.append(mod)
+        filled.append(mod)
+    return filled, missing

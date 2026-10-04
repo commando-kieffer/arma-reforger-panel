@@ -91,6 +91,12 @@ class ModSetsTest(unittest.TestCase):
                 modsets.rename(bad, "x")
         with self.assertRaises(ChangeRejected):
             modsets.create("x", copy_from="deadbeef")
+        with self.assertRaises(ChangeRejected):
+            modsets.get("deadbeef")
+
+    def test_get(self):
+        set_id, _ = self.default()
+        self.assertEqual(modsets.get(set_id), {"name": "Default", "mods": [RHS]})
 
     def test_the_set_in_use_cannot_be_deleted(self):
         set_id, _ = self.default()

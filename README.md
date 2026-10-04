@@ -153,6 +153,8 @@ Before each change it makes to the server's `config.json`, the panel copies the 
 
 Mod sets are stored in `modsets/` in the panel directory: one `<id>.json` file per set (`{"name": ..., "mods": [...]}`) and an `active` file holding the id of the set in use. The server itself only reads `game.mods` in `config.json`: choosing a set copies its mods there, and changes to the set in use are written to both. On first start the panel creates a "Default" set from the mods already in `config.json`. If `game.mods` is later edited by hand, the Mods card shows that it no longer matches the set in use.
 
+Export downloads the selected set as a JSON file in the import format. Mods that don't name a version get the version the server has downloaded, read from the addon's `meta` file in `WORKSHOP_DIR`. Mods the server hasn't downloaded yet are exported without a version, and the panel lists them.
+
 ---
 
 ## Useful Commands

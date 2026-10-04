@@ -7,9 +7,10 @@ from flask import Blueprint, jsonify, request
 from ..i18n import t, tn
 from ..security import csrf_protected, login_required
 from ..services import modsets
-from ..services.mods import collect_import_entries, merge_mods, normalize_mod_entry
+from ..services.mods import collect_import_entries, fill_versions, merge_mods, normalize_mod_entry
 from ..services.process import get_server_pid
 from ..services.server_config import ChangeRejected
+from ..services.workshop import installed_versions
 from .common import attempt
 
 bp = Blueprint("mods", __name__, url_prefix="/api/modsets")
@@ -68,6 +69,23 @@ def activate_set(set_id):
     if error:
         return error
     return jsonify({"ok": True, "restart_required": get_server_pid() is not None})
+
+
+@bp.get("/<set_id>/export")
+@login_required
+def export_set(set_id):
+    """The set's mods in the import format. Mods that don't name a version
+    get the one the server has downloaded, when it is known."""
+    data, error = _attempt(lambda: modsets.get(set_id))
+    if error:
+        return error
+    mods, missing = fill_versions(data["mods"], installed_versions())
+    return jsonify({
+        "ok": True,
+        "name": data["name"],
+        "mods": mods,
+        "unversioned": [m.get("name") or m.get("modId") for m in missing],
+    })
 
 
 def _restart_required(in_use):

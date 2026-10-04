@@ -46,6 +46,13 @@ def overview():
     }
 
 
+def get(set_id):
+    """The set's {"name", "mods"}."""
+    with _lock:
+        sets, _active = _load()
+        return _get(sets, set_id)
+
+
 def create(name, copy_from=None):
     """Create a set, empty or with the mods of `copy_from`. Returns its id."""
     with _lock:

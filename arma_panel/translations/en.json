@@ -201,7 +201,16 @@
     "confirm_delete": "Delete the set \"{name}\"? This can't be undone.",
     "deleted": "Set \"{name}\" deleted",
     "activating": "Switching to \"{name}\"…",
-    "activated": "\"{name}\" will be loaded at the next server start"
+    "activated": "\"{name}\" will be loaded at the next server start",
+    "export": "Export",
+    "exported": {
+      "one": "{count} mod exported from \"{name}\"",
+      "other": "{count} mods exported from \"{name}\""
+    },
+    "export_unversioned": {
+      "one": ". No downloaded version found for {count} mod: {mods}",
+      "other": ". No downloaded version found for {count} mods: {mods}"
+    }
   },
   "persistence": {
     "title": "Persistence",

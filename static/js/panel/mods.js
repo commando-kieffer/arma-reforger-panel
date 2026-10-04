@@ -80,6 +80,7 @@ function render() {
   const set = selectedSet();
   const inUse = !!set && set.id === activeId;
   $('btn-modset-activate').disabled = !set || (inUse && !configDiffers);
+  $('btn-modset-export').disabled = !set;
   document.querySelectorAll('[data-modset-action]').forEach(btn => {
     const action = btn.dataset.modsetAction;
     btn.disabled = action !== 'new' && (!set || (action === 'delete' && inUse));
@@ -169,6 +170,33 @@ async function activateSet() {
   await loadSets();
 }
 
+async function exportSet() {
+  if (!selectedSet()) return;
+  const r = await fetch(setUrl('/export'));
+  if (r.status === 401) { window.location.href = '/login'; return; }
+  const d = await r.json();
+  if (!d.ok) { setLog(errorMessage(d), 'error'); return; }
+  downloadJson(d.mods, `${d.name.replace(/[\\/:*?"<>|]/g, '_')}.json`);
+  let msg = tn('modsets.exported', d.mods.length, { name: d.name });
+  if (d.unversioned.length) {
+    const mods = d.unversioned.slice(0, 3).join(', ') + (d.unversioned.length > 3 ? '…' : '');
+    msg += tn('modsets.export_unversioned', d.unversioned.length, { mods });
+  }
+  setLog(msg, 'ok');
+}
+
+function downloadJson(data, fileName) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2) + '\n'], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoking the URL right after the click can cancel the download in some browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 // Mods of the selected set
 
 async function addMod() {
@@ -248,6 +276,7 @@ export function initMods() {
     render();
   });
   $('btn-modset-activate').addEventListener('click', () => run(activateSet));
+  $('btn-modset-export').addEventListener('click', () => run(exportSet));
   document.querySelectorAll('[data-modset-action]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.dataset.modsetAction === 'delete') run(deleteSet);

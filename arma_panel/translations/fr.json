@@ -201,7 +201,16 @@
     "confirm_delete": "Supprimer le modset « {name} » ? Cette action est irréversible.",
     "deleted": "Modset « {name} » supprimé",
     "activating": "Passage à « {name} »…",
-    "activated": "« {name} » sera chargé au prochain démarrage du serveur"
+    "activated": "« {name} » sera chargé au prochain démarrage du serveur",
+    "export": "Exporter",
+    "exported": {
+      "one": "{count} mod exporté depuis « {name} »",
+      "other": "{count} mods exportés depuis « {name} »"
+    },
+    "export_unversioned": {
+      "one": ". Aucune version téléchargée trouvée pour {count} mod : {mods}",
+      "other": ". Aucune version téléchargée trouvée pour {count} mods : {mods}"
+    }
   },
   "persistence": {
     "title": "Persistance",
