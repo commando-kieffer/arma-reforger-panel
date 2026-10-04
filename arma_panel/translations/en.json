@@ -28,6 +28,14 @@
     "title": "Arma Reforger — Management Panel",
     "logout": "Log out"
   },
+  "settings": {
+    "title": "Panel settings",
+    "close": "Close",
+    "theme": "Style",
+    "theme_help": "The style applies to everyone using the panel.",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "status": {
     "title": "Server Status",
     "loading": "LOADING...",
@@ -309,6 +317,8 @@
     "modset_name_invalid": "Set names are limited to {max} characters on one line",
     "modset_name_taken": "A set named \"{name}\" already exists",
     "modset_write_failed": "Could not save the mod set: {error}",
+    "unknown_theme": "Unknown style",
+    "settings_write_failed": "Could not save the panel settings: {error}",
     "file_not_utf8": "File must be UTF-8 encoded JSON",
     "invalid_mode": "mode must be 'replace' or 'merge'",
     "empty_payload": "Empty payload",

@@ -8,7 +8,7 @@ const POLL_MS = 3000;
 let cpuChart = null;
 let ramChart = null;
 
-// Chart colors come from the design tokens in static/css/base.css.
+// Chart colors come from the design tokens in the theme's base.css.
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }

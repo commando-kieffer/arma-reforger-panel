@@ -7,18 +7,13 @@
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0F0E33">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arma Panel">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/panel.css') }}">
+{% with page_css = 'panel.css' %}{% include 'partials/theme_head.html' %}{% endwith %}
 </head>
 <body>
 
@@ -30,6 +25,9 @@
     </div>
     <img class="header-logo" src="{{ url_for('static', filename='img/logo-ck.png') }}" alt="{{ t('common.logo_alt') }}">
     <div class="header-actions">
+      <button type="button" class="icon-btn" id="btn-settings" aria-haspopup="dialog" aria-label="{{ t('settings.title') }}" title="{{ t('settings.title') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
       {% include 'partials/lang_switch.html' %}
       <button class="btn btn-light btn-sm" id="btn-logout">{{ t('panel.logout') }}</button>
     </div>
@@ -398,6 +396,29 @@
 <footer class="site-footer">
   <p>{{ t('footer.refresh_in') }} <span id="refresh-timer">10</span>{{ t('footer.seconds_unit') }} &nbsp;|&nbsp; Panel v3.0</p>
 </footer>
+
+<dialog class="modal" id="settings-dialog" aria-labelledby="settings-title">
+  <form class="modal-form" id="settings-form">
+    <div class="modal-header">
+      <h2 class="card-title" id="settings-title">{{ t('settings.title') }}</h2>
+      <button type="button" class="modal-close" data-dialog-close aria-label="{{ t('settings.close') }}">✕</button>
+    </div>
+    <div class="field-group">
+      <label for="settings-theme">{{ t('settings.theme') }}</label>
+      <select id="settings-theme">
+        {%- for item in themes %}
+        <option value="{{ item.id }}"{{ ' selected' if item.id == theme.id }}>{{ item.name }}</option>
+        {%- endfor %}
+      </select>
+    </div>
+    <div class="card-help">{{ t('settings.theme_help') }}</div>
+    <div class="field-warning" id="settings-error" role="alert" hidden></div>
+    <div class="card-actions">
+      <button type="submit" class="btn btn-solid" id="btn-settings-save">{{ t('settings.save') }}</button>
+      <button type="button" class="btn btn-outline" data-dialog-close>{{ t('settings.cancel') }}</button>
+    </div>
+  </form>
+</dialog>
 
 {% include 'partials/i18n_data.html' %}
 <script type="module" src="{{ url_for('static', filename='js/panel/main.js') }}"></script>

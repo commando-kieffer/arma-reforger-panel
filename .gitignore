@@ -8,3 +8,4 @@ config.env
 .scenario-cache.json
 config-backups/
 modsets/
+panel-settings.json

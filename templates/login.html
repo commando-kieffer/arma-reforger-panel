@@ -5,16 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{{ t('login.title') }}</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0F0E33">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arma Panel">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% with page_css = 'login.css' %}{% include 'partials/theme_head.html' %}{% endwith %}
 </head>
 <body>
 <main class="connection">

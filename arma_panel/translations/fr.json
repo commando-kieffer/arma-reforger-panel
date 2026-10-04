@@ -28,6 +28,14 @@
     "title": "Arma Reforger — Panel de gestion",
     "logout": "Se déconnecter"
   },
+  "settings": {
+    "title": "Paramètres du panel",
+    "close": "Fermer",
+    "theme": "Style",
+    "theme_help": "Le style s'applique à tous les utilisateurs du panel.",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
   "status": {
     "title": "État du serveur",
     "loading": "CHARGEMENT...",
@@ -309,6 +317,8 @@
     "modset_name_invalid": "Le nom d'un modset est limité à {max} caractères sur une seule ligne",
     "modset_name_taken": "Un modset nommé « {name} » existe déjà",
     "modset_write_failed": "Impossible d'enregistrer le modset : {error}",
+    "unknown_theme": "Style inconnu",
+    "settings_write_failed": "Impossible d'enregistrer les paramètres du panel : {error}",
     "file_not_utf8": "Le fichier doit être du JSON encodé en UTF-8",
     "invalid_mode": "Le mode doit être « replace » ou « merge »",
     "empty_payload": "Contenu vide",

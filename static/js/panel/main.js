@@ -11,6 +11,7 @@ import { fetchPersistence, initPersistence } from './persistence.js';
 import { initPlayers } from './players.js';
 import { initServerConfig } from './server-config.js';
 import { initServerControl } from './server-control.js';
+import { initSettings } from './settings.js';
 import { fetchStatus, startCountdown } from './status.js';
 
 async function doLogout() {
@@ -31,6 +32,7 @@ initLogHistory();
 initPlayers();
 
 document.getElementById('btn-logout').addEventListener('click', doLogout);
+initSettings();
 initLanguageSwitch();
 initPasswordToggles();
 

@@ -49,6 +49,68 @@ body {
   gap: 0.75rem;
 }
 
+/* Settings button */
+.icon-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: #FFFFFF;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.icon-btn svg { width: 17px; height: 17px; transition: transform 0.4s ease; }
+.icon-btn:hover { color: var(--ink); background-color: #FFFFFF; border-color: #FFFFFF; }
+.icon-btn:hover svg { transform: rotate(60deg); }
+
+/* Settings dialog. Its display isn't set here: the browser hides it while closed. */
+.modal {
+  width: min(440px, calc(100% - 2rem));
+  margin: auto;
+  padding: 0;
+  color: var(--ink);
+  background-color: #F5F7FC;
+  background-image: var(--gradient-page);
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+}
+.modal[open] { animation: fadeUp 0.25s ease both; }
+.modal::backdrop {
+  background-color: rgba(7, 7, 9, 0.55);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.modal-form { padding: 1.75rem; }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.modal-close {
+  padding: 0.2rem 0.4rem;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.modal-close:hover { color: var(--ink); }
+
+.modal .field-warning { margin-bottom: 0; }
+
 /* Page */
 .layout {
   flex: 1;
