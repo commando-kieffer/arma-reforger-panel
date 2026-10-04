@@ -55,6 +55,7 @@ The installer will ask you for:
 - Max players, game port, public IP
 - Panel web password and port
 - Optionally, a domain name for the panel (see [HTTPS / Domain](#https--domain-optional))
+- Optionally, whether to set up the UFW firewall (see [Firewall](#firewall-optional))
 
 After ~15 minutes your server is running and the panel is accessible at:
 ```
@@ -183,7 +184,7 @@ The full and panel-only installs ask whether to serve the panel on a domain. Bef
 
 - installs nginx and certbot, and writes `/etc/nginx/sites-available/<domain>`, which forwards to the panel;
 - disables nginx's default welcome page;
-- allows 80/tcp and 443/tcp in UFW if UFW is active (an inactive firewall is left alone);
+- allows 80/tcp and 443/tcp in UFW if UFW is active or the installer sets it up (an inactive firewall is otherwise left alone);
 - gets a Let's Encrypt certificate, redirects HTTP to HTTPS and sends an HSTS header, so browsers only use HTTPS for the domain from then on. `certbot.timer` renews the certificate;
 - makes the panel listen on `127.0.0.1` only (`PANEL_HOST`), so it can't be reached around nginx, and sets `PANEL_BEHIND_PROXY=true`.
 
@@ -215,6 +216,21 @@ server {
 Then get the certificate with `sudo certbot --nginx -d panel.example.com --redirect --hsts`, add `PANEL_HOST=127.0.0.1` and `PANEL_BEHIND_PROXY=true` to `config.env`, and restart the panel. Without `PANEL_BEHIND_PROXY`, the panel sees every visitor as nginx itself, so one person's failed logins would lock everyone out. `install.sh --update` reminds you of this when it finds such a site.
 
 If you use **HestiaCP**, add a subdomain through its web interface — it handles SSL automatically. The two `config.env` settings above apply there too.
+
+---
+
+## Firewall (optional)
+
+The full and panel-only installs ask whether to set up the firewall. Only UFW is supported. If you answer yes, the installer installs UFW if it's missing, then:
+
+- allows SSH on the ports sshd listens on. It asks you to confirm them, since a wrong port locks you out of the server;
+- allows the game port and the A2S query port (UDP). For an existing server (`--panel-only`), they are read from its `config.json`, and if that fails the firewall is left alone;
+- allows the panel port (TCP), or 80/tcp and 443/tcp when the panel is served on a domain;
+- sets the default policies to `deny incoming` and `allow outgoing`, and turns UFW on.
+
+Every other incoming port is blocked, so on a machine that runs other services, answer no or add their rules first. Rules already in UFW are kept. RCON listens on `127.0.0.1` only and needs no rule.
+
+If you answer no, the firewall isn't touched and the installer prints the `ufw` commands to run yourself, including the SSH rule and the default policies.
 
 ---
 

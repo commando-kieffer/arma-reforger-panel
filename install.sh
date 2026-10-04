@@ -9,7 +9,8 @@
 #   sudo bash install.sh --update     — update panel files only
 #
 # The full and panel-only installs can also serve the panel on a custom
-# domain, through nginx with a Let's Encrypt certificate.
+# domain, through nginx with a Let's Encrypt certificate, and set up the UFW
+# firewall.
 # ============================================================
 
 set -e
@@ -31,8 +32,10 @@ ARMA_APP_ID="1874900"
 ARMA_BINARY="ArmaReforgerServer"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RCON_PORT="19999"
+A2S_PORT="17777"
 DOMAIN=""
 LE_EMAIL=""
+USE_UFW=""
 
 # ── Input checks ──────────────────────────────────────────────────────────────
 # The domain ends up in the nginx config and in file names, so only plain
@@ -45,6 +48,29 @@ valid_domain() {
 valid_email() {
     local re='^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
     [[ $1 =~ $re ]]
+}
+
+# One or more port numbers, separated by spaces.
+valid_ports() {
+    local -a ports
+    local port
+    read -ra ports <<< "$1"
+    [ ${#ports[@]} -gt 0 ] || return 1
+    for port in "${ports[@]}"; do
+        [[ $port =~ ^[1-9][0-9]{0,4}$ ]] && (( port <= 65535 )) || return 1
+    done
+}
+
+# Ports sshd listens on, from its effective configuration. A ListenAddress
+# with its own port overrides Port, so both are read. Falls back to 22 when
+# sshd isn't installed or its configuration can't be read.
+ssh_ports() {
+    local ports
+    ports=$(sshd -T 2>/dev/null \
+        | awk '$1 == "port" { print $2 }
+               $1 == "listenaddress" { for (i = 2; i <= NF; i++) { sub(/.*:/, "", $i); print $i } }' \
+        | sort -un | paste -sd ' ' -)
+    echo "${ports:-22}"
 }
 
 # Reads a setting from config.env the way the panel does (load_env in
@@ -227,6 +253,62 @@ if [[ "$INPUT_USE_DOMAIN" =~ ^[Yy]$ ]]; then
     echo -e "  ${DIM}https://letsencrypt.org/repository/${NC}"
 fi
 
+echo ""
+echo -e "  ${CYAN}Firewall (optional, UFW only):${NC}"
+echo -e "  ${DIM}Turns UFW on (installing it if needed) and blocks every incoming connection${NC}"
+echo -e "  ${DIM}except SSH and the ports the server and panel use. Rules already in UFW are${NC}"
+echo -e "  ${DIM}kept. Answer no to get the rules to add yourself at the end instead.${NC}"
+read -p "  Configure the firewall with UFW? [y/N]: " INPUT_USE_UFW
+if [[ "$INPUT_USE_UFW" =~ ^[Yy]$ ]]; then
+    USE_UFW="yes"
+fi
+if [ -n "$USE_UFW" ] && [[ "$MODE" == "panel" ]]; then
+    # The server already exists, so its ports come from its config.json, with
+    # the server's own defaults. Without an "a2s" block there is no A2S port.
+    read -r GAME_PORT A2S_PORT <<< "$(python3 -c '
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+ports = [cfg.get("bindPort", 2001)]
+if isinstance(cfg.get("a2s"), dict):
+    ports.append(cfg["a2s"].get("port", 17777))
+print(*(int(p) for p in ports))
+' "$SERVER_CONFIG" 2>/dev/null || true)"
+    if ! valid_ports "$GAME_PORT $A2S_PORT"; then
+        echo -e "  ${RED}Couldn't read the game port from ${SERVER_CONFIG}; the firewall will be left alone.${NC}"
+        USE_UFW=""
+    fi
+fi
+if [ -n "$USE_UFW" ]; then
+    DETECTED_SSH_PORTS=$(ssh_ports)
+    echo -e "  ${DIM}Check the SSH port: with the wrong one, you lose access to this server.${NC}"
+    read -p "  SSH port(s) [$DETECTED_SSH_PORTS]: " SSH_PORTS
+    SSH_PORTS="${SSH_PORTS:-$DETECTED_SSH_PORTS}"
+    while ! valid_ports "$SSH_PORTS"; do
+        echo -e "  ${RED}Enter port numbers from 1 to 65535, separated by spaces.${NC}"
+        read -p "  SSH port(s) [$DETECTED_SSH_PORTS]: " SSH_PORTS
+        SSH_PORTS="${SSH_PORTS:-$DETECTED_SSH_PORTS}"
+    done
+fi
+
+# Rules UFW gets, as "port|purpose". SSH comes first so it is never cut off.
+# RCON listens on 127.0.0.1 only and with a domain the panel does too, so
+# neither is listed.
+UFW_RULES=()
+if [ -n "$USE_UFW" ]; then
+    for port in $SSH_PORTS; do
+        UFW_RULES+=("${port}/tcp|SSH")
+    done
+    UFW_RULES+=("${GAME_PORT}/udp|Reforger game port")
+    if [ -n "$A2S_PORT" ]; then
+        UFW_RULES+=("${A2S_PORT}/udp|A2S server-browser query")
+    fi
+    if [ -z "$DOMAIN" ]; then
+        UFW_RULES+=("${PANEL_PORT}/tcp|Panel web UI")
+    else
+        UFW_RULES+=("80/tcp|HTTP, redirected to HTTPS" "443/tcp|Panel over HTTPS")
+    fi
+fi
+
 # ── Confirm ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}━━━ Summary ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -242,15 +324,25 @@ echo -e "  Panel port    : ${CYAN}$PANEL_PORT${NC}"
 if [ -n "$DOMAIN" ]; then
     echo -e "  Panel URL     : ${CYAN}https://$DOMAIN${NC}"
 fi
+if [ -n "$USE_UFW" ]; then
+    echo -e "  Firewall      : ${CYAN}UFW${NC}, incoming connections allowed only on:"
+    for rule in "${UFW_RULES[@]}"; do
+        printf "                  ${CYAN}%-10s${NC} ${DIM}%s${NC}\n" "${rule%%|*}" "${rule#*|}"
+    done
+fi
 echo ""
 read -p "  Proceed? [Y/n]: " CONFIRM
 [[ "$CONFIRM" =~ ^[Nn]$ ]] && exit 0
 echo ""
 
 # Step numbers: the full install has 6 steps, the panel-only install 1, and
-# the custom domain adds one at the end.
+# the firewall and the custom domain add one each at the end.
 if [[ "$MODE" == "full" ]]; then TOTAL_STEPS=6; else TOTAL_STEPS=1; fi
 PANEL_STEP=$TOTAL_STEPS
+if [ -n "$USE_UFW" ]; then
+    TOTAL_STEPS=$((TOTAL_STEPS + 1))
+    FIREWALL_STEP=$TOTAL_STEPS
+fi
 if [ -n "$DOMAIN" ]; then
     TOTAL_STEPS=$((TOTAL_STEPS + 1))
     DOMAIN_STEP=$TOTAL_STEPS
@@ -318,7 +410,7 @@ if [[ "$MODE" == "full" ]]; then
 	"publicPort": ${GAME_PORT},
 	"a2s": {
 		"address": "${PUBLIC_IP}",
-		"port": 17777
+		"port": ${A2S_PORT}
 	},
 	"rcon": {
 		"address": "127.0.0.1",
@@ -351,9 +443,6 @@ EOF
     # both run as the Arma user, and the panel keeps the mode when it saves.
     chmod 600 "$SERVER_CONFIG"
     echo -e "      ${GREEN}✓ config.json generated.${NC}"
-
-    # Firewall is intentionally NOT touched — see post-install summary.
-    # The user is expected to manage their own firewall (UFW recommended).
 
     # Arma server systemd service
     cat > /etc/systemd/system/arma-server.service << EOF
@@ -463,12 +552,28 @@ systemctl daemon-reload
 systemctl enable arma-panel
 systemctl restart arma-panel
 
-# Firewall is intentionally NOT touched — see post-install summary.
-
 echo -e "      ${GREEN}✓ Panel installed and started.${NC}"
 
 if [ -z "$PUBLIC_IP" ]; then
     PUBLIC_IP=$(curl -4 -s ifconfig.me 2>/dev/null || echo "YOUR_SERVER_IP")
+fi
+
+# ── Firewall: UFW ─────────────────────────────────────────────────────────────
+# Runs before the domain step so that Let's Encrypt can reach port 80.
+if [ -n "$USE_UFW" ]; then
+    echo -e "${YELLOW}[${FIREWALL_STEP}/${TOTAL_STEPS}] Configuring the UFW firewall...${NC}"
+    if ! command -v ufw >/dev/null 2>&1; then
+        apt-get install -y -qq ufw
+    fi
+    # Rules go in before the default policy changes: if UFW is already on,
+    # the new policy applies at once.
+    for rule in "${UFW_RULES[@]}"; do
+        ufw allow "${rule%%|*}" comment "${rule#*|}" >/dev/null
+    done
+    ufw default deny incoming >/dev/null
+    ufw default allow outgoing >/dev/null
+    ufw --force enable >/dev/null
+    echo -e "      ${GREEN}✓ UFW active; incoming connections allowed only on ${UFW_RULES[*]%%|*}.${NC}"
 fi
 
 # ── Custom domain: nginx reverse proxy and Let's Encrypt certificate ─────────
@@ -513,8 +618,9 @@ EOF
     echo -e "      ${GREEN}✓ nginx forwards http://${DOMAIN} to the panel.${NC}"
 
     # Port 80 is needed for the certificate check and the redirect, 443 for
-    # the panel itself. A firewall left inactive is left alone.
-    if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "^Status: active"; then
+    # the panel itself. A firewall left inactive is left alone, and one set up
+    # by the firewall step already allows both.
+    if [ -z "$USE_UFW" ] && command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "^Status: active"; then
         ufw allow 80/tcp >/dev/null
         ufw allow 443/tcp >/dev/null
         UFW_OPENED="yes"
@@ -581,16 +687,28 @@ echo -e "  ${BOLD}Update panel in the future:${NC}"
 echo -e "    ${YELLOW}git pull && sudo bash install.sh --update${NC}"
 echo ""
 
+if [ -n "$USE_UFW" ]; then
+    echo -e "  ${BOLD}Firewall (UFW):${NC}"
+    echo -e "    Incoming connections are blocked, except on:"
+    for rule in "${UFW_RULES[@]}"; do
+        printf "      ${CYAN}%-10s${NC} ${DIM}%s${NC}\n" "${rule%%|*}" "${rule#*|}"
+    done
+    echo -e "    Rules    : ${YELLOW}sudo ufw status verbose${NC}"
+    echo ""
+fi
+
 # Ports still to open, as "port|purpose". RCON listens on 127.0.0.1 only and
 # with a domain the panel does too, so neither is listed.
 FIREWALL_RULES=()
-if [[ "$MODE" == "full" ]]; then
-    FIREWALL_RULES+=("${GAME_PORT}/udp|Reforger game port" "17777/udp|A2S server-browser query")
-fi
-if [ -z "$DOMAIN" ]; then
-    FIREWALL_RULES+=("${PANEL_PORT}/tcp|Panel web UI")
-elif [ -z "$UFW_OPENED" ]; then
-    FIREWALL_RULES+=("80/tcp|HTTP, redirected to HTTPS" "443/tcp|Panel over HTTPS")
+if [ -z "$USE_UFW" ]; then
+    if [[ "$MODE" == "full" ]]; then
+        FIREWALL_RULES+=("${GAME_PORT}/udp|Reforger game port" "${A2S_PORT}/udp|A2S server-browser query")
+    fi
+    if [ -z "$DOMAIN" ]; then
+        FIREWALL_RULES+=("${PANEL_PORT}/tcp|Panel web UI")
+    elif [ -z "$UFW_OPENED" ]; then
+        FIREWALL_RULES+=("80/tcp|HTTP, redirected to HTTPS" "443/tcp|Panel over HTTPS")
+    fi
 fi
 if [ ${#FIREWALL_RULES[@]} -gt 0 ]; then
     echo -e "${BOLD}${YELLOW}⚠  Firewall — action required${NC}"
@@ -600,7 +718,17 @@ if [ ${#FIREWALL_RULES[@]} -gt 0 ]; then
     for rule in "${FIREWALL_RULES[@]}"; do
         printf "    ${CYAN}%-28s${NC} ${DIM}# %s${NC}\n" "sudo ufw allow ${rule%%|*}" "${rule#*|}"
     done
-    echo -e "    ${CYAN}sudo ufw reload${NC}"
+    echo ""
+    echo -e "  Don't forget to allow SSH too, or you will lose access to this server once"
+    echo -e "  UFW blocks incoming connections. Then set the default policies and turn"
+    echo -e "  UFW on:"
+    echo ""
+    for port in $(ssh_ports); do
+        printf "    ${CYAN}%-28s${NC} ${DIM}# %s${NC}\n" "sudo ufw allow ${port}/tcp" "SSH"
+    done
+    echo -e "    ${CYAN}sudo ufw default deny incoming${NC}"
+    echo -e "    ${CYAN}sudo ufw default allow outgoing${NC}"
+    echo -e "    ${CYAN}sudo ufw enable${NC}"
     echo ""
 fi
 if [ -z "$DOMAIN" ]; then
