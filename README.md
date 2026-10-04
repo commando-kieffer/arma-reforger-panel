@@ -54,11 +54,15 @@ The installer will ask you for:
 - Server name, game password, admin password
 - Max players, game port, public IP
 - Panel web password and port
+- Optionally, a domain name for the panel (see [HTTPS / Domain](#https--domain-optional))
 
 After ~15 minutes your server is running and the panel is accessible at:
 ```
 http://YOUR_SERVER_IP:8888
 ```
+or at `https://your.domain` if you gave one.
+
+The generated `config.json` enables RCON on `127.0.0.1` with a random password, so the panel can show the names of the connected players (see [Player names](#player-names-rcon)).
 
 ---
 
@@ -100,6 +104,12 @@ PANEL_PASSWORD=changeme
 # Port the panel listens on
 PANEL_PORT=8888
 
+# Address the panel listens on (127.0.0.1 when nginx serves it)
+PANEL_HOST=0.0.0.0
+
+# true when every request comes through nginx on this machine
+PANEL_BEHIND_PROXY=false
+
 # Path to your Arma Reforger server binary directory
 SERVER_DIR=/home/arma/server
 
@@ -131,7 +141,7 @@ The player count comes from the server's A2S port. The names and identity IDs of
 }
 ```
 
-Add it at the top level, next to `a2s`, and restart the server. The password needs at least 3 characters and no spaces. With `127.0.0.1` the port is only reachable from the server itself, and `monitor` is read-only. The panel reads the address, port and password from `config.json`, so nothing has to be added to `config.env`.
+The full install writes this block with a random password. On an existing server, add it at the top level, next to `a2s`, and restart the server. The password needs at least 3 characters and no spaces. With `127.0.0.1` the port is only reachable from the server itself, and `monitor` is read-only. The panel reads the address, port and password from `config.json`, so nothing has to be added to `config.env`.
 
 The names are only shown when the server's answer is complete and lists as many players as the A2S count. Otherwise the Players card keeps the count and says why, and `journalctl -u arma-panel` has the details.
 
@@ -167,22 +177,42 @@ git pull && sudo bash install.sh --update
 
 ## HTTPS / Domain (optional)
 
-To access the panel over HTTPS with a custom domain, use nginx as a reverse proxy with a Let's Encrypt certificate.
+The full and panel-only installs ask whether to serve the panel on a domain. Before answering yes, point the domain's DNS `A` record to the server and make sure ports 80 and 443 can be reached. The installer then:
 
-Nginx config example:
+- installs nginx and certbot, and writes `/etc/nginx/sites-available/<domain>`, which forwards to the panel;
+- disables nginx's default welcome page;
+- allows 80/tcp and 443/tcp in UFW if UFW is active (an inactive firewall is left alone);
+- gets a Let's Encrypt certificate, redirects HTTP to HTTPS and sends an HSTS header, so browsers only use HTTPS for the domain from then on. `certbot.timer` renews the certificate;
+- makes the panel listen on `127.0.0.1` only (`PANEL_HOST`), so it can't be reached around nginx, and sets `PANEL_BEHIND_PROXY=true`.
+
+If the certificate can't be obtained (usually because DNS doesn't point to the server yet), the panel stays on plain HTTP through nginx and the installer prints the `certbot` command to run once DNS is fixed.
+
+To put an existing install behind nginx by hand, use the same site as the installer:
+
 ```nginx
-location / {
-    proxy_pass http://127.0.0.1:8888;
-    proxy_http_version 1.1;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_buffering off;
-    proxy_read_timeout 3600;
+server {
+    listen 80;
+    listen [::]:80;
+    server_name panel.example.com;
+
+    client_max_body_size 2m;
+
+    location / {
+        proxy_pass http://127.0.0.1:8888;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
 }
 ```
 
-If you use **HestiaCP**, add a subdomain through its web interface — it handles SSL automatically.
+Then get the certificate with `sudo certbot --nginx -d panel.example.com --redirect --hsts`, add `PANEL_HOST=127.0.0.1` and `PANEL_BEHIND_PROXY=true` to `config.env`, and restart the panel. Without `PANEL_BEHIND_PROXY`, the panel sees every visitor as nginx itself, so one person's failed logins would lock everyone out. `install.sh --update` reminds you of this when it finds such a site.
+
+If you use **HestiaCP**, add a subdomain through its web interface — it handles SSL automatically. The two `config.env` settings above apply there too.
 
 ---
 

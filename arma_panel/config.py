@@ -48,6 +48,15 @@ _env = load_env(os.path.join(BASE_DIR, "config.env"))
 
 PANEL_PASSWORD_HASH = _resolve_password_hash(_env)
 PANEL_PORT     = int(_env.get("PANEL_PORT", 8888))
+# Address the panel listens on. install.sh sets 127.0.0.1 when nginx serves
+# the panel on a domain, so it can't be reached around nginx.
+PANEL_HOST     = _env.get("PANEL_HOST", "").strip() or "0.0.0.0"
+# Set when every request comes through a reverse proxy on this machine: the
+# client address and scheme are then read from the headers it adds.
+PANEL_BEHIND_PROXY = _env.get("PANEL_BEHIND_PROXY", "").strip().lower() in ("1", "true", "yes")
+if PANEL_BEHIND_PROXY and PANEL_HOST not in ("127.0.0.1", "localhost", "::1"):
+    logger.warning("PANEL_BEHIND_PROXY is set but the panel listens on %s: clients reaching it "
+                   "directly can fake their address. Set PANEL_HOST=127.0.0.1.", PANEL_HOST)
 SERVER_DIR     = _env.get("SERVER_DIR",    "/home/arma/server")
 SERVER_CONFIG  = _env.get("SERVER_CONFIG", "/home/arma/server/config.json")
 LOG_DIR        = _env.get("LOG_DIR",       "/home/arma/.config/ArmaReforger/logs")

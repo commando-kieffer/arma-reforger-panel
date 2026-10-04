@@ -8,6 +8,7 @@ from functools import wraps
 
 import bcrypt
 from flask import jsonify, request, session
+from flask.sessions import SecureCookieSessionInterface
 
 from . import config
 from .i18n import t
@@ -40,8 +41,9 @@ def load_or_create_secret(path):
 
 
 def client_ip():
-    # Honor X-Forwarded-For only when behind a reverse proxy; otherwise use remote_addr
-    return request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip() or "unknown"
+    # Behind nginx, ProxyFix has already put the client's address here (see
+    # create_app). X-Forwarded-For isn't read directly: any client can send one.
+    return request.remote_addr or "unknown"
 
 
 def login_rate_ok(ip: str) -> bool:
@@ -101,6 +103,14 @@ def csrf_protected(view):
             return jsonify({"ok": False, "error": t("api.csrf_invalid")}), 403
         return view(*args, **kwargs)
     return wrapper
+
+
+class SessionInterface(SecureCookieSessionInterface):
+    """Marks the session cookie Secure when the page was requested over HTTPS,
+    so a session opened over HTTPS is never sent back in clear."""
+
+    def get_cookie_secure(self, app):
+        return request.is_secure
 
 
 def add_security_headers(resp):

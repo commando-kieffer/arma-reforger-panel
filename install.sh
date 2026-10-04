@@ -7,6 +7,9 @@
 #   sudo bash install.sh              — full install (SteamCMD + server + panel)
 #   sudo bash install.sh --panel-only — install panel only (server already exists)
 #   sudo bash install.sh --update     — update panel files only
+#
+# The full and panel-only installs can also serve the panel on a custom
+# domain, through nginx with a Let's Encrypt certificate.
 # ============================================================
 
 set -e
@@ -27,6 +30,22 @@ PANEL_PORT="8888"
 ARMA_APP_ID="1874900"
 ARMA_BINARY="ArmaReforgerServer"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RCON_PORT="19999"
+DOMAIN=""
+LE_EMAIL=""
+
+# ── Input checks ──────────────────────────────────────────────────────────────
+# The domain ends up in the nginx config and in file names, so only plain
+# host names are accepted.
+valid_domain() {
+    local re='^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$'
+    [[ ${#1} -le 253 && $1 =~ $re ]]
+}
+
+valid_email() {
+    local re='^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+    [[ $1 =~ $re ]]
+}
 
 MODE="full"
 if [[ "$1" == "--panel-only" ]]; then MODE="panel"; fi
@@ -89,6 +108,20 @@ if [[ "$MODE" == "update" ]]; then
     systemctl restart arma-panel
     echo -e "${GREEN}✓ Panel updated and restarted.${NC}"
     echo ""
+    # Panels put behind nginx by hand predate PANEL_BEHIND_PROXY. config.env
+    # is the user's file, so point the change out rather than making it.
+    PANEL_ENV="$PANEL_DIR_EXISTING/config.env"
+    EXISTING_PORT=$(grep "^PANEL_PORT=" "$PANEL_ENV" 2>/dev/null | cut -d= -f2)
+    if ! grep -q "^PANEL_BEHIND_PROXY=" "$PANEL_ENV" 2>/dev/null \
+        && grep -qs "proxy_pass http://127.0.0.1:${EXISTING_PORT:-8888}" /etc/nginx/sites-enabled/*; then
+        echo -e "${YELLOW}nginx forwards requests to this panel, but config.env doesn't say so.${NC}"
+        echo -e "  Add these lines to ${PANEL_ENV}, then run ${YELLOW}sudo systemctl restart arma-panel${NC}:"
+        echo -e "    ${CYAN}PANEL_HOST=127.0.0.1${NC}"
+        echo -e "    ${CYAN}PANEL_BEHIND_PROXY=true${NC}"
+        echo -e "  ${DIM}Without them the login rate limit sees every visitor as nginx itself, and${NC}"
+        echo -e "  ${DIM}the panel can still be reached on port ${EXISTING_PORT:-8888} without going through nginx.${NC}"
+        echo ""
+    fi
     exit 0
 fi
 
@@ -151,6 +184,29 @@ if [[ "$MODE" == "panel" ]]; then
     PANEL_DIR="/home/$ARMA_USER/panel"
 fi
 
+echo ""
+echo -e "  ${CYAN}Custom domain (optional):${NC}"
+echo -e "  ${DIM}Serves the panel at https://<domain> through nginx, with a Let's Encrypt${NC}"
+echo -e "  ${DIM}certificate. The domain's DNS record must already point to this server and${NC}"
+echo -e "  ${DIM}ports 80 and 443 must be reachable from the Internet.${NC}"
+read -p "  Configure a custom domain for the panel? [y/N]: " INPUT_USE_DOMAIN
+if [[ "$INPUT_USE_DOMAIN" =~ ^[Yy]$ ]]; then
+    read -p "  Domain name (e.g. panel.example.com): " DOMAIN
+    DOMAIN="${DOMAIN,,}"
+    while ! valid_domain "$DOMAIN"; do
+        echo -e "  ${RED}Enter a domain name such as panel.example.com (no http://, no path).${NC}"
+        read -p "  Domain name: " DOMAIN
+        DOMAIN="${DOMAIN,,}"
+    done
+    read -p "  Email for Let's Encrypt notices (optional): " LE_EMAIL
+    while [ -n "$LE_EMAIL" ] && ! valid_email "$LE_EMAIL"; do
+        echo -e "  ${RED}Enter a valid email address, or leave it empty.${NC}"
+        read -p "  Email for Let's Encrypt notices (optional): " LE_EMAIL
+    done
+    echo -e "  ${DIM}Requesting the certificate accepts the Let's Encrypt terms of service:${NC}"
+    echo -e "  ${DIM}https://letsencrypt.org/repository/${NC}"
+fi
+
 # ── Confirm ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}━━━ Summary ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -163,16 +219,28 @@ if [[ "$MODE" == "full" ]]; then
 fi
 echo -e "  Panel dir     : ${CYAN}$PANEL_DIR${NC}"
 echo -e "  Panel port    : ${CYAN}$PANEL_PORT${NC}"
+if [ -n "$DOMAIN" ]; then
+    echo -e "  Panel URL     : ${CYAN}https://$DOMAIN${NC}"
+fi
 echo ""
 read -p "  Proceed? [Y/n]: " CONFIRM
 [[ "$CONFIRM" =~ ^[Nn]$ ]] && exit 0
 echo ""
 
+# Step numbers: the full install has 6 steps, the panel-only install 1, and
+# the custom domain adds one at the end.
+if [[ "$MODE" == "full" ]]; then TOTAL_STEPS=6; else TOTAL_STEPS=1; fi
+PANEL_STEP=$TOTAL_STEPS
+if [ -n "$DOMAIN" ]; then
+    TOTAL_STEPS=$((TOTAL_STEPS + 1))
+    DOMAIN_STEP=$TOTAL_STEPS
+fi
+
 # ── FULL MODE: steps 1-5 ──────────────────────────────────────────────────────
 if [[ "$MODE" == "full" ]]; then
 
     # Step 1: System user
-    echo -e "${YELLOW}[1/6] Creating system user '${ARMA_USER}'...${NC}"
+    echo -e "${YELLOW}[1/${TOTAL_STEPS}] Creating system user '${ARMA_USER}'...${NC}"
     if id "$ARMA_USER" &>/dev/null; then
         echo -e "      ${DIM}User already exists — skipping.${NC}"
     else
@@ -181,7 +249,7 @@ if [[ "$MODE" == "full" ]]; then
     fi
 
     # Step 2: Dependencies
-    echo -e "${YELLOW}[2/6] Installing system dependencies...${NC}"
+    echo -e "${YELLOW}[2/${TOTAL_STEPS}] Installing system dependencies...${NC}"
     dpkg --add-architecture i386
     apt-get update -qq
     # Install Flask and bcrypt via apt rather than pip — avoids the "Cannot
@@ -191,7 +259,7 @@ if [[ "$MODE" == "full" ]]; then
     echo -e "      ${GREEN}✓ Done.${NC}"
 
     # Step 3: SteamCMD
-    echo -e "${YELLOW}[3/6] Installing SteamCMD...${NC}"
+    echo -e "${YELLOW}[3/${TOTAL_STEPS}] Installing SteamCMD...${NC}"
     mkdir -p "$STEAM_DIR"
     if [ ! -f "$STEAM_DIR/steamcmd.sh" ]; then
         curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" \
@@ -201,7 +269,7 @@ if [[ "$MODE" == "full" ]]; then
     echo -e "      ${GREEN}✓ Done.${NC}"
 
     # Step 4: Download Arma server
-    echo -e "${YELLOW}[4/6] Downloading Arma Reforger Dedicated Server (~15 GB)...${NC}"
+    echo -e "${YELLOW}[4/${TOTAL_STEPS}] Downloading Arma Reforger Dedicated Server (~15 GB)...${NC}"
     echo -e "      ${DIM}This may take 10–30 minutes depending on your connection.${NC}"
     mkdir -p "$SERVER_DIR"
     chown -R "$ARMA_USER:$ARMA_USER" "$SERVER_DIR"
@@ -215,8 +283,13 @@ if [[ "$MODE" == "full" ]]; then
     echo -e "      ${GREEN}✓ Arma Reforger Server downloaded.${NC}"
 
     # Step 5: config.json
-    echo -e "${YELLOW}[5/6] Generating server config.json...${NC}"
+    echo -e "${YELLOW}[5/${TOTAL_STEPS}] Generating server config.json...${NC}"
     mkdir -p "$(dirname "$SERVER_CONFIG")"
+    # RCON is how the panel lists the connected players' names and identity
+    # IDs. It listens on the loopback interface only, so it needs no firewall
+    # rule, and "monitor" makes it read-only: the password can't kick, ban or
+    # restart. Hex keeps the password free of spaces, which RCON rejects.
+    RCON_PASSWORD=$(python3 -c 'import secrets; print(secrets.token_hex(16))')
     cat > "$SERVER_CONFIG" << EOF
 {
 	"bindAddress": "0.0.0.0",
@@ -226,6 +299,12 @@ if [[ "$MODE" == "full" ]]; then
 	"a2s": {
 		"address": "${PUBLIC_IP}",
 		"port": 17777
+	},
+	"rcon": {
+		"address": "127.0.0.1",
+		"port": ${RCON_PORT},
+		"password": "${RCON_PASSWORD}",
+		"permission": "monitor"
 	},
 	"game": {
 		"name": "${SERVER_NAME}",
@@ -248,6 +327,9 @@ if [[ "$MODE" == "full" ]]; then
 }
 EOF
     chown "$ARMA_USER:$ARMA_USER" "$SERVER_CONFIG"
+    # It holds the game, admin and RCON passwords. The server and the panel
+    # both run as the Arma user, and the panel keeps the mode when it saves.
+    chmod 600 "$SERVER_CONFIG"
     echo -e "      ${GREEN}✓ config.json generated.${NC}"
 
     # Firewall is intentionally NOT touched — see post-install summary.
@@ -277,11 +359,6 @@ EOF
 fi  # end full mode
 
 # ── PANEL install (both full and panel-only modes) ────────────────────────────
-PANEL_STEP=6
-if [[ "$MODE" == "panel" ]]; then PANEL_STEP=1; fi
-TOTAL_STEPS=6
-if [[ "$MODE" == "panel" ]]; then TOTAL_STEPS=1; fi
-
 echo -e "${YELLOW}[${PANEL_STEP}/${TOTAL_STEPS}] Installing management panel...${NC}"
 
 # Dependencies (panel-only mode)
@@ -319,10 +396,22 @@ WORKSHOP_DIR="${ARMA_HOME}/.local/share/Arma Reforger/addons"
 # layout puts them under `{ARMA_HOME}/.config/ArmaReforger/profile/.save/`.
 PROFILE_DIR="${ARMA_HOME}/.config/ArmaReforger/profile"
 
+# With a custom domain, nginx is the only way in: the panel listens on the
+# loopback interface and trusts the client address and scheme nginx forwards.
+if [ -n "$DOMAIN" ]; then
+    PANEL_HOST="127.0.0.1"
+    PANEL_BEHIND_PROXY="true"
+else
+    PANEL_HOST="0.0.0.0"
+    PANEL_BEHIND_PROXY="false"
+fi
+
 cat > "$PANEL_DIR/config.env" << EOF
 # bcrypt-hashed admin password. Generated at install time.
 PANEL_PASSWORD_HASH=${PANEL_PASSWORD_HASH}
 PANEL_PORT=${PANEL_PORT}
+PANEL_HOST=${PANEL_HOST}
+PANEL_BEHIND_PROXY=${PANEL_BEHIND_PROXY}
 SERVER_DIR=${SERVER_DIR}
 SERVER_CONFIG=${SERVER_CONFIG}
 LOG_DIR=${LOG_DIR}
@@ -358,11 +447,85 @@ systemctl restart arma-panel
 
 echo -e "      ${GREEN}✓ Panel installed and started.${NC}"
 
-# ── Final summary ─────────────────────────────────────────────────────────────
 if [ -z "$PUBLIC_IP" ]; then
-    PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo "YOUR_SERVER_IP")
+    PUBLIC_IP=$(curl -4 -s ifconfig.me 2>/dev/null || echo "YOUR_SERVER_IP")
 fi
 
+# ── Custom domain: nginx reverse proxy and Let's Encrypt certificate ─────────
+HTTPS_READY=""
+UFW_OPENED=""
+if [ -n "$DOMAIN" ]; then
+    echo -e "${YELLOW}[${DOMAIN_STEP}/${TOTAL_STEPS}] Serving the panel on ${DOMAIN} with nginx and HTTPS...${NC}"
+    apt-get install -y -qq nginx certbot python3-certbot-nginx
+    systemctl enable --now nginx
+
+    # Plain HTTP site; certbot adds the HTTPS server and the redirect to it.
+    # The panel doesn't use WebSockets, so no Upgrade/Connection headers.
+    NGINX_SITE="/etc/nginx/sites-available/${DOMAIN}"
+    cat > "$NGINX_SITE" << EOF
+# Arma Reforger panel, written by install.sh.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    # Same limit as the panel's own upload cap (mod list imports).
+    client_max_body_size 2m;
+
+    location / {
+        proxy_pass http://127.0.0.1:${PANEL_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+}
+EOF
+    ln -sf "$NGINX_SITE" "/etc/nginx/sites-enabled/${DOMAIN}"
+    # The stock welcome page would answer every other name pointing at this
+    # server. Only the link is removed; sites-available/default is kept.
+    rm -f /etc/nginx/sites-enabled/default
+    nginx -t
+    systemctl reload nginx
+    echo -e "      ${GREEN}✓ nginx forwards http://${DOMAIN} to the panel.${NC}"
+
+    # Port 80 is needed for the certificate check and the redirect, 443 for
+    # the panel itself. A firewall left inactive is left alone.
+    if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "^Status: active"; then
+        ufw allow 80/tcp >/dev/null
+        ufw allow 443/tcp >/dev/null
+        UFW_OPENED="yes"
+        echo -e "      ${GREEN}✓ Ports 80/tcp and 443/tcp allowed in UFW.${NC}"
+    fi
+
+    # Let's Encrypt checks the domain from the Internet; a wrong DNS record is
+    # the usual reason for a failure, so say so before trying.
+    DOMAIN_IPS=$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u | tr '\n' ' ')
+    if [[ $PUBLIC_IP =~ ^[0-9.]+$ && " $DOMAIN_IPS " != *" $PUBLIC_IP "* ]]; then
+        echo -e "      ${YELLOW}${DOMAIN} resolves to: ${DOMAIN_IPS:-nothing}; this server is ${PUBLIC_IP}.${NC}"
+        echo -e "      ${YELLOW}The certificate request will fail unless the DNS record points here.${NC}"
+    fi
+
+    # --redirect sends every HTTP request to HTTPS, --hsts tells browsers to
+    # never use HTTP for this domain again. Renewal runs from certbot.timer.
+    CERTBOT_ARGS=(--nginx -d "$DOMAIN" --non-interactive --agree-tos --redirect --hsts)
+    if [ -n "$LE_EMAIL" ]; then
+        CERTBOT_ARGS+=(-m "$LE_EMAIL")
+    else
+        CERTBOT_ARGS+=(--register-unsafely-without-email)
+    fi
+    if certbot "${CERTBOT_ARGS[@]}"; then
+        HTTPS_READY="yes"
+        echo -e "      ${GREEN}✓ Certificate installed; HTTP now redirects to HTTPS.${NC}"
+    else
+        echo -e "      ${RED}The certificate could not be obtained; the panel is served over HTTP for now.${NC}"
+    fi
+fi
+
+# ── Final summary ─────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════════╗${NC}"
 echo -e "${BOLD}${GREEN}║           Installation complete!                 ║${NC}"
@@ -375,8 +538,21 @@ echo -e "    Start   : ${YELLOW}sudo systemctl start arma-server${NC}"
 echo -e "    Status  : ${YELLOW}sudo systemctl status arma-server${NC}"
 echo ""
 fi
+if [ -n "$HTTPS_READY" ]; then
+    PANEL_URL="https://${DOMAIN}"
+elif [ -n "$DOMAIN" ]; then
+    PANEL_URL="http://${DOMAIN}"
+else
+    PANEL_URL="http://${PUBLIC_IP}:${PANEL_PORT}"
+fi
 echo -e "  ${BOLD}Management Panel:${NC}"
-echo -e "    URL      : ${CYAN}http://${PUBLIC_IP}:${PANEL_PORT}${NC}"
+echo -e "    URL      : ${CYAN}${PANEL_URL}${NC}"
+if [ -n "$HTTPS_READY" ]; then
+echo -e "    HTTPS    : ${DIM}HTTP redirects to HTTPS; the certificate renews automatically (certbot.timer)${NC}"
+elif [ -n "$DOMAIN" ]; then
+echo -e "    HTTPS    : ${YELLOW}not set up yet.${NC} Once ${DOMAIN} points to ${PUBLIC_IP} and port 80 is open, run:"
+echo -e "               ${YELLOW}sudo certbot ${CERTBOT_ARGS[*]}${NC}"
+fi
 echo -e "    Password : ${DIM}(the one you entered — it has been bcrypt-hashed in config.env)${NC}"
 echo -e "    Restart  : ${YELLOW}sudo systemctl restart arma-panel${NC}"
 echo -e "    Logs     : ${YELLOW}sudo journalctl -u arma-panel -f${NC}"
@@ -384,20 +560,39 @@ echo ""
 echo -e "  ${BOLD}Update panel in the future:${NC}"
 echo -e "    ${YELLOW}git pull && sudo bash install.sh --update${NC}"
 echo ""
-echo -e "${BOLD}${YELLOW}⚠  Firewall — action required${NC}"
-echo -e "  This installer does ${BOLD}not${NC} touch your firewall. Open the following ports"
-echo -e "  yourself so players (and you) can reach the server and panel:"
-echo ""
+
+# Ports still to open, as "port|purpose". RCON listens on 127.0.0.1 only and
+# with a domain the panel does too, so neither is listed.
+FIREWALL_RULES=()
 if [[ "$MODE" == "full" ]]; then
-echo -e "    ${CYAN}sudo ufw allow ${GAME_PORT}/udp${NC}      ${DIM}# Reforger game port${NC}"
-echo -e "    ${CYAN}sudo ufw allow 17777/udp${NC}              ${DIM}# A2S server-browser query${NC}"
+    FIREWALL_RULES+=("${GAME_PORT}/udp|Reforger game port" "17777/udp|A2S server-browser query")
 fi
-echo -e "    ${CYAN}sudo ufw allow ${PANEL_PORT}/tcp${NC}        ${DIM}# Panel web UI${NC}"
-echo -e "    ${CYAN}sudo ufw reload${NC}"
-echo ""
-echo -e "  ${DIM}Tip: bind the panel to 127.0.0.1 and SSH-tunnel instead of opening${NC}"
-echo -e "  ${DIM}${PANEL_PORT}/tcp publicly — even with the hashed password, HTTP is sniffable.${NC}"
-echo ""
+if [ -z "$DOMAIN" ]; then
+    FIREWALL_RULES+=("${PANEL_PORT}/tcp|Panel web UI")
+elif [ -z "$UFW_OPENED" ]; then
+    FIREWALL_RULES+=("80/tcp|HTTP, redirected to HTTPS" "443/tcp|Panel over HTTPS")
+fi
+if [ ${#FIREWALL_RULES[@]} -gt 0 ]; then
+    echo -e "${BOLD}${YELLOW}⚠  Firewall — action required${NC}"
+    echo -e "  Open the following ports yourself so players (and you) can reach the"
+    echo -e "  server and panel:"
+    echo ""
+    for rule in "${FIREWALL_RULES[@]}"; do
+        printf "    ${CYAN}%-28s${NC} ${DIM}# %s${NC}\n" "sudo ufw allow ${rule%%|*}" "${rule#*|}"
+    done
+    echo -e "    ${CYAN}sudo ufw reload${NC}"
+    echo ""
+fi
+if [ -z "$DOMAIN" ]; then
+    echo -e "  ${DIM}Tip: bind the panel to 127.0.0.1 and SSH-tunnel instead of opening${NC}"
+    echo -e "  ${DIM}${PANEL_PORT}/tcp publicly — even with the hashed password, HTTP is sniffable.${NC}"
+    echo ""
+fi
+if [[ "$MODE" == "panel" ]] && ! python3 -c 'import json, sys; sys.exit(not isinstance(json.load(open(sys.argv[1])).get("rcon"), dict))' "$SERVER_CONFIG" 2>/dev/null; then
+    echo -e "  ${DIM}Tip: to see the connected players' names in the panel, add an \"rcon\" block${NC}"
+    echo -e "  ${DIM}to ${SERVER_CONFIG} and restart the server (README: Player names).${NC}"
+    echo ""
+fi
 if [[ "$MODE" == "full" ]]; then
 echo -e "  ${DIM}Tip: Connect in-game via Multiplayer → Direct Connect → ${PUBLIC_IP}:${GAME_PORT}${NC}"
 echo ""
