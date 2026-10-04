@@ -1,0 +1,177 @@
+/* Design tokens and components shared by the login page and the panel.
+   A terminal look: monospace everywhere, phosphor green on black, boxes
+   drawn like ncurses windows and [ bracketed ] buttons. */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg:        #0A0E0B;
+  --surface:   #0E1511;
+  --surface-2: #142019;
+  --fg:        #C9D6CB;
+  --fg-dim:    #8A9C8D;
+  --fg-muted:  #5A6E5E;
+  --line:        #1E3326;
+  --line-strong: #2E5A3C;
+
+  --green: #33FF66;
+  --cyan:  #5FD7FF;
+  --amber: #FFB454;
+  --red:   #FF5F5F;
+
+  --glow: 0 0 6px rgba(51, 255, 102, 0.45);
+
+  /* Read by the charts (static/js/panel/metrics.js); keep the colors in hex. */
+  --cpu-color:     #33FF66;
+  --ram-color:     #5FD7FF;
+  --chart-grid:    #1E3326;
+  --chart-ticks:   #5A6E5E;
+  --chart-tension: 0;
+
+  --font-sans: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: var(--font-sans);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg);
+  background-color: var(--bg);
+  caret-color: var(--green);
+}
+
+/* Faint CRT scanlines over the whole page. Dialogs sit above them. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+}
+
+::selection { background-color: var(--green); color: var(--bg); }
+
+:focus-visible { outline: 1px dashed var(--green); outline-offset: 2px; }
+
+code { font-family: var(--font-mono); color: var(--cyan); }
+
+/* Components below set their own display, which would override [hidden]. */
+[hidden] { display: none !important; }
+
+/* Buttons: [ label ], inverted on hover */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5ch;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: lowercase;
+  color: var(--green);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn::before { content: '['; }
+.btn::after  { content: ']'; }
+.btn:hover:not(:disabled) { color: var(--bg); background-color: var(--green); box-shadow: var(--glow); }
+.btn:disabled { color: var(--fg-muted); cursor: not-allowed; }
+a.btn { text-decoration: none; }
+
+.btn-sm { padding: 0.15rem 0.4rem; font-size: 12px; }
+
+/* The main action is shown inverted from the start. */
+.btn-solid { color: var(--bg); background-color: var(--green); }
+.btn-solid:hover:not(:disabled) { background-color: #7DFF9C; }
+.btn-solid:disabled { color: var(--bg); background-color: var(--fg-muted); }
+
+.btn-danger { color: var(--red); }
+.btn-danger:hover:not(:disabled) { color: var(--bg); background-color: var(--red); box-shadow: 0 0 6px rgba(255, 95, 95, 0.45); }
+
+/* Form controls */
+label { font-size: 12px; color: var(--fg-dim); }
+
+input, textarea, select {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
+  background-color: #050806;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  padding: 0.45rem 0.6rem;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px var(--green), var(--glow);
+}
+input::placeholder, textarea::placeholder { color: var(--fg-muted); }
+input:disabled, textarea:disabled, select:disabled { color: var(--fg-muted); border-style: dashed; cursor: not-allowed; }
+
+input[type="file"] { padding: 0.3rem; color: var(--fg-dim); }
+input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--bg);
+  background-color: var(--fg-dim);
+  border: none;
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background-color: var(--green); }
+
+textarea { resize: vertical; }
+
+select {
+  height: 2.3rem;
+  padding-right: 2rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2333FF66' stroke-width='1.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 10px 6px;
+}
+select option { color: var(--fg); background-color: var(--surface); }
+
+/* Language switch: the active language is inverted. */
+.lang-switch { display: inline-flex; border: 1px solid var(--line-strong); }
+.lang-option {
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: lowercase;
+  color: var(--fg-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.lang-option:hover:not(.active) { color: var(--green); }
+.lang-option.active { color: var(--bg); background-color: var(--green); cursor: default; }
+
+/* A blinking block cursor, put after titles. */
+.header-title::after,
+.login-title::after {
+  content: '_';
+  margin-left: 0.15ch;
+  color: var(--green);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

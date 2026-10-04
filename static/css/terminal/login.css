@@ -1,0 +1,98 @@
+/* A login prompt on a bare terminal. */
+
+.connection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background-image: radial-gradient(ellipse at center, #0F1A13 0%, var(--bg) 70%);
+}
+
+.login-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  width: 100%;
+  max-width: 640px;
+  padding: 2.25rem 2rem 1.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 0 24px rgba(51, 255, 102, 0.08);
+}
+
+.login-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 2rem;
+}
+
+/* The logo in the terminal's green. */
+.login-logo img {
+  display: block;
+  height: 140px;
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) brightness(0.95) drop-shadow(0 0 6px rgba(51, 255, 102, 0.35));
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 270px;
+}
+
+.login-tag { font-size: 12px; color: var(--fg-muted); }
+.login-tag::before { content: '# '; }
+
+.login-title {
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--green);
+  text-shadow: var(--glow);
+}
+.login-title::before { content: '~/'; color: var(--cyan); text-shadow: none; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+.field label::before { content: '> '; color: var(--green); }
+
+.field input.invalid,
+.field input.invalid:focus { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+
+.login-form .btn { margin-top: 0.75rem; }
+
+.error {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 12px;
+  color: var(--red);
+  border-left: 3px solid var(--red);
+  background-color: rgba(255, 95, 95, 0.08);
+}
+.error::before { content: '[!] '; font-weight: 700; }
+/* Keep the space reserved so the box doesn't jump when an error shows up. */
+.error:empty { visibility: hidden; }
+
+.login-foot {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--line-strong);
+}
+
+@media (max-width: 768px) {
+  .login-box { padding: 1.75rem 1.25rem 1.25rem; }
+  .login-head { flex-direction: column; }
+  .login-logo img { height: 100px; }
+  .login-form { align-items: stretch; max-width: none; }
+}
