@@ -1,0 +1,157 @@
+/* Design tokens and components shared by the login page and the panel.
+   An early-2000s desktop look: blue title bars, beige window bodies,
+   bevelled buttons that glow orange on hover, Tahoma everywhere. */
+
+:root {
+  --text:       #000000;
+  --text-soft:  #444444;
+  --text-muted: #6F6F6F;
+
+  --window:       #ECE9D8;
+  --window-frame: #2B5BC7;
+  --etch-dark:    #ACA899;
+  --field-border: #7F9DB9;
+  --link:         #0033CC;
+  --link-hover:   #FF6600;
+  --selection:    #316AC5;
+
+  --titlebar: linear-gradient(180deg, #0997FF 0%, #0053EE 8%, #0050EE 40%, #0066FF 88%, #005BFF 95%, #003DD7 100%);
+  --bar:      linear-gradient(180deg, #3D95FF 0%, #2A70E8 6%, #1F5FD6 50%, #1A55C5 90%, #10409E 100%);
+  --accent-line: linear-gradient(90deg, #10409E 0%, #F99736 25%, #FFD08A 50%, #F99736 75%, #10409E 100%);
+
+  --button-face:    linear-gradient(180deg, #FFFFFF 0%, #F4F4F0 40%, #ECEBE6 85%, #D6D0C5 100%);
+  --button-pressed: linear-gradient(180deg, #CDCAC3 0%, #E3E3DB 10%, #E5E5DE 90%, #F2F2F1 100%);
+  --button-border:  #003C74;
+  --button-glow:    inset 0 1px 0 #FFF0CF, inset 0 2px 0 #FDD889, inset 0 -1px 0 #E5A01A,
+                    inset 0 -2px 0 #F8B330, inset 1px 0 0 #FBC761, inset -1px 0 0 #FBC761;
+  --button-default: inset 0 1px 0 #CEE7FF, inset 0 2px 0 #98B8EA, inset 0 -1px 0 #89ADE4,
+                    inset 0 -2px 0 #89ADE4, inset 1px 0 0 #BCD4F6, inset -1px 0 0 #BCD4F6;
+
+  /* Classic two-tone bevel for sunken areas (charts, status fields). */
+  --sunken-colors: #808080 #FFFFFF #FFFFFF #808080;
+
+  --online:  #2E9E2E;
+  --offline: #C62B1C;
+  --warn:    #E8A317;
+  --info:    #000080;
+
+  /* Read by the charts (static/js/panel/metrics.js); keep the colors in hex. */
+  --cpu-color:     #00FF00;
+  --ram-color:     #FFFF00;
+  --chart-grid:    #00602A;
+  --chart-ticks:   #00C000;
+  --chart-tension: 0;
+
+  --font-sans:  Tahoma, Verdana, 'Segoe UI', sans-serif;
+  --font-title: 'Trebuchet MS', Tahoma, Verdana, sans-serif;
+  --font-mono:  'Lucida Console', 'Courier New', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+::selection { background-color: var(--selection); color: #FFFFFF; }
+
+/* The dotted focus rectangle of the era. */
+:focus-visible { outline: 1px dotted #000000; outline-offset: 1px; }
+
+code { font-family: var(--font-mono); font-size: 0.95em; }
+
+/* Components below set their own display, which would override [hidden]. */
+[hidden] { display: none !important; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 75px;
+  padding: 4px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text);
+  background-image: var(--button-face);
+  border: 1px solid var(--button-border);
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { box-shadow: var(--button-glow); }
+.btn:active:not(:disabled) { background-image: var(--button-pressed); box-shadow: none; }
+.btn:disabled { color: var(--etch-dark); border-color: #C9C7BA; background-image: none; background-color: #F4F4F0; cursor: not-allowed; }
+a.btn { text-decoration: none; }
+
+.btn-sm { min-width: 0; padding: 2px 8px; font-size: 11px; }
+
+/* The default button of a dialog: bold, with a blue inner ring. */
+.btn-solid { font-weight: 700; box-shadow: var(--button-default); }
+
+.btn-danger { color: var(--offline); }
+
+/* Form controls */
+label { font-size: 12px; }
+
+input, textarea, select {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text);
+  background-color: #FFFFFF;
+  border: 1px solid var(--field-border);
+  border-radius: 0;
+  padding: 3px 5px;
+}
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--selection); }
+input::placeholder, textarea::placeholder { color: #8C8C8C; }
+input:disabled, textarea:disabled, select:disabled { color: var(--etch-dark); background-color: #F4F4F0; cursor: not-allowed; }
+
+textarea { resize: vertical; }
+
+/* Drop-down with the little blue arrow button on its right. */
+select {
+  height: 23px;
+  padding: 2px 22px 2px 4px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 19'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23E6EEFC'/><stop offset='1' stop-color='%23B4C9F5'/></linearGradient></defs><rect x='0.5' y='0.5' width='16' height='18' rx='2' fill='url(%23g)' stroke='%23B9CDF7'/><path d='M5 8l3.5 3.5L12 8' fill='none' stroke='%234D6185' stroke-width='2'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 1px center;
+  background-size: 17px 19px;
+}
+
+/* Language switch: two buttons joined together, the active one pushed in. */
+.lang-switch { display: inline-flex; }
+.lang-option {
+  padding: 2px 8px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text);
+  background-image: var(--button-face);
+  border: 1px solid var(--button-border);
+  cursor: pointer;
+}
+.lang-option:first-child { border-radius: 3px 0 0 3px; }
+.lang-option:last-child  { border-radius: 0 3px 3px 0; }
+.lang-option + .lang-option { border-left: none; }
+.lang-option:hover:not(.active) { box-shadow: var(--button-glow); }
+.lang-option.active {
+  background-image: var(--button-pressed);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
+  cursor: default;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

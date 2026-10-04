@@ -20,6 +20,12 @@ THEMES = (
               "&family=Roboto+Mono:wght@400;500&display=swap",
         color="#0F0E33",
     ),
+    Theme(
+        id="retro",
+        name="Retro 2000",
+        fonts=None,
+        color="#245EDC",
+    ),
 )
 
 DEFAULT_THEME = "zeus"

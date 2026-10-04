@@ -8,7 +8,7 @@ const POLL_MS = 3000;
 let cpuChart = null;
 let ramChart = null;
 
-// Chart colors come from the design tokens in the theme's base.css.
+// Chart colors and line style come from the design tokens in the theme's base.css.
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
@@ -23,7 +23,7 @@ function makeChartData(color) {
       borderWidth: 2,
       pointRadius: 0,
       fill: true,
-      tension: 0.4,
+      tension: Number(cssVar('--chart-tension')) || 0,
     }]
   };
 }

@@ -48,10 +48,11 @@
   --info:    #1B1871;
 
   /* Read by the charts (static/js/panel/metrics.js); keep the colors in hex. */
-  --cpu-color:   #2591FB;
-  --ram-color:   #1B1871;
-  --chart-grid:  rgba(15, 14, 51, 0.08);
-  --chart-ticks: rgba(15, 14, 51, 0.45);
+  --cpu-color:     #2591FB;
+  --ram-color:     #1B1871;
+  --chart-grid:    rgba(15, 14, 51, 0.08);
+  --chart-ticks:   rgba(15, 14, 51, 0.45);
+  --chart-tension: 0.4;
 
   --radius-sm:   8px;
   --radius-md:   12px;
