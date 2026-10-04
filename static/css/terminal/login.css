@@ -29,10 +29,17 @@
   gap: 2rem;
 }
 
+/* The banner logo can be replaced from the panel: a wide one is shrunk to
+   fit next to the form rather than pushing it aside. */
+.login-head > .login-logo { flex: 0 1 auto; min-width: 0; }
+.login-head > .login-form { flex-shrink: 0; }
+
 /* The logo in the terminal's green. */
 .login-logo img {
   display: block;
   height: 140px;
+  max-width: 100%;
+  object-fit: contain;
   filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) brightness(0.95) drop-shadow(0 0 6px rgba(51, 255, 102, 0.35));
 }
 

@@ -8,7 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arma Panel">
-<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="icon" type="image/png" href="/branding/icon-192.png" data-branding="icon-192.png">
+<link rel="apple-touch-icon" href="/branding/icon-192.png" data-branding="icon-192.png">
 {% with page_css = 'login.css' %}{% include 'partials/theme_head.html' %}{% endwith %}
 </head>
 <body>
@@ -16,7 +17,7 @@
   <div class="login-box">
     <div class="login-head">
       <div class="login-logo">
-        <img src="{{ url_for('static', filename='img/logo-ck.png') }}" alt="{{ t('common.logo_alt') }}">
+        <img src="/branding/banner-logo.png" alt="{{ t('common.logo_alt') }}">
       </div>
       <form class="login-form" id="login-form">
         <div class="login-tag">{{ t('common.panel_tag') }}</div>

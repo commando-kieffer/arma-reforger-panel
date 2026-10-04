@@ -1,13 +1,17 @@
-// Panel settings dialog, opened from the header: the style in use, and the
-// styles that can be downloaded, uploaded and deleted. The settings are the
-// same for everyone, and the page is reloaded once they are saved so they
-// take effect.
+// Panel settings dialog, opened from the header: the style in use, the
+// styles that can be downloaded, uploaded and deleted, the banner logo and
+// the app icon. The settings are the same for everyone, and the page is
+// reloaded once a style is saved so it takes effect.
 
 import { t } from '../i18n.js';
 import { postForm, postJson } from './api.js';
 
 const MAX_STYLESHEET_BYTES = 512 * 1024;
 const STYLESHEETS = ['base', 'login', 'panel'];
+// Same limit as FILE_MAX_BYTES in arma_panel/services/branding.py.
+const MAX_IMAGE_BYTES = 1536 * 1024;
+// Requests are capped at 2 MB (MAX_CONTENT_LENGTH in arma_panel/__init__.py).
+const MAX_UPLOAD_BYTES = 1900 * 1024;
 
 const $ = id => document.getElementById(id);
 
@@ -121,6 +125,134 @@ async function deleteTheme() {
   showNotice(t('settings.deleted', { name: theme.name }));
 }
 
+// Banner logo and app icons (see arma_panel/services/branding.py). The
+// browser scales the chosen image and sends PNG files.
+
+// Each output is fitted into `box`. A square output fills the whole box, with
+// the image centered on a transparent background; the others take the
+// image's proportions.
+const BRANDING = {
+  banner: {
+    preview: 'banner-logo.png',
+    outputs: [{ name: 'banner-logo.png', box: [1200, 300], square: false }],
+  },
+  icons: {
+    preview: 'icon-192.png',
+    outputs: [
+      { name: 'icon-192.png', box: [192, 192], square: true },
+      { name: 'icon-512.png', box: [512, 512], square: true },
+    ],
+  },
+};
+
+const pendingImages = {};  // { group: { file name: PNG blob } } scaled from the chosen image
+const previewUrls = {};
+
+function brandingUrl(name) {
+  // The URL never changes, so a query string makes the browser fetch it again.
+  return `/branding/${name}?v=${Date.now()}`;
+}
+
+function setPreview(group, blob) {
+  if (previewUrls[group]) URL.revokeObjectURL(previewUrls[group]);
+  previewUrls[group] = blob ? URL.createObjectURL(blob) : null;
+  $(`branding-preview-${group}`).src = previewUrls[group] || brandingUrl(BRANDING[group].preview);
+}
+
+function clearBrandingForm(group) {
+  delete pendingImages[group];
+  $(`branding-file-${group}`).value = '';
+  $(`btn-branding-upload-${group}`).disabled = true;
+  setPreview(group, null);
+}
+
+async function loadBrandingState() {
+  const r = await fetch('/api/branding');
+  if (r.status === 401) { window.location.href = '/login'; return; }
+  const d = await r.json();
+  Object.keys(BRANDING).forEach(group => { $(`btn-branding-reset-${group}`).hidden = !d.custom[group]; });
+}
+
+function scaleImage(img, { box: [boxWidth, boxHeight], square }) {
+  const scale = Math.min(boxWidth / img.naturalWidth, boxHeight / img.naturalHeight);
+  const width = Math.max(1, Math.round(img.naturalWidth * scale));
+  const height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = square ? boxWidth : width;
+  canvas.height = square ? boxHeight : height;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+async function prepareImage(group, file) {
+  delete pendingImages[group];
+  $(`btn-branding-upload-${group}`).disabled = true;
+  setPreview(group, null);
+  if (!file) return;
+  const outputs = BRANDING[group].outputs;
+  const url = URL.createObjectURL(file);
+  let blobs;
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    // Some SVG files have no size of their own.
+    if (!img.naturalWidth || !img.naturalHeight) throw new Error('no size');
+    blobs = await Promise.all(outputs.map(output => scaleImage(img, output)));
+    if (blobs.some(blob => !blob)) throw new Error('not scaled');
+  } catch (e) {
+    $(`branding-file-${group}`).value = '';
+    showError(t('settings.image_unreadable'));
+    return;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+  const total = blobs.reduce((sum, blob) => sum + blob.size, 0);
+  if (blobs.some(blob => blob.size > MAX_IMAGE_BYTES) || total > MAX_UPLOAD_BYTES) {
+    $(`branding-file-${group}`).value = '';
+    showError(t('settings.image_too_large', { max: MAX_IMAGE_BYTES / 1024 }));
+    return;
+  }
+  showError('');
+  pendingImages[group] = Object.fromEntries(outputs.map((output, i) => [output.name, blobs[i]]));
+  setPreview(group, blobs[0]);
+  $(`btn-branding-upload-${group}`).disabled = false;
+}
+
+// Points every element showing the group's images at the new files.
+function refreshBranding(group) {
+  BRANDING[group].outputs.forEach(({ name }) => {
+    document.querySelectorAll(`[data-branding="${name}"]`).forEach(el => {
+      el[el.tagName === 'LINK' ? 'href' : 'src'] = brandingUrl(name);
+    });
+  });
+}
+
+async function uploadImage(group) {
+  const images = pendingImages[group];
+  if (!images) return;
+  const fd = new FormData();
+  Object.entries(images).forEach(([name, blob]) => fd.append(name, blob, name));
+  const d = await (await postForm(`/api/branding/${group}`, fd)).json();
+  if (!d.ok) { showError(errorMessage(d)); return; }
+  clearBrandingForm(group);
+  $(`btn-branding-reset-${group}`).hidden = false;
+  refreshBranding(group);
+  showNotice(t(`settings.${group}_saved`));
+}
+
+async function resetImage(group) {
+  if (!confirm(t(`settings.${group}_confirm_reset`))) return;
+  const d = await (await postJson(`/api/branding/${group}/reset`, {})).json();
+  if (!d.ok) { showError(errorMessage(d)); return; }
+  clearBrandingForm(group);
+  $(`btn-branding-reset-${group}`).hidden = true;
+  refreshBranding(group);
+  showNotice(t(`settings.${group}_reset_done`));
+}
+
 async function save() {
   const theme = selectedTheme();
   if (!theme || theme.id === activeId) { $('settings-dialog').close(); return; }
@@ -136,8 +268,12 @@ export function initSettings() {
     showError('');
     $('settings-notice').hidden = true;
     closeUpload();
+    Object.keys(BRANDING).forEach(clearBrandingForm);
     dialog.showModal();
-    run(() => loadThemes(activeId));
+    run(async () => {
+      await loadThemes(activeId);
+      await loadBrandingState();
+    });
   });
 
   dialog.querySelectorAll('[data-dialog-close]').forEach(btn => {
@@ -158,6 +294,12 @@ export function initSettings() {
     if (event.key !== 'Enter') return;
     event.preventDefault();
     run(() => upload());
+  });
+
+  Object.keys(BRANDING).forEach(group => {
+    $(`branding-file-${group}`).addEventListener('change', event => prepareImage(group, event.target.files[0]));
+    $(`btn-branding-upload-${group}`).addEventListener('click', () => run(() => uploadImage(group)));
+    $(`btn-branding-reset-${group}`).addEventListener('click', () => run(() => resetImage(group)));
   });
 
   $('settings-form').addEventListener('submit', event => {

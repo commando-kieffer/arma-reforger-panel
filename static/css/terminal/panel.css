@@ -35,9 +35,12 @@ body {
 }
 .header-title::before { content: '~/'; color: var(--cyan); text-shadow: none; }
 
-/* The logo in the terminal's green. */
+/* The logo in the terminal's green. A wide one is shrunk to fit rather than
+   widening the header. */
 .header-logo {
   height: 56px;
+  max-width: 240px;
+  object-fit: contain;
   justify-self: center;
   filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) brightness(0.95);
 }
@@ -121,6 +124,19 @@ body {
 .theme-upload .card-actions { margin: 0; }
 
 .settings-notice { color: var(--green); }
+
+.branding-row { display: flex; align-items: flex-end; gap: 1rem; }
+.branding-row .field-group { flex: 1; min-width: 0; }
+/* A grey checkerboard shows the transparent parts, and white logos too. */
+.branding-preview {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: repeating-conic-gradient(#8E8E8E 0 25%, #A8A8A8 0 50%) 0 0 / 12px 12px;
+  border: 1px solid var(--line-strong);
+}
+.branding-field--banner .branding-preview { width: auto; max-width: 180px; }
 
 /* Page */
 .layout {

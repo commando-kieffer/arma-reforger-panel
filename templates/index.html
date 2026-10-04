@@ -11,7 +11,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arma Panel">
-<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="icon" type="image/png" href="/branding/icon-192.png" data-branding="icon-192.png">
+<link rel="apple-touch-icon" href="/branding/icon-192.png" data-branding="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 {% with page_css = 'panel.css' %}{% include 'partials/theme_head.html' %}{% endwith %}
 </head>
@@ -23,7 +24,7 @@
       <div class="header-tag">{{ t('common.panel_tag') }}</div>
       <div class="header-title">Arma Reforger</div>
     </div>
-    <img class="header-logo" src="{{ url_for('static', filename='img/logo-ck.png') }}" alt="{{ t('common.logo_alt') }}">
+    <img class="header-logo" src="/branding/banner-logo.png" data-branding="banner-logo.png" alt="{{ t('common.logo_alt') }}">
     <div class="header-actions">
       <button type="button" class="icon-btn" id="btn-settings" aria-haspopup="dialog" aria-label="{{ t('settings.title') }}" title="{{ t('settings.title') }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -433,6 +434,25 @@
         <button type="button" class="btn btn-outline" id="btn-theme-upload-cancel">{{ t('settings.cancel') }}</button>
       </div>
     </div>
+
+    {#- One block per group of services/branding.py, previewed with this file. #}
+    {%- for group, preview in (('banner', 'banner-logo.png'), ('icons', 'icon-192.png')) %}
+    <div class="card-section branding-field branding-field--{{ group }}">
+      <h3 class="card-subtitle">{{ t('settings.' ~ group ~ '_title') }}</h3>
+      <div class="branding-row">
+        <img class="branding-preview" id="branding-preview-{{ group }}" src="/branding/{{ preview }}" data-branding="{{ preview }}" alt="">
+        <div class="field-group">
+          <label for="branding-file-{{ group }}">{{ t('settings.' ~ group ~ '_file') }}</label>
+          <input type="file" id="branding-file-{{ group }}" data-branding-group="{{ group }}" accept="image/*" />
+        </div>
+      </div>
+      <div class="card-help">{{ t('settings.' ~ group ~ '_help') }}</div>
+      <div class="card-actions">
+        <button type="button" class="btn btn-solid" id="btn-branding-upload-{{ group }}" disabled>{{ t('settings.' ~ group ~ '_upload') }}</button>
+        <button type="button" class="btn btn-outline" id="btn-branding-reset-{{ group }}" hidden>{{ t('settings.' ~ group ~ '_reset') }}</button>
+      </div>
+    </div>
+    {%- endfor %}
 
     <div class="field-warning" id="settings-error" role="alert" hidden></div>
     <div class="card-help settings-notice" id="settings-notice" role="status" hidden></div>

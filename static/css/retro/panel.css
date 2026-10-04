@@ -45,8 +45,11 @@ body {
   text-shadow: 2px 2px 0 #0A246A;
 }
 
+/* A wide banner logo is shrunk to fit rather than widening the header. */
 .header-logo {
   height: 64px;
+  max-width: 240px;
+  object-fit: contain;
   justify-self: center;
   filter: drop-shadow(2px 2px 0 rgba(10, 36, 106, 0.6));
 }
@@ -143,6 +146,19 @@ body {
 .theme-upload .card-actions { margin: 0; }
 
 .settings-notice { color: #006600; }
+
+.branding-row { display: flex; align-items: flex-end; gap: 10px; }
+.branding-row .field-group { flex: 1; min-width: 0; }
+/* A grey checkerboard shows the transparent parts, and white logos too. */
+.branding-preview {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: repeating-conic-gradient(#8E8E8E 0 25%, #A8A8A8 0 50%) 0 0 / 12px 12px;
+  border: 1px solid var(--field-border);
+}
+.branding-field--banner .branding-preview { width: auto; max-width: 180px; }
 
 /* Page */
 .layout {

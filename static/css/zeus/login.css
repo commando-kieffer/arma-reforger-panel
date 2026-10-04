@@ -30,7 +30,12 @@
   gap: 2rem;
 }
 
-.login-logo img { display: block; height: 150px; }
+/* The banner logo can be replaced from the panel: a wide one is shrunk to
+   fit next to the form rather than pushing it aside. */
+.login-head > .login-logo { flex: 0 1 auto; min-width: 0; }
+.login-head > .login-form { flex-shrink: 0; }
+
+.login-logo img { display: block; height: 150px; max-width: 100%; object-fit: contain; }
 
 .login-form {
   display: flex;
