@@ -405,14 +405,37 @@
     </div>
     <div class="field-group">
       <label for="settings-theme">{{ t('settings.theme') }}</label>
-      <select id="settings-theme">
-        {%- for item in themes %}
-        <option value="{{ item.id }}"{{ ' selected' if item.id == theme.id }}>{{ item.name }}</option>
-        {%- endfor %}
-      </select>
+      <select id="settings-theme" disabled></select>
+    </div>
+    <div class="theme-actions">
+      <a class="link-btn" id="btn-theme-download" href="#" download hidden>{{ t('settings.theme_download') }}</a>
+      <button type="button" class="link-btn" id="btn-theme-upload-open">{{ t('settings.theme_upload') }}</button>
+      <button type="button" class="link-btn link-btn--danger" id="btn-theme-delete" hidden>{{ t('settings.theme_delete') }}</button>
     </div>
     <div class="card-help">{{ t('settings.theme_help') }}</div>
+
+    {# Not a form of its own: forms can't be nested. #}
+    <div class="card-section theme-upload" id="theme-upload" hidden>
+      <h3 class="card-subtitle">{{ t('settings.upload_title') }}</h3>
+      <div class="field-group">
+        <label for="theme-name">{{ t('settings.theme_name') }}</label>
+        <input type="text" id="theme-name" maxlength="60" autocomplete="off" />
+      </div>
+      {%- for key in ('base', 'login', 'panel') %}
+      <div class="field-group">
+        <label for="theme-file-{{ key }}">{{ t('settings.file_' ~ key) }}</label>
+        <input type="file" id="theme-file-{{ key }}" data-theme-file="{{ key }}" accept=".css,text/css" />
+      </div>
+      {%- endfor %}
+      <div class="card-help">{{ t('settings.upload_help') }}</div>
+      <div class="card-actions">
+        <button type="button" class="btn btn-solid" id="btn-theme-upload">{{ t('settings.upload') }}</button>
+        <button type="button" class="btn btn-outline" id="btn-theme-upload-cancel">{{ t('settings.cancel') }}</button>
+      </div>
+    </div>
+
     <div class="field-warning" id="settings-error" role="alert" hidden></div>
+    <div class="card-help settings-notice" id="settings-notice" role="status" hidden></div>
     <div class="card-actions">
       <button type="submit" class="btn btn-solid" id="btn-settings-save">{{ t('settings.save') }}</button>
       <button type="button" class="btn btn-outline" data-dialog-close>{{ t('settings.cancel') }}</button>

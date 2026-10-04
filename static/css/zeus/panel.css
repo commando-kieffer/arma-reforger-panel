@@ -111,6 +111,15 @@ body {
 
 .modal .field-warning { margin-bottom: 0; }
 
+.theme-actions { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
+
+.theme-upload { display: flex; flex-direction: column; gap: 0.9rem; }
+.theme-upload .card-subtitle,
+.theme-upload .card-help,
+.theme-upload .card-actions { margin: 0; }
+
+.settings-notice { color: var(--online); }
+
 /* Page */
 .layout {
   flex: 1;
@@ -409,6 +418,7 @@ body {
   transition: border-color var(--transition);
 }
 .link-btn:hover:not(:disabled) { border-bottom-color: currentColor; }
+a.link-btn { text-decoration: none; }
 .link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Show/hide button placed inside the right end of a password input. */

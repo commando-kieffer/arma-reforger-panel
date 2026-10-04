@@ -135,6 +135,15 @@ body {
 
 .modal .field-warning { margin-bottom: 0; }
 
+.theme-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+
+.theme-upload { display: flex; flex-direction: column; gap: 8px; }
+.theme-upload .card-subtitle,
+.theme-upload .card-help,
+.theme-upload .card-actions { margin: 0; }
+
+.settings-notice { color: #006600; }
+
 /* Page */
 .layout {
   flex: 1;

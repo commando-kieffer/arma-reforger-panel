@@ -9,3 +9,4 @@ config.env
 config-backups/
 modsets/
 panel-settings.json
+custom-themes/

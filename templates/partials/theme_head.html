@@ -1,8 +1,2 @@
-<meta name="theme-color" content="{{ theme.color }}">
-{%- if theme.fonts %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="{{ theme.fonts }}" rel="stylesheet">
-{%- endif %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ theme.id ~ '/base.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ theme.id ~ '/' ~ page_css) }}">
+<link rel="stylesheet" href="{{ url_for('themes.stylesheet', theme_id=theme_id, name='base.css') }}">
+<link rel="stylesheet" href="{{ url_for('themes.stylesheet', theme_id=theme_id, name=page_css) }}">

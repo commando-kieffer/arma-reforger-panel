@@ -1,9 +1,12 @@
 /* Fonts, design tokens and components shared by the login page and the panel.
    The look follows the Commando Kieffer user panel (Zeus). */
 
+@import url('https://fonts.googleapis.com/css2?family=Spectral:wght@300;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+/* Theme stylesheets are served from /themes/<id>/, so fonts use absolute URLs. */
 @font-face {
   font-family: 'Marianne';
-  src: url('../../fonts/marianne/Marianne-Thin.woff2') format('woff2');
+  src: url('/static/fonts/marianne/Marianne-Thin.woff2') format('woff2');
   font-weight: 100;
   font-style: normal;
   font-display: swap;
@@ -11,7 +14,7 @@
 
 @font-face {
   font-family: 'Marianne';
-  src: url('../../fonts/marianne/Marianne-Regular.woff2') format('woff2');
+  src: url('/static/fonts/marianne/Marianne-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -19,7 +22,7 @@
 
 @font-face {
   font-family: 'Marianne';
-  src: url('../../fonts/marianne/Marianne-Bold.woff2') format('woff2');
+  src: url('/static/fonts/marianne/Marianne-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;

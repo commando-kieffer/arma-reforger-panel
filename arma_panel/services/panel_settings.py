@@ -4,20 +4,19 @@ Stored in panel-settings.json in the panel directory:
 
     {"theme": "zeus"}
 
-Settings missing from the file, or holding a value the panel doesn't know,
-fall back to their default.
+Settings missing from the file, or holding a value the panel doesn't know
+(such as a theme that was deleted), fall back to their default.
 """
 
 import json
 import threading
 
-from .. import config, themes
+from .. import config
 from ..i18n import t
 from ..log import logger
+from . import themes
 from .files import write_atomic
 from .server_config import ChangeRejected
-
-DEFAULTS = {"theme": themes.DEFAULT_THEME}
 
 _lock = threading.Lock()
 
@@ -26,11 +25,13 @@ def load():
     """The settings, with every key present and valid."""
     data = _read()
     theme = data.get("theme")
-    return {"theme": theme if theme in themes.BY_ID else DEFAULTS["theme"]}
+    if not isinstance(theme, str) or themes.get(theme) is None:
+        theme = themes.DEFAULT_THEME
+    return {"theme": theme}
 
 
 def set_theme(theme_id):
-    if not isinstance(theme_id, str) or theme_id not in themes.BY_ID:
+    if not isinstance(theme_id, str) or themes.get(theme_id) is None:
         raise ChangeRejected(t("api.unknown_theme"))
     with _lock:
         # Keys this version doesn't know are kept as they are.

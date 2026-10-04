@@ -4,9 +4,8 @@ Layout:
   config.py    settings read from config.env
   i18n.py      interface translations (translations/*.json)
   security.py  authentication, CSRF and rate limiting
-  themes.py    panel styles (static/css/<theme>/)
   services/    game server process, config.json, mods, saves, scenarios, logs,
-               panel settings
+               panel settings and styles
   routes/      Flask blueprints exposing the pages and the JSON API
 """
 
