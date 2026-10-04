@@ -686,6 +686,7 @@ a.link-btn { text-decoration: none; }
 
   .layout { padding: 1.5rem 1rem 2rem; gap: 1rem; }
   .card { padding: 1.25rem; }
+  .log-viewer-card { padding: 0; }
 
   .charts-row,
   .config-grid { grid-template-columns: 1fr; }
