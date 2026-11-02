@@ -1,4 +1,5 @@
-// Server status card and the start / stop / restart buttons.
+// Server status card, the start / stop / restart buttons, and force stop
+// for a server that a normal stop doesn't reach.
 
 import { t } from '../i18n.js';
 import { postJson } from './api.js';
@@ -44,9 +45,23 @@ async function serverAction(action) {
   setBusy(false);
 }
 
+async function forceStop() {
+  if (!confirm(t('controls.confirm_force_stop'))) return;
+  setBusy(true);
+  setLog(t('controls.force_stopping'), 'info');
+  try {
+    const d = await (await postJson('/api/force-stop', {})).json();
+    if (d.ok) setLog(d.message, 'ok');
+    else setLog(t('common.error', { error: d.error || t('common.unknown') }), 'error');
+    await fetchStatus();
+  } catch (e) { setLog(t('common.connection_error'), 'error'); }
+  setBusy(false);
+}
+
 export function initServerControl() {
   onStatus(renderStatus);
   document.querySelectorAll('[data-server-action]').forEach(btn => {
     btn.addEventListener('click', () => serverAction(btn.dataset.serverAction));
   });
+  document.getElementById('btn-force-stop').addEventListener('click', forceStop);
 }

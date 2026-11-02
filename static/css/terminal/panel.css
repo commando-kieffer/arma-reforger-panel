@@ -491,7 +491,8 @@ body {
 }
 .mod-remove::before { content: '['; }
 .mod-remove::after  { content: ']'; }
-.mod-remove:hover { color: var(--bg); background-color: var(--red); }
+.mod-remove:hover:not(:disabled) { color: var(--bg); background-color: var(--red); }
+.mod-remove:disabled { color: var(--fg-muted); cursor: not-allowed; }
 
 .import-textarea { font-size: 12px; line-height: 1.5; }
 
@@ -639,6 +640,122 @@ body {
 }
 #refresh-timer { font-weight: 700; color: var(--green); }
 
+/* Links in the explanations, such as the editor's documentation links */
+.card-description a,
+.card-help a { color: var(--cyan); }
+
+/* Force stop, under the server controls */
+.controls-extra {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: -1.25rem;
+}
+.controls-extra .card-help { margin: 0; }
+.controls-extra .card-help::before { content: '# '; }
+
+/* Subtitle with an action aligned on its right */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.workshop-summary { margin: 0 0 0.75rem; }
+
+/* Players */
+.players-table .player-number { width: 1%; white-space: nowrap; color: var(--fg-dim); }
+.players-table .player-action { width: 1%; text-align: right; white-space: nowrap; }
+
+/* config.json editor */
+.editor-details > summary {
+  display: inline-block;
+  margin-bottom: 0.9rem;
+  list-style: none;
+}
+.editor-details > summary::-webkit-details-marker { display: none; }
+.editor-details > summary::before { content: '$ '; color: var(--green); }
+
+.config-editor {
+  min-height: 320px;
+  font-size: 12px;
+  line-height: 1.55;
+  tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+.config-editor[readonly] { color: var(--fg-muted); border-style: dashed; cursor: not-allowed; }
+#editor-locked { margin-top: 0; }
+
+.editor-status { margin-top: 0.6rem; font-size: 12px; color: var(--fg-dim); }
+.editor-status--ok      { color: var(--green); }
+.editor-status--warning { color: var(--amber); }
+.editor-status--error   { color: var(--red); }
+
+.editor-problems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 260px;
+  margin-top: 0.5rem;
+  overflow-y: auto;
+  list-style: none;
+}
+.editor-problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.editor-problem-level { font-weight: 700; }
+.editor-problem-level::before { content: '['; }
+.editor-problem-level::after  { content: ']'; }
+.editor-problem--error .editor-problem-level   { color: var(--red); }
+.editor-problem--warning .editor-problem-level { color: var(--amber); }
+
+/* A card locked while the config.json editor has unsaved changes */
+.card.is-locked { opacity: 0.4; }
+
+/* Save bar, like a status line waiting for a command */
+body.has-save-bar { padding-bottom: 5.5rem; }
+
+.save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  padding: 0 1rem calc(1rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.save-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0.6rem 1rem;
+  font-size: 13px;
+  background-color: var(--surface);
+  border: 1px solid var(--green);
+  box-shadow: 0 0 24px rgba(51, 255, 102, 0.2);
+  pointer-events: auto;
+}
+.save-bar-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; min-width: 0; }
+.save-bar-text strong { color: var(--amber); }
+.save-bar-text strong::before { content: '[+] '; }
+.save-bar-note  { flex-basis: 100%; font-size: 12px; color: var(--fg-dim); }
+.save-bar-error { flex-basis: 100%; font-size: 12px; color: var(--red); overflow-wrap: anywhere; }
+.save-bar-actions { display: flex; flex-shrink: 0; gap: 0.5rem; }
+
 /* Responsive */
 @media (max-width: 992px) {
   .header-logo { height: 48px; }
@@ -669,6 +786,7 @@ body {
 }
 
 @media (max-width: 576px) {
+  .save-bar-actions { width: 100%; justify-content: space-between; }
   .header-bar { grid-template-columns: 1fr; }
   .header-actions { justify-self: start; }
 

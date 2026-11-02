@@ -5,10 +5,11 @@ import unittest
 from unittest import mock
 
 from arma_panel import config
-from arma_panel.services.workshop import installed_versions
+from arma_panel.services.server_config import ChangeRejected
+from arma_panel.services.workshop import installed_mods, installed_versions, uninstall
 
 
-class InstalledVersionsTest(unittest.TestCase):
+class WorkshopTestCase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
@@ -26,6 +27,8 @@ class InstalledVersionsTest(unittest.TestCase):
         with open(os.path.join(path, "meta"), "w", encoding="utf-8-sig") as f:
             f.write(text)
 
+
+class InstalledVersionsTest(WorkshopTestCase):
     def test_reads_the_version_of_each_addon(self):
         self.add_addon("ACECarrying_5DBD560C5148E1DA", {
             "id": "5DBD560C5148E1DA", "name": "ACE Carrying",
@@ -59,6 +62,42 @@ class InstalledVersionsTest(unittest.TestCase):
             self.assertEqual(installed_versions(), {})
         with mock.patch.object(config, "WORKSHOP_DIR", ""):
             self.assertEqual(installed_versions(), {})
+
+
+class InstalledModsTest(WorkshopTestCase):
+    def add_file(self, folder, name, size):
+        with open(os.path.join(self.dir, folder, name), "wb") as f:
+            f.write(b"x" * size)
+
+    def test_lists_each_mod_once(self):
+        self.add_addon("ACECarrying_5DBD560C5148E1DA", {
+            "id": "5DBD560C5148E1DA", "name": "ACE Carrying", "versions": [{"version": "1.4.3"}]})
+        self.add_file("ACECarrying_5DBD560C5148E1DA", "data.pak", 1000)
+        # No name in meta: taken from the folder.
+        self.add_addon("Zulu_abcdef0123456789", {"id": "abcdef0123456789", "versions": []})
+        self.add_addon("Old_00000000000000AA", {"id": "00000000000000AA", "name": "Twice", "versions": [{"version": "1.0"}]})
+        self.add_addon("New_00000000000000AA", {"id": "00000000000000AA", "name": "Twice", "versions": [{"version": "1.1"}]})
+        mods = installed_mods()
+        self.assertEqual([(m["id"], m["name"], m["version"]) for m in mods], [
+            ("5DBD560C5148E1DA", "ACE Carrying", "1.4.3"),
+            ("00000000000000AA", "Twice", None),
+            ("ABCDEF0123456789", "Zulu", None),
+        ])
+        self.assertGreater(mods[0]["size"], 1000)
+        self.assertEqual(sorted(mods[1]["folders"]), ["New_00000000000000AA", "Old_00000000000000AA"])
+
+    def test_uninstall_removes_every_folder_of_the_mod(self):
+        self.add_addon("Old_00000000000000AA", {"id": "00000000000000AA"})
+        self.add_addon("New_00000000000000AA", {"id": "00000000000000AA"})
+        self.add_addon("Keep_00000000000000BB", {"id": "00000000000000BB"})
+        self.assertEqual(uninstall("00000000000000aa"), 2)
+        self.assertEqual(sorted(os.listdir(self.dir)), ["Keep_00000000000000BB"])
+        with self.assertRaises(ChangeRejected):
+            uninstall("00000000000000AA")
+        for bad in ("..", "../etc", ""):
+            with self.subTest(mod_id=bad), self.assertRaises(ChangeRejected):
+                uninstall(bad)
+        self.assertEqual(os.listdir(self.dir), ["Keep_00000000000000BB"])
 
 
 if __name__ == "__main__":

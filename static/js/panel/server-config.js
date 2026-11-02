@@ -1,10 +1,26 @@
-// Server configuration card: name, scenario and passwords.
+// Server configuration card: name, scenario and passwords. Saved from the
+// save bar (changes.js).
 
 import { t, tn } from '../i18n.js';
 import { postJson } from './api.js';
-import { setBusy, setLog } from './activity.js';
+import { setLog } from './activity.js';
+import { hasChanges, markSaved, trackSection } from './changes.js';
 import { fillFields, readFields } from './fields.js';
-import { fetchStatus, onStatus } from './status.js';
+import { onStatus } from './status.js';
+
+function card() {
+  return document.getElementById('config-card');
+}
+
+function readConfig() {
+  return {
+    ...readFields(card()),
+    server_name: document.getElementById('input-name').value,
+    scenario_id: document.getElementById('input-mission').value,
+    password: document.getElementById('input-password').value,
+    password_admin: document.getElementById('input-password-admin').value,
+  };
+}
 
 // The form is filled when the page loads and after a save, never from the
 // status poll: refilling it every 10 s would wipe edits that aren't saved yet.
@@ -18,7 +34,8 @@ async function loadConfig() {
     document.getElementById('input-password').value = d.password || '';
     document.getElementById('input-password-admin').value = d.password_admin || '';
     if (d.scenario_id) document.getElementById('input-mission').value = d.scenario_id;
-    fillFields(document.getElementById('config-card'), d);
+    fillFields(card(), d);
+    markSaved('server');
   } catch (e) { setLog(t('common.connection_error'), 'error'); }
 }
 
@@ -29,6 +46,10 @@ function showConfigError(error) {
 }
 
 function renderMissionSelect(missions, counts, currentId) {
+  // Rebuilding the list can change the select's value (when the stored
+  // scenario only appears once the list arrives): that isn't a change made
+  // by the user.
+  const unchanged = !hasChanges('server');
   const sel = document.getElementById('input-mission');
   // Always rebuild — discovered scenarios can change as the workshop populates.
   const prev = sel.value || currentId || '';
@@ -62,6 +83,7 @@ function renderMissionSelect(missions, counts, currentId) {
   if (badge && counts) {
     badge.textContent = t('config.scenario_counts', { vanilla: counts.vanilla, mods: counts.from_mods });
   }
+  if (unchanged) markSaved('server');
 }
 
 async function rescanScenarios() {
@@ -93,41 +115,17 @@ async function rescanScenarios() {
   if (btn) btn.disabled = false;
 }
 
-async function saveConfig() {
-  const name     = document.getElementById('input-name').value.trim();
-  const scenario = document.getElementById('input-mission').value;
-  const password = document.getElementById('input-password').value;
-  const pwdAdmin = document.getElementById('input-password-admin').value.trim();
-
-  if (!name)     { setLog(t('config.name_required'), 'error'); return; }
-  if (!pwdAdmin) { setLog(t('config.admin_password_required'), 'error'); return; }
-
-  setBusy(true);
-  setLog(t('config.saving'), 'info');
-  try {
-    const r = await postJson('/api/config', {
-      ...readFields(document.getElementById('config-card')),
-      server_name: name, scenario_id: scenario, password, password_admin: pwdAdmin,
-    });
-    const d = await r.json();
-    if (d.ok) {
-      setLog(t('config.saved'), 'ok');
-      document.getElementById('restart-notice').classList.toggle('visible', !!d.restart_required);
-      await loadConfig();
-      await fetchStatus();
-    } else {
-      setLog(t('common.save_failed', { error: d.error || t('common.unknown') }), 'error');
-    }
-  } catch (e) { setLog(t('common.connection_error'), 'error'); }
-  setBusy(false);
-}
-
 export function initServerConfig() {
+  trackSection('server', {
+    card: card(),
+    read: readConfig,
+    reload: loadConfig,
+    restartNotice: document.getElementById('restart-notice'),
+  });
   onStatus(d => {
     showConfigError(d.config_error);
     renderMissionSelect(d.missions || [], d.missions_count, d.scenario_id);
   });
   document.getElementById('btn-rescan-scenarios').addEventListener('click', rescanScenarios);
-  document.getElementById('btn-save').addEventListener('click', saveConfig);
   loadConfig();
 }

@@ -1,8 +1,9 @@
 // Gameplay settings card: game.gameProperties and operating in config.json.
+// Saved from the save bar (changes.js).
 
 import { t } from '../i18n.js';
-import { postJson } from './api.js';
-import { setBusy, setLog } from './activity.js';
+import { setLog } from './activity.js';
+import { markSaved, trackSection } from './changes.js';
 import { fillFields, readFields } from './fields.js';
 
 function card() {
@@ -22,28 +23,17 @@ async function loadGameplay() {
     fillFields(card(), d);
     document.getElementById('fast-validation-warning').hidden = d.fast_validation;
     updateBattleyeWarning();
+    markSaved('gameplay');
   } catch (e) { setLog(t('common.connection_error'), 'error'); }
-}
-
-async function saveGameplay() {
-  setBusy(true);
-  setLog(t('gameplay.saving'), 'info');
-  try {
-    const r = await postJson('/api/gameplay', readFields(card()));
-    const d = await r.json();
-    if (d.ok) {
-      setLog(t('gameplay.saved'), 'ok');
-      document.getElementById('gameplay-restart-notice').classList.toggle('visible', !!d.restart_required);
-      await loadGameplay();
-    } else {
-      setLog(t('common.save_failed', { error: d.error || t('common.unknown') }), 'error');
-    }
-  } catch (e) { setLog(t('common.connection_error'), 'error'); }
-  setBusy(false);
 }
 
 export function initGameplay() {
-  document.getElementById('btn-gameplay-save').addEventListener('click', saveGameplay);
+  trackSection('gameplay', {
+    card: card(),
+    read: () => readFields(card()),
+    reload: loadGameplay,
+    restartNotice: document.getElementById('gameplay-restart-notice'),
+  });
   document.getElementById('input-battleye').addEventListener('change', updateBattleyeWarning);
   loadGameplay();
 }

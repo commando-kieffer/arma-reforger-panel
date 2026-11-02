@@ -1,8 +1,10 @@
-// Persistence card: save mode and settings, and the session save files on disk.
+// Persistence card: save mode and settings, and the session save files on
+// disk. The settings are saved from the save bar (changes.js).
 
 import { t, tn } from '../i18n.js';
 import { postJson } from './api.js';
 import { setBusy, setLog } from './activity.js';
+import { markSaved, trackSection } from './changes.js';
 import { fillFields, readFields } from './fields.js';
 import { escHtml, fmtAge, fmtBytes } from './format.js';
 
@@ -14,6 +16,12 @@ function card() {
 
 function modeSelect() {
   return document.getElementById('input-persist-mode');
+}
+
+// The settings are only sent, and checked, in custom mode.
+function readPersistence() {
+  const mode = modeSelect().value;
+  return mode === 'custom' ? { mode, ...readFields(card()) } : { mode };
 }
 
 // The settings only apply in custom mode; in the other modes they show the
@@ -51,27 +59,8 @@ export async function fetchPersistence() {
     fillFields(card(), d);
     updateFieldsState();
     renderPersistStats(d);
+    markSaved('persistence');
   } catch (e) { /* panel is the source of truth; silent on transient errors */ }
-}
-
-async function savePersistence() {
-  const mode = modeSelect().value;
-  // Settings are only sent, and checked, in custom mode.
-  const body = mode === 'custom' ? { mode, ...readFields(card()) } : { mode };
-  setBusy(true);
-  setLog(t('persistence.saving'), 'info');
-  try {
-    const r = await postJson('/api/persistence', body);
-    const d = await r.json();
-    if (d.ok) {
-      setLog(t('persistence.saved'), 'ok');
-      document.getElementById('persist-restart-notice').classList.toggle('visible', !!d.restart_required);
-      await fetchPersistence();
-    } else {
-      setLog(t('common.save_failed', { error: d.error || t('common.unknown') }), 'error');
-    }
-  } catch (e) { setLog(t('common.connection_error'), 'error'); }
-  setBusy(false);
 }
 
 async function flushPersistence() {
@@ -92,7 +81,12 @@ async function flushPersistence() {
 }
 
 export function initPersistence() {
+  trackSection('persistence', {
+    card: card(),
+    read: readPersistence,
+    reload: fetchPersistence,
+    restartNotice: document.getElementById('persist-restart-notice'),
+  });
   modeSelect().addEventListener('change', updateFieldsState);
-  document.getElementById('btn-persist-save').addEventListener('click', savePersistence);
   document.getElementById('btn-persist-flush').addEventListener('click', flushPersistence);
 }

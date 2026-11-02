@@ -7,10 +7,11 @@ from unittest import mock
 
 from arma_panel import config
 from arma_panel.services import server_config
-from arma_panel.services.server_config import ChangeRejected, ConfigError, load_config, update_config
+from arma_panel.services.server_config import (ChangeRejected, ConfigChanged, ConfigError, load_config,
+                                               read_config_text, replace_config_text, update_config)
 
 
-class UpdateConfigTest(unittest.TestCase):
+class ConfigFileTestCase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
@@ -29,6 +30,8 @@ class UpdateConfigTest(unittest.TestCase):
         with open(self.path, encoding="utf-8") as f:
             return f.read()
 
+
+class UpdateConfigTest(ConfigFileTestCase):
     def test_missing_file_is_an_error(self):
         with self.assertRaises(ConfigError):
             load_config()
@@ -95,6 +98,42 @@ class UpdateConfigTest(unittest.TestCase):
         for th in threads:
             th.join()
         self.assertEqual(load_config()["counter"], 80)
+
+
+class ReplaceConfigTextTest(ConfigFileTestCase):
+    """The config.json editor: the whole text replaced, broken JSON included."""
+
+    def test_round_trip(self):
+        with open(self.path, "wb") as f:
+            f.write(b'{"game": {"name": "x"}}\n')
+        text, sha = read_config_text()
+        self.assertEqual(text, '{"game": {"name": "x"}}\n')
+        new_sha = replace_config_text('{\n\t"game": {"name": "y"}\n}', sha)
+        # Written as sent, with a final line break.
+        with open(self.path, "rb") as f:
+            self.assertEqual(f.read(), b'{\n\t"game": {"name": "y"}\n}\n')
+        self.assertEqual(read_config_text()[1], new_sha)
+        self.assertEqual(len(server_config.list_backups()), 1)
+
+    def test_refused_when_the_file_changed(self):
+        self.write('{"game": {}}')
+        _, sha = read_config_text()
+        self.write('{"game": {"name": "changed elsewhere"}}')
+        with self.assertRaises(ConfigChanged):
+            replace_config_text('{"game": {}}', sha)
+        self.assertEqual(self.read(), '{"game": {"name": "changed elsewhere"}}')
+        self.assertEqual(server_config.list_backups(), [])
+
+    def test_repairs_a_broken_file(self):
+        self.write('{"game": ')
+        text, sha = read_config_text()
+        self.assertEqual(text, '{"game": ')
+        replace_config_text('{"game": {}}', sha)
+        self.assertEqual(load_config(), {"game": {}})
+
+    def test_missing_file(self):
+        with self.assertRaises(ConfigError):
+            read_config_text()
 
 
 if __name__ == "__main__":

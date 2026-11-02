@@ -159,6 +159,16 @@ def discover_mod_scenarios(force_rescan=False):
         _SCAN_LOCK.release()
 
 
+def refresh_scenarios():
+    """Rescan the addon folders, re-reading only the ones that changed. Used
+    after a mod is removed, so its scenarios leave the list."""
+    with _SCAN_LOCK:
+        scenarios, diag = _discover_locked(False)
+        _LAST_SCAN_RESULT["scenarios"] = scenarios
+        _LAST_SCAN_RESULT["diag"] = diag
+        _LAST_SCAN_RESULT["ts"] = time.time()
+
+
 def cached_scenarios():
     """Cheap read for /api/status — never triggers a fresh scan."""
     cache_mods, _mtimes = _scan_cache_load()

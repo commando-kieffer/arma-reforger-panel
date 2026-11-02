@@ -1,10 +1,13 @@
 // Server mods card: mod sets, and the mods of the set chosen in the selector
-// (list, bulk JSON import and single-mod form).
+// (list, bulk JSON import and single-mod form). The mods downloaded on the
+// server are in workshop.js.
 
 import { t, tn } from '../i18n.js';
 import { postForm, postJson } from './api.js';
 import { setLog } from './activity.js';
+import { reloadIfUnchanged } from './changes.js';
 import { escHtml } from './format.js';
+import { initWorkshop, loadWorkshop } from './workshop.js';
 
 const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
 
@@ -66,6 +69,14 @@ async function loadSets(selectId = selectedId) {
   const known = id => sets.some(s => s.id === id);
   selectedId = known(selectId) ? selectId : (activeId || (sets[0] && sets[0].id) || null);
   render();
+}
+
+// After a change to the sets: the set in use is also config.json's mod list,
+// which the config.json editor and the list of downloaded mods show.
+async function reloadSets(selectId) {
+  await loadSets(selectId);
+  reloadIfUnchanged('raw');
+  loadWorkshop();
 }
 
 function render() {
@@ -147,7 +158,7 @@ async function submitName() {
   if (!d.ok) { setLog(errorMessage(d), 'error'); return; }
   setLog(t(renaming ? 'modsets.renamed' : 'modsets.created', { name }), 'ok');
   closeNameForm();
-  await loadSets(d.id || selectedId);
+  await reloadSets(d.id || selectedId);
 }
 
 async function deleteSet() {
@@ -156,7 +167,7 @@ async function deleteSet() {
   const d = await send(setUrl('/delete'), {});
   if (!d.ok) { setLog(errorMessage(d), 'error'); return; }
   setLog(t('modsets.deleted', { name: set.name }), 'ok');
-  await loadSets(activeId);
+  await reloadSets(activeId);
 }
 
 async function activateSet() {
@@ -167,7 +178,7 @@ async function activateSet() {
   if (!d.ok) { setLog(errorMessage(d), 'error'); return; }
   setLog(t('modsets.activated', { name: set.name }), 'ok');
   showRestartNotice(d.restart_required);
-  await loadSets();
+  await reloadSets();
 }
 
 async function exportSet() {
@@ -213,7 +224,7 @@ async function addMod() {
   $('mod-name').value = '';
   $('mod-version').value = '';
   showRestartNotice(d.restart_required);
-  await loadSets();
+  await reloadSets();
 }
 
 async function removeMod(modId) {
@@ -223,7 +234,7 @@ async function removeMod(modId) {
   if (!d.ok) { setLog(errorMessage(d), 'error'); return; }
   setLog(t('mods.removed'), 'ok');
   showRestartNotice(d.restart_required);
-  await loadSets();
+  await reloadSets();
 }
 
 async function importModsFromTextarea() {
@@ -266,7 +277,7 @@ async function afterImport(d) {
   setLog(msg, 'ok');
   $('mods-import-text').value = '';
   showRestartNotice(d.restart_required);
-  await loadSets();
+  await reloadSets();
 }
 
 export function initMods() {
@@ -298,4 +309,5 @@ export function initMods() {
   });
 
   run(() => loadSets());
+  initWorkshop();
 }

@@ -507,7 +507,8 @@ a.link-btn { text-decoration: none; }
   cursor: pointer;
   transition: var(--transition);
 }
-.mod-remove:hover { color: #FFFFFF; background-color: var(--offline); border-color: var(--offline); }
+.mod-remove:hover:not(:disabled) { color: #FFFFFF; background-color: var(--offline); border-color: var(--offline); }
+.mod-remove:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .import-textarea {
   font-family: var(--font-mono);
@@ -689,6 +690,128 @@ a.link-btn { text-decoration: none; }
 @keyframes ping  { 0% { transform: scale(1); opacity: 0.25; } 100% { transform: scale(2.5); opacity: 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
+/* Links in the explanations, such as the editor's documentation links */
+.card-description a,
+.card-help a { font-weight: 700; color: var(--info); }
+
+/* Force stop, under the server controls */
+.controls-extra {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin-top: -0.75rem;
+}
+.controls-extra .card-help { margin: 0; }
+
+/* Subtitle with an action aligned on its right */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.workshop-summary { margin: 0 0 0.75rem; }
+
+/* Players */
+.players-table .player-number { width: 1%; white-space: nowrap; font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
+.players-table .player-action { width: 1%; text-align: right; white-space: nowrap; }
+
+/* config.json editor */
+.editor-details > summary {
+  display: inline-block;
+  margin-bottom: 0.9rem;
+  list-style: none;
+}
+.editor-details > summary::-webkit-details-marker { display: none; }
+.editor-details > summary::before { content: '▸ '; }
+.editor-details[open] > summary::before { content: '▾ '; }
+
+.config-editor {
+  min-height: 320px;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.55;
+  tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+.config-editor[readonly] { opacity: 0.6; cursor: not-allowed; }
+#editor-locked { margin-top: 0; }
+
+.editor-status { margin-top: 0.6rem; font-size: 12.5px; color: var(--ink-soft); }
+.editor-status--ok      { color: var(--online); }
+.editor-status--warning { color: var(--warn); }
+.editor-status--error   { color: var(--offline); }
+
+.editor-problems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 260px;
+  margin-top: 0.5rem;
+  overflow-y: auto;
+  list-style: none;
+}
+.editor-problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+  border-left: 3px solid;
+  border-radius: var(--radius-sm);
+}
+.editor-problem--error   { border-color: var(--offline); background-color: rgba(209, 72, 65, 0.08); }
+.editor-problem--warning { border-color: var(--warn); background-color: rgba(217, 130, 43, 0.1); }
+.editor-problem-level { font-weight: 700; }
+.editor-problem code { padding: 0.05rem 0.35rem; border-radius: 4px; background-color: rgba(15, 14, 51, 0.06); }
+
+/* A card locked while the config.json editor has unsaved changes */
+.card.is-locked { opacity: 0.5; }
+
+/* Save bar, shown while a card has unsaved changes */
+body.has-save-bar { padding-bottom: 6.5rem; }
+
+.save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  padding: 0 1rem calc(1rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.save-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  max-width: 1052px;
+  margin: 0 auto;
+  padding: 0.85rem 1.25rem;
+  color: #FFFFFF;
+  background-image: var(--gradient-night);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  pointer-events: auto;
+  animation: fadeUp 0.25s ease both;
+}
+.save-bar-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.5rem; min-width: 0; font-size: 13px; }
+.save-bar-note  { flex-basis: 100%; font-size: 12px; color: gainsboro; }
+.save-bar-error { flex-basis: 100%; font-size: 12.5px; color: #FFB4AE; overflow-wrap: anywhere; }
+.save-bar-actions { display: flex; flex-shrink: 0; gap: 0.5rem; }
+.save-bar .btn-outline { border-color: #FFFFFF; color: #FFFFFF; }
+.save-bar .btn-outline:hover:not(:disabled) { background-color: #FFFFFF; color: var(--ink); }
+.save-bar .btn-solid { background-color: #FFFFFF; border-color: #FFFFFF; color: var(--ink); box-shadow: none; }
+.save-bar .btn-solid:hover:not(:disabled) { background-color: transparent; color: #FFFFFF; }
+
 /* Responsive */
 @media (max-width: 992px) {
   .header-logo { height: 52px; }
@@ -714,6 +837,8 @@ a.link-btn { text-decoration: none; }
 }
 
 @media (max-width: 576px) {
+  .save-bar-actions { width: 100%; }
+  .save-bar-actions .btn { flex: 1; }
   .header-bar { grid-template-columns: 1fr; }
   .header-actions { justify-self: start; }
 

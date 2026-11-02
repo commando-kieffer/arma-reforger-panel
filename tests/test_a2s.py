@@ -150,7 +150,8 @@ class GetPlayersTest(unittest.TestCase):
         with mock.patch.object(a2s, "query_info", return_value={"players": 4, "max_players": 32}), \
              mock.patch.object(a2s, "query_players", side_effect=A2SError("bad")):
             result = players.get_players(True, self.CFG)
-        self.assertEqual(result, {"state": "ok", "count": 4, "max": 32, "players": None, "list_state": "rcon_disabled"})
+        self.assertEqual(result, {"state": "ok", "count": 4, "max": 32, "players": None, "list_state": "rcon_disabled",
+                                  "can_kick": False})
 
     def test_count_only_when_no_names(self):
         with mock.patch.object(a2s, "query_info", return_value={"players": 2, "max_players": 32}), \

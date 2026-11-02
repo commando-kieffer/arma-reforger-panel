@@ -9,7 +9,6 @@
     "unknown": "erreur inconnue",
     "error": "Erreur : {error}",
     "connection_error": "Erreur de connexion",
-    "save_changes": "Enregistrer",
     "save_failed": "Échec de l'enregistrement : {error}",
     "show_password": "Afficher",
     "hide_password": "Masquer",
@@ -73,6 +72,20 @@
     "image_unreadable": "Cette image ne peut pas être lue",
     "image_too_large": "L'image mise à l'échelle est trop volumineuse (plus de {max} Ko). Essayez une image plus simple."
   },
+  "changes": {
+    "unsaved": "Modifications non enregistrées :",
+    "save": "Enregistrer",
+    "discard": "Annuler",
+    "confirm_discard": "Annuler les modifications non enregistrées ?",
+    "saving": "Enregistrement…",
+    "saved": "Modifications enregistrées",
+    "save_failed_section": "Non enregistré. {section} : {error}",
+    "forms_locked": "Les formulaires sont verrouillés pendant que config.json est modifié.",
+    "section_server": "Configuration du serveur",
+    "section_gameplay": "Paramètres de jeu",
+    "section_persistence": "Persistance",
+    "section_raw": "éditeur de config.json"
+  },
   "status": {
     "title": "État du serveur",
     "loading": "CHARGEMENT...",
@@ -106,7 +119,13 @@
     "connecting": "connexion…",
     "seconds": "{n} s",
     "minutes": "{n} min",
-    "hours": "{h} h {m}"
+    "hours": "{h} h {m}",
+    "col_number": "ID",
+    "kick": "Expulser",
+    "confirm_kick": "Expulser {name} ? Il pourra se reconnecter.",
+    "kicking": "Expulsion de {name}…",
+    "kicked": "{name} a été expulsé",
+    "kick_unavailable": "Pour expulser des joueurs d'ici, mettez \"permission\": \"admin\" dans le bloc rcon de config.json (éditeur ci-dessous), puis redémarrez le serveur."
   },
   "controls": {
     "start": "DÉMARRER",
@@ -117,7 +136,11 @@
     "restarting": "Redémarrage du serveur...",
     "started": "Serveur démarré",
     "stopped": "Serveur arrêté",
-    "restarted": "Serveur redémarré"
+    "restarted": "Serveur redémarré",
+    "force_stop": "Arrêt forcé",
+    "force_stop_help": "Le serveur ne répond pas à Arrêter ?",
+    "confirm_force_stop": "Forcer l'arrêt du serveur ?\n\nChaque processus du serveur reçoit SIGINT, puis est tué s'il ne s'est pas arrêté au bout de 10 secondes. Le jeu risque de ne pas pouvoir sauvegarder. À n'utiliser que si Arrêter ne fonctionne pas.",
+    "force_stopping": "Arrêt forcé du serveur…"
   },
   "metrics": {
     "cpu_title": "CPU — Système",
@@ -152,11 +175,7 @@
     "scan_nothing_found": ". Aucun fichier .pak trouvé. Emplacements testés : {tried}. Lancez le serveur une première fois pour qu'il télécharge les mods du workshop, ou définissez WORKSHOP_DIR dans config.env.",
     "rescan_failed": "Échec du rescan : {error}",
     "rescan_error": "Erreur lors du rescan",
-    "name_required": "Le nom du serveur ne peut pas être vide",
-    "admin_password_required": "Le mot de passe admin ne peut pas être vide",
-    "saving": "Enregistrement de la configuration...",
-    "saved": "Configuration enregistrée",
-    "unreadable_banner": "Impossible de lire config.json ({error}). Les réglages ne peuvent pas être enregistrés tant que le fichier n'est pas corrigé."
+    "unreadable_banner": "config.json n'a pas pu être lu ({error}). Les cartes ne peuvent pas enregistrer tant qu'il n'est pas corrigé, par exemple dans l'éditeur de config.json en bas de la page."
   },
   "gameplay": {
     "title": "Paramètres de jeu",
@@ -172,9 +191,7 @@
     "join_queue_max_size": "Taille de la file d'attente (0–50, 0 = désactivée)",
     "ai_limit": "Limite d'IA (-1 = aucune)",
     "battleye_warning": "BattlEye est l'anti-triche du serveur. Ne le désactivez que sur un serveur privé.",
-    "fast_validation_off": "<code>fastValidation</code> est désactivé dans config.json. Le wiki de Bohemia recommande de toujours le laisser activé sur un serveur public.",
-    "saving": "Enregistrement des paramètres de jeu...",
-    "saved": "Paramètres de jeu enregistrés"
+    "fast_validation_off": "<code>fastValidation</code> est désactivé dans config.json. Le wiki de Bohemia recommande de toujours le laisser activé sur un serveur public."
   },
   "mods": {
     "title": "Mods du serveur",
@@ -257,6 +274,26 @@
       "other": ". Aucune version téléchargée trouvée pour {count} mods : {mods}"
     }
   },
+  "workshop": {
+    "title": "Téléchargés sur le serveur",
+    "refresh": "Actualiser",
+    "help": "Les mods que le serveur a téléchargés dans son dossier workshop. En supprimer un libère de l'espace disque. Un mod de la liste de config.json (le modset utilisé) ne peut pas être supprimé : le serveur le téléchargerait à nouveau à son prochain démarrage, comme il le fait pour un mod supprimé dont un autre mod dépend.",
+    "summary": {
+      "one": "{count} mod, {size}, dans {dir}.",
+      "other": "{count} mods, {size}, dans {dir}."
+    },
+    "empty": "Aucun mod téléchargé dans {dir}.",
+    "load_failed": "Impossible de lister les mods téléchargés.",
+    "in_use": "utilisé",
+    "in_sets": "dans les modsets : {sets}",
+    "in_no_set": "dans aucun modset",
+    "uninstall": "Supprimer",
+    "running_help": "Arrêtez le serveur pour supprimer des mods.",
+    "in_use_help": "Dans la liste de mods de config.json : le serveur le téléchargerait à nouveau",
+    "confirm_uninstall": "Supprimer {name} ({size}) du disque du serveur ?\n\nIl sera téléchargé à nouveau si un modset qui le contient est utilisé plus tard.",
+    "uninstalling": "Suppression de {name}…",
+    "uninstalled": "{name} supprimé du serveur"
+  },
   "persistence": {
     "title": "Persistance",
     "description": "Les sauvegardes de session permettent au serveur de reprendre le monde après un redémarrage. Elles ne fonctionnent que dans les scénarios qui les gèrent (Conflict, Combat Ops) ; en Game Master, il faut sauvegarder manuellement depuis le menu Échap. <strong>Valeurs par défaut du serveur</strong> : rien dans <code>config.json</code>, le serveur sauvegarde automatiquement toutes les 10 minutes. <strong>Réglages personnalisés</strong> : les réglages ci-dessous, écrits dans <code>game.gameProperties.persistence</code>. <strong>Désactivée</strong> : met <code>m_eSaveTypes</code> à 0 dans l'en-tête de mission, ce qui désactive la sauvegarde. Le serveur est toujours lancé avec <code>-loadSessionSave</code> : une sauvegarde existante est donc chargée au démarrage ; utilisez <strong>Purger les sauvegardes</strong> pour repartir d'un monde vierge.",
@@ -279,8 +316,6 @@
       "other": "{label} : {count} fichiers, {size} (dernier {age})"
     },
     "empty": "vide",
-    "saving": "Enregistrement des paramètres de persistance...",
-    "saved": "Paramètres de persistance enregistrés",
     "confirm_flush": "Supprimer la sauvegarde de session du monde (.save/game) et les sauvegardes des joueurs (.save/playersave) ? Les paramètres du serveur sont conservés. Le prochain lancement démarrera un monde vierge. Cette action est irréversible.",
     "flushing": "Purge des sauvegardes...",
     "flushed": {
@@ -288,6 +323,41 @@
       "other": "{count} fichiers de sauvegarde supprimés"
     },
     "flush_failed": "Échec de la purge : {error}"
+  },
+  "editor": {
+    "title": "config.json",
+    "description": "Le fichier de configuration complet du serveur, pour les paramètres que les cartes ci-dessus ne couvrent pas, comme les <a href=\"https://anvil.acemod.org/components/medical/\" target=\"_blank\" rel=\"noopener\">paramètres ACE</a> dans <code>game.gameProperties.missionHeader</code> (voir la <a href=\"https://community.bistudio.com/wiki/Arma_Reforger:Server_Config\" target=\"_blank\" rel=\"noopener\">référence de la configuration</a>). Le texte est vérifié pendant la saisie : les erreurs empêchent l'enregistrement, les avertissements non. Le fichier précédent est conservé dans <code>config-backups/</code>.",
+    "open": "Modifier config.json",
+    "locked": "Les formulaires ci-dessus ont des modifications non enregistrées : enregistrez-les ou annulez-les avant de modifier config.json.",
+    "checking": "Vérification…",
+    "no_problems": "Aucun problème trouvé.",
+    "problem_count": "{errors} erreur(s), {warnings} avertissement(s)",
+    "level_error": "Erreur",
+    "level_warning": "Avertissement",
+    "load_failed": "Impossible de charger config.json : {error}"
+  },
+  "check": {
+    "syntax": "JSON invalide à la ligne {line}, colonne {col} : {reason}",
+    "syntax_value": "{value} n'est pas du JSON valide",
+    "duplicate_key": "La clé \"{name}\" apparaît deux fois dans le même objet",
+    "not_an_object": "Le fichier doit contenir un objet JSON : { … }",
+    "wrong_type": "Doit être {expected}",
+    "kind_string": "une chaîne de caractères",
+    "kind_int": "un nombre entier",
+    "kind_bool": "true ou false",
+    "kind_object": "un objet { … }",
+    "kind_array": "une liste [ … ]",
+    "out_of_range": "Valeurs autorisées : {allowed}",
+    "not_a_choice": "Valeurs autorisées : {allowed}",
+    "too_long": "{max} caractères au plus",
+    "too_short": "{min} caractères au moins",
+    "spaces": "Ne doit pas contenir d'espaces",
+    "required": "Obligatoire",
+    "unknown_key": "Clé non documentée. Vérifiez l'orthographe (les clés sont sensibles à la casse), sauf si elle vient d'une version plus récente du serveur ou d'un mod.",
+    "unknown_scenario": "Scénario inconnu du panel (jeu de base ou mods téléchargés)",
+    "invalid_mod": "Entrée de mod invalide : modId doit faire de 1 à 32 caractères hexadécimaux",
+    "duplicate_mod": "Le mod {mod_id} apparaît deux fois",
+    "port_taken": "Le port {port} est déjà utilisé par {other}"
   },
   "logs": {
     "title": "Logs du serveur — en direct",
@@ -384,6 +454,38 @@
     "import_replaced": {
       "one": "Liste des mods remplacée ({count} entrée)",
       "other": "Liste des mods remplacée ({count} entrées)"
-    }
+    },
+    "invalid_request": "Requête invalide",
+    "save_mixed": "L'éditeur de config.json et les formulaires ne peuvent pas être enregistrés ensemble",
+    "config_check_failed": "config.json contient des erreurs, rien n'a été enregistré (voir la liste sous l'éditeur)",
+    "config_changed": "config.json a changé depuis le chargement de l'éditeur (dans un autre onglet, ou via les modsets). Rien n'a été enregistré : annulez pour charger le fichier actuel, puis refaites vos modifications.",
+    "force_stop_none": "Aucun processus du serveur trouvé",
+    "force_stopped": {
+      "one": "Arrêt forcé du serveur ({count} processus)",
+      "other": "Arrêt forcé du serveur ({count} processus)"
+    },
+    "force_stop_killed": {
+      "one": ". Le processus {pids} a ignoré SIGINT et a été tué",
+      "other": ". Les processus {pids} ont ignoré SIGINT et ont été tués"
+    },
+    "force_stop_systemd": ". Il avait été lancé par le service arma-server, qui peut le relancer dans les 10 secondes. Pour qu'il reste arrêté, lancez : sudo systemctl stop arma-server",
+    "force_stop_remaining": {
+      "one": "Le processus {pids} tourne encore après SIGKILL",
+      "other": "Les processus {pids} tournent encore après SIGKILL"
+    },
+    "force_stop_denied": {
+      "one": ". Le panel n'a pas le droit d'envoyer un signal au processus {pids} : il tourne sous un autre utilisateur",
+      "other": ". Le panel n'a pas le droit d'envoyer un signal aux processus {pids} : ils tournent sous un autre utilisateur"
+    },
+    "kick_rcon_disabled": "L'expulsion passe par RCON : config.json n'a pas de bloc rcon avec un mot de passe",
+    "kick_needs_admin": "L'expulsion nécessite \"permission\": \"admin\" dans le bloc rcon de config.json, puis un redémarrage du serveur",
+    "kick_rcon_refused": "Le serveur a refusé le mot de passe RCON de config.json",
+    "kick_rcon_failed": "Le serveur n'a pas répondu en RCON",
+    "kick_player_gone": "Ce joueur n'est plus dans la liste avec cet ID : actualisez et réessayez",
+    "kick_failed": "Le joueur est toujours connecté après la commande d'expulsion. Réponse du serveur : {answer}",
+    "stop_before_uninstall": "Arrêtez le serveur avant de supprimer un mod",
+    "workshop_mod_in_use": "Ce mod est dans la liste de mods de config.json : retirez-le d'abord du modset utilisé, ou changez de modset",
+    "workshop_mod_not_found": "Ce mod n'est plus dans le dossier workshop",
+    "workshop_remove_failed": "Impossible de supprimer le mod : {error}"
   }
 }

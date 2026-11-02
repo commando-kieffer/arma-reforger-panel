@@ -4,9 +4,14 @@ Every change goes through update_config(): the file is read strictly, so a
 config that can't be parsed is never overwritten with a partial one; the
 previous version is copied to the backup folder; and the new content replaces
 the file in a single rename, so the server never reads a half-written file.
+
+The config.json editor replaces the whole text instead (replace_config_text),
+with the same lock, backup and rename. It works on a file that doesn't parse,
+so it can be used to repair one.
 """
 
 import copy
+import hashlib
 import json
 import os
 import shutil
@@ -15,7 +20,7 @@ from datetime import datetime
 
 from .. import config
 from ..log import logger
-from .files import write_atomic
+from .files import write_atomic, write_atomic_bytes
 
 BACKUP_KEEP = 20
 
@@ -30,6 +35,10 @@ class ConfigError(Exception):
 
 class ChangeRejected(Exception):
     """Raised by an update callback to cancel the change; nothing is written."""
+
+
+class ConfigChanged(Exception):
+    """config.json changed since the editor loaded it; nothing is written."""
 
 
 def load_config():
@@ -72,6 +81,39 @@ def update_config(mutate):
             _backup()
             _write_atomic(cfg)
         return result
+
+
+def read_config_text():
+    """(text, SHA-256 of the file) as stored, valid JSON or not. Raises
+    ConfigError when the file can't be read."""
+    try:
+        with open(config.SERVER_CONFIG, "rb") as f:
+            data = f.read()
+    except FileNotFoundError:
+        raise ConfigError(f"{config.SERVER_CONFIG} not found") from None
+    except OSError as e:
+        raise ConfigError(str(e)) from None
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise ConfigError(str(e)) from None
+    return text, hashlib.sha256(data).hexdigest()
+
+
+def replace_config_text(text, expected_sha256):
+    """Replace config.json with `text`, unless the file changed since the
+    version whose SHA-256 is `expected_sha256` was read: ConfigChanged is
+    raised then. The text is written as is; checking it is up to the caller."""
+    if not text.endswith("\n"):
+        text += "\n"
+    with _write_lock:
+        _, current = read_config_text()
+        if current != expected_sha256:
+            raise ConfigChanged()
+        _backup()
+        data = text.encode("utf-8")
+        write_atomic_bytes(os.path.realpath(config.SERVER_CONFIG), data)
+        return hashlib.sha256(data).hexdigest()
 
 
 def list_backups():

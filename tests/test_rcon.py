@@ -5,6 +5,7 @@ from unittest import mock
 
 from arma_panel.services import a2s, players, rcon
 from arma_panel.services.rcon import RconError, build_packet, parse_packet
+from arma_panel.services.server_config import ChangeRejected
 
 PASSWORD = "s3cret"
 UID_A = "b6955d91-4749-4cdb-9a51-e69f630ec435"
@@ -101,14 +102,14 @@ class PacketTest(unittest.TestCase):
 class ParsePlayersTest(unittest.TestCase):
     def test_captured_output(self):
         text = CAPTURED_PLAYERS[2][2:].decode()
-        self.assertEqual(rcon.parse_players(text), [{"uid": UID_A, "name": "Cpt. Jerry - Fox"}])
+        self.assertEqual(rcon.parse_players(text), [{"id": 1, "uid": UID_A, "name": "Cpt. Jerry - Fox"}])
 
     def test_list(self):
         text = HEADER + f"1 ; {UID_A} ; Jerry\r\n12 ; {UID_B} ; Orzeł ; 04 \n3 ; {UID_A} ; \n"
         self.assertEqual(rcon.parse_players(text), [
-            {"uid": UID_A, "name": "Jerry"},
-            {"uid": UID_B, "name": "Orzeł ; 04"},
-            {"uid": UID_A, "name": ""},
+            {"id": 1, "uid": UID_A, "name": "Jerry"},
+            {"id": 12, "uid": UID_B, "name": "Orzeł ; 04"},
+            {"id": 3, "uid": UID_A, "name": ""},
         ])
 
     def test_no_players(self):
@@ -168,7 +169,7 @@ class ClientTest(unittest.TestCase):
         client = self.client(mock.Mock(address=sock.getsockname()))
         text = client.command("#players")
         thread.join()
-        self.assertEqual(rcon.parse_players(text), [{"uid": UID_A, "name": "Cpt. Jerry - Fox"}])
+        self.assertEqual(rcon.parse_players(text), [{"id": 1, "uid": UID_A, "name": "Cpt. Jerry - Fox"}])
         self.assertEqual(client.messages, ["Logged In! Client ID: #0"])
         # Login, command, then one acknowledgement per server message.
         self.assertEqual(received, [b"\x00" + PASSWORD.encode(), b"\x01\x00#players",
@@ -177,6 +178,24 @@ class ClientTest(unittest.TestCase):
     def test_command(self):
         server = self.serve(lambda command: output("you sent " + command, command))
         self.assertEqual(self.client(server).command("#players"), "you sent #players")
+
+    def test_command_without_output(self):
+        server = self.serve(lambda command: ["Processing Command: " + command])
+        client = self.client(server)
+        self.assertEqual(client.command("#kick 3", output_wait=0.2), "")
+        # The session is still usable afterwards.
+        self.assertEqual(client.command("#kick 4", output_wait=0.2), "")
+        self.assertEqual(server.logins, 1)
+
+    def test_output_is_returned_when_it_comes(self):
+        server = self.serve(lambda command: output("done", command))
+        self.assertEqual(self.client(server).command("#kick 3", output_wait=0.5), "done")
+
+    def test_output_wait_needs_the_processing_message(self):
+        # Without "Processing Command" the command wasn't run: that's a timeout.
+        server = self.serve(lambda command: [])
+        with self.assertRaises(OSError):
+            self.client(server, timeout=0.3).command("#kick 3", output_wait=0.1)
 
     def test_login_is_reused(self):
         server = self.serve(lambda command: output("list"))
@@ -309,8 +328,9 @@ class RconPlayersTest(unittest.TestCase):
 
     def test_list(self):
         cfg = self.serve(HEADER + f"1 ; {UID_A} ; Jerry\n2 ; {UID_B} ; Hubert")
-        self.assertEqual(self.query(cfg, 2), {"state": "ok", "count": 2, "max": 64, "list_state": "ok", "players": [
-            {"uid": UID_A, "name": "Jerry"}, {"uid": UID_B, "name": "Hubert"}]})
+        self.assertEqual(self.query(cfg, 2), {"state": "ok", "count": 2, "max": 64, "list_state": "ok",
+                                              "can_kick": False, "players": [
+            {"id": 1, "uid": UID_A, "name": "Jerry"}, {"id": 2, "uid": UID_B, "name": "Hubert"}]})
         self.warning.assert_not_called()
 
     def test_nobody_connected(self):
@@ -350,7 +370,7 @@ class RconPlayersTest(unittest.TestCase):
     def test_recovers_after_a_problem(self):
         cfg = self.serve(HEADER + f"1 ; {UID_A} ; Jerry")
         self.assertEqual(self.query(cfg, 2)["list_state"], "rcon_mismatch")
-        self.assertEqual(self.query(cfg, 1)["players"], [{"uid": UID_A, "name": "Jerry"}])
+        self.assertEqual(self.query(cfg, 1)["players"], [{"id": 1, "uid": UID_A, "name": "Jerry"}])
         self.assertEqual(self.server.logins, 1)
 
     def test_client_closed_when_the_server_stops(self):
@@ -358,6 +378,76 @@ class RconPlayersTest(unittest.TestCase):
         self.assertIsNotNone(players._rcon["client"])
         self.assertEqual(players.get_players(False, {}), {"state": "offline"})
         self.assertIsNone(players._rcon["client"])
+
+
+class KickTest(unittest.TestCase):
+    """kick() against a server that drops a player when it gets `#kick`."""
+
+    def setUp(self):
+        players._cache.update(key=None, at=0.0, result=None)
+        self.addCleanup(players._close_rcon)
+        for name, value in (("KICK_CHECK_INTERVAL", 0.05), ("KICK_CHECK_SECONDS", 0.5), ("KICK_OUTPUT_WAIT", 0.1)):
+            patcher = mock.patch.object(players, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = mock.patch.object(players.logger, "warning")
+        self.warning = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.connected = {1: (UID_A, "Jerry"), 2: (UID_B, "Hubert")}
+        self.commands = []
+        self.obeys = True
+
+    def handle(self, command):
+        self.commands.append(command)
+        if command == "#players":
+            rows = "".join(f"{n} ; {uid} ; {name}\n" for n, (uid, name) in sorted(self.connected.items()))
+            return output(HEADER + rows)
+        if command.startswith("#kick ") and self.obeys:
+            self.connected.pop(int(command.split()[1]), None)
+        return ["Processing Command: " + command]
+
+    def config(self, permission="admin"):
+        server = FakeServer(self.handle)
+        self.addCleanup(server.close)
+        block = {"address": server.address[0], "port": server.address[1], "password": PASSWORD}
+        if permission is not None:
+            block["permission"] = permission
+        return {"a2s": {"address": "127.0.0.1"}, "rcon": block}
+
+    def test_kick(self):
+        self.assertEqual(players.kick(self.config(), 2, UID_B.upper()), "Hubert")
+        self.assertIn("#kick 2", self.commands)
+        self.assertEqual(list(self.connected), [1])
+
+    def test_number_must_still_belong_to_the_player(self):
+        cfg = self.config()
+        for player_id, uid in ((2, UID_A), (3, UID_B)):
+            with self.subTest(player_id=player_id), self.assertRaises(ChangeRejected):
+                players.kick(cfg, player_id, uid)
+        self.assertFalse(any(c.startswith("#kick") for c in self.commands))
+
+    def test_player_still_connected(self):
+        self.obeys = False
+        with self.assertRaises(ChangeRejected):
+            players.kick(self.config(), 2, UID_B)
+        self.assertEqual(len(self.connected), 2)
+
+    def test_needs_admin_permission(self):
+        for permission in ("monitor", None):
+            with self.subTest(permission=permission), self.assertRaises(ChangeRejected):
+                players.kick(self.config(permission), 2, UID_B)
+        self.assertEqual(self.commands, [])
+
+    def test_needs_rcon(self):
+        with self.assertRaises(ChangeRejected):
+            players.kick({"a2s": {"address": "127.0.0.1"}}, 2, UID_B)
+
+    def test_can_kick_flag(self):
+        cfg = self.config()
+        with mock.patch.object(a2s, "query_info", return_value={"players": 2, "max_players": 64}):
+            self.assertTrue(players.get_players(True, cfg)["can_kick"])
+            cfg["rcon"]["permission"] = "monitor"
+            self.assertFalse(players.get_players(True, cfg)["can_kick"])
 
 
 if __name__ == "__main__":

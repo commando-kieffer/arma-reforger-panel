@@ -1,8 +1,10 @@
-"""Player count and player list, read from the running game server.
+"""Player count and player list, read from the running game server, and
+kicking a player.
 
 The count comes from A2S. A2S doesn't give the names on Reforger, so when
-config.json has an `rcon` block the list (names and identity IDs) is read
-over RCON instead.
+config.json has an `rcon` block the list (player numbers, identity IDs and
+names) is read over RCON instead. Kicking also goes through RCON, and needs
+`"permission": "admin"` in that block.
 
 The result is cached for a few seconds so several open panels don't multiply
 the queries. A server that doesn't answer is reported as such, never as
@@ -12,11 +14,19 @@ the queries. A server that doesn't answer is reported as such, never as
 import threading
 import time
 
+from ..i18n import t
 from ..log import logger
 from . import a2s, rcon
+from .server_config import ChangeRejected
 
 CACHE_SECONDS = 5
 DEFAULT_PORT = 17777
+
+# After `#kick`: how long to wait for an output, then how long the player
+# list is watched for the player to leave.
+KICK_OUTPUT_WAIT = 1.0
+KICK_CHECK_SECONDS = 5.0
+KICK_CHECK_INTERVAL = 0.5
 
 _lock = threading.Lock()
 _cache = {"key": None, "at": 0.0, "result": None}
@@ -59,6 +69,14 @@ def rcon_settings(cfg):
     return address, password
 
 
+def rcon_can_kick(cfg):
+    """Whether the rcon block allows kicking. The wiki doesn't say which
+    permission applies when the key is left out, so only an explicit
+    "admin" counts."""
+    block = cfg.get("rcon")
+    return isinstance(block, dict) and block.get("permission") == "admin"
+
+
 def get_players(running, cfg):
     """Returns {"state": ...} where state is:
       offline         the server process isn't running (nothing is queried)
@@ -66,6 +84,7 @@ def get_players(running, cfg):
       no_answer       the query failed (server starting, A2S unreachable, bad answer)
       ok              with "count", "max", "players" and "list_state"
 
+    With state "ok", "can_kick" says whether the rcon block allows kicking.
     "players" is None when there is no list to show, and "list_state" says why:
       rcon_disabled   config.json has no usable rcon block
       rcon_no_answer  nothing answers on the RCON port
@@ -81,13 +100,65 @@ def get_players(running, cfg):
     if address is None:
         return {"state": "not_configured"}
     settings = rcon_settings(cfg)
-    key = (address, settings)
+    can_kick = settings is not None and rcon_can_kick(cfg)
+    key = (address, settings, can_kick)
     with _lock:
         if _cache["key"] == key and time.monotonic() - _cache["at"] < CACHE_SECONDS:
             return _cache["result"]
         result = _query(address, settings)
+        if result["state"] == "ok":
+            result["can_kick"] = can_kick
         _cache.update(key=key, at=time.monotonic(), result=result)
         return result
+
+
+def kick(cfg, player_id, uid):
+    """Kick player number `player_id`, once the list confirms the number
+    still belongs to identity `uid` (numbers are reused when players leave
+    and join). Returns the player's name. Raises ChangeRejected with a
+    message ready to show.
+
+    The server's answer to `#kick` isn't documented, so the kick only counts
+    as done once the player is gone from `#players`.
+    """
+    settings = rcon_settings(cfg)
+    if settings is None:
+        raise ChangeRejected(t("api.kick_rcon_disabled"))
+    if not rcon_can_kick(cfg):
+        raise ChangeRejected(t("api.kick_needs_admin"))
+    with _lock:
+        _cache["key"] = None
+        client = _client(settings)
+        try:
+            listed = rcon.parse_players(client.command(rcon.PLAYERS_COMMAND))
+        except rcon.LoginRefused:
+            raise ChangeRejected(t("api.kick_rcon_refused")) from None
+        except (rcon.RconError, OSError):
+            raise ChangeRejected(t("api.kick_rcon_failed")) from None
+        target = next((p for p in listed
+                       if p["id"] == player_id and p["uid"].lower() == str(uid).lower()), None)
+        if target is None:
+            raise ChangeRejected(t("api.kick_player_gone"))
+
+        answer = None
+        try:
+            answer = client.command(rcon.KICK_COMMAND.format(player_id), output_wait=KICK_OUTPUT_WAIT)
+        except (rcon.RconError, OSError) as e:
+            logger.warning("no answer to #kick %d: %s", player_id, e)
+
+        deadline = time.monotonic() + KICK_CHECK_SECONDS
+        while time.monotonic() < deadline:
+            time.sleep(KICK_CHECK_INTERVAL)
+            try:
+                listed = rcon.parse_players(client.command(rcon.PLAYERS_COMMAND))
+            except (rcon.RconError, OSError):
+                continue
+            if not any(p["uid"].lower() == target["uid"].lower() for p in listed):
+                logger.info("kicked player %d (%s, %s)", player_id, target["name"], target["uid"])
+                return target["name"]
+        logger.warning("player %d (%s) still connected after #kick; server answer: %r",
+                       player_id, target["uid"], answer)
+        raise ChangeRejected(t("api.kick_failed", answer=answer or "—"))
 
 
 def _query(address, settings):
@@ -120,11 +191,8 @@ def _rcon_players(settings, count):
     # No need to ask who is connected when nobody is.
     if count == 0:
         return [], "ok"
-    address, password = settings
-    client = _rcon["client"]
-    if client is None or (client.address, client.password) != settings:
-        _close_rcon()
-        client = _rcon["client"] = rcon.Client(address, password)
+    address = settings[0]
+    client = _client(settings)
     reply = None
     try:
         reply = client.command(rcon.PLAYERS_COMMAND)
@@ -142,6 +210,15 @@ def _rcon_players(settings, count):
         return None, _problem("rcon_mismatch", "RCON lists %d players, A2S reports %d" % (len(players), count))
     _rcon["problem"] = None
     return players, "ok"
+
+
+def _client(settings):
+    """The RCON client for `settings`, kept from one call to the next."""
+    client = _rcon["client"]
+    if client is None or (client.address, client.password) != settings:
+        _close_rcon()
+        client = _rcon["client"] = rcon.Client(*settings)
+    return client
 
 
 def _problem(reason, detail):

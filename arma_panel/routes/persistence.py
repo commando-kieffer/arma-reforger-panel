@@ -1,16 +1,16 @@
-"""Session persistence settings and save file management."""
+"""Session persistence settings and save file management. The settings
+are saved with the other config.json sections (routes/server_config.py)."""
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 
 from .. import config
 from ..i18n import t
 from ..security import csrf_protected, login_required
 from ..services import config_fields
-from ..services.config_fields import PERSISTENCE_FIELDS, FieldError
-from ..services.persistence import MODES, flush_saves, persistence_mode, scan_saves, set_persistence_mode
+from ..services.config_fields import PERSISTENCE_FIELDS
+from ..services.persistence import flush_saves, persistence_mode, scan_saves
 from ..services.process import get_server_pid
 from ..services.server_config import read_config
-from .common import save_config
 
 bp = Blueprint("persistence", __name__, url_prefix="/api/persistence")
 
@@ -24,34 +24,6 @@ def get_persistence():
         **config_fields.form_values(cfg, PERSISTENCE_FIELDS),
         "saves":       scan_saves(),
         "profile_dir": config.PROFILE_DIR,
-    })
-
-
-@bp.post("")
-@login_required
-@csrf_protected
-def update_persistence():
-    data = request.get_json(silent=True) or {}
-    mode = data.get("mode")
-    if mode not in MODES:
-        return jsonify({"ok": False, "error": t("api.invalid_persistence_mode")}), 400
-    try:
-        fields = config_fields.parse_form(PERSISTENCE_FIELDS, data) if mode == "custom" else {}
-    except FieldError as e:
-        return jsonify({"ok": False, "error": str(e)}), 400
-
-    def change(cfg):
-        set_persistence_mode(cfg, mode)
-        config_fields.apply(cfg, PERSISTENCE_FIELDS, fields)
-        return persistence_mode(cfg)
-
-    new_mode, error = save_config(change)
-    if error:
-        return error
-    return jsonify({
-        "ok": True,
-        "restart_required": get_server_pid() is not None,
-        "mode":             new_mode,
     })
 
 

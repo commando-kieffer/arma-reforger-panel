@@ -1,7 +1,7 @@
 """Flask blueprints, one per area of the panel."""
 
 from . import (auth, branding, logs, monitoring, mods, pages, persistence, scenarios, server,
-               server_config, settings, themes)
+               server_config, settings, themes, workshop)
 
 BLUEPRINTS = (
     pages.bp,
@@ -14,6 +14,7 @@ BLUEPRINTS = (
     server.bp,
     server_config.bp,
     mods.bp,
+    workshop.bp,
     persistence.bp,
     scenarios.bp,
 )

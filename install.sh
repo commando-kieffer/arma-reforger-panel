@@ -416,7 +416,7 @@ if [[ "$MODE" == "full" ]]; then
 		"address": "127.0.0.1",
 		"port": ${RCON_PORT},
 		"password": "${RCON_PASSWORD}",
-		"permission": "monitor"
+		"permission": "admin"
 	},
 	"game": {
 		"name": "${SERVER_NAME}",
@@ -737,8 +737,8 @@ if [ -z "$DOMAIN" ]; then
     echo ""
 fi
 if [[ "$MODE" == "panel" ]] && ! python3 -c 'import json, sys; sys.exit(not isinstance(json.load(open(sys.argv[1])).get("rcon"), dict))' "$SERVER_CONFIG" 2>/dev/null; then
-    echo -e "  ${DIM}Tip: to see the connected players' names in the panel, add an \"rcon\" block${NC}"
-    echo -e "  ${DIM}to ${SERVER_CONFIG} and restart the server (README: Player names).${NC}"
+    echo -e "  ${DIM}Tip: to see the connected players' names in the panel and kick them, add an${NC}"
+    echo -e "  ${DIM}\"rcon\" block to ${SERVER_CONFIG} and restart the server (README: Player names).${NC}"
     echo ""
 fi
 if [[ "$MODE" == "full" ]]; then

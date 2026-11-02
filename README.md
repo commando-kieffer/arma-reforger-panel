@@ -9,16 +9,17 @@ A lightweight, self-hosted web panel for managing your **Arma Reforger dedicated
 ## Features
 
 - **One-command install** — sets up SteamCMD, downloads the Arma Reforger server and installs the panel automatically
-- **Server control** — Start, stop and restart your server from the browser
+- **Server control** — Start, stop and restart your server from the browser, and force stop a server that doesn't answer a normal stop
 - **Real-time monitoring** — Live CPU and RAM charts updated every 3 seconds
 - **Live log streaming** — Server console logs with aligned columns and colour-coded output (errors, warnings, network events)
 - **Log history** — Every past server session, each downloadable as a zip of its console, error and script logs
-- **Players** — Player count read from the server's A2S (Steam query) port, and the names and identity IDs of connected players read over RCON when it is enabled in `config.json`; shown as unavailable rather than guessed when the server doesn't answer
+- **Players** — Player count read from the server's A2S (Steam query) port, and the player number, name and identity ID of each connected player read over RCON when it is enabled in `config.json`, with a button to kick a player; shown as unavailable rather than guessed when the server doesn't answer
 - **Mission selector** — 41 built-in missions including all vanilla and RHS — Status Quo scenarios
 - **Gameplay settings** — View distances, third-person view, voice chat UI, BattlEye, join queue size and AI limit
 - **Persistence** — Keep the server's save defaults, set custom autosave settings or turn saving off, and flush the session saves
-- **Mod sets** — Keep several named mod lists and pick the one the server loads at its next start; add, remove or import Workshop mods in each
-- **Config editor** — Edit server name, scenario, passwords, max players, server browser visibility and crossplay without touching the filesystem
+- **Mod sets** — Keep several named mod lists and pick the one the server loads at its next start; add, remove or import Workshop mods in each, and delete downloaded mods from the server's disk
+- **Config editor** — Edit server name, scenario, passwords, max players, server browser visibility and crossplay without touching the filesystem; changes in any card are saved together from a bar at the bottom of the page
+- **config.json editor** — Edit the whole `config.json` for the settings the cards don't cover (ACE settings, for example), checked as you type before it can be saved
 - **PWA support** — Installable as a native app on Android and iOS
 - **English and French** — Switch the interface language from the panel header or the login screen
 - **Single config file** — All settings in one `config.env`, no code editing required
@@ -63,7 +64,7 @@ http://YOUR_SERVER_IP:8888
 ```
 or at `https://your.domain` if you gave one.
 
-The generated `config.json` enables RCON on `127.0.0.1` with a random password, so the panel can show the names of the connected players (see [Player names](#player-names-rcon)).
+The generated `config.json` enables RCON on `127.0.0.1` with a random password, so the panel can show the connected players and kick them (see [Player names](#player-names-rcon)).
 
 ---
 
@@ -138,23 +139,44 @@ The player count comes from the server's A2S port. The names and identity IDs of
     "address": "127.0.0.1",
     "port": 19999,
     "password": "a-random-password",
-    "permission": "monitor"
+    "permission": "admin"
 }
 ```
 
-The full install writes this block with a random password. On an existing server, add it at the top level, next to `a2s`, and restart the server. The password needs at least 3 characters and no spaces. With `127.0.0.1` the port is only reachable from the server itself, and `monitor` is read-only. The panel reads the address, port and password from `config.json`, so nothing has to be added to `config.env`.
+The full install writes this block with a random password. On an existing server, add it at the top level, next to `a2s` (the config.json editor at the bottom of the panel does it), and restart the server. The password needs at least 3 characters and no spaces. With `127.0.0.1` the port is only reachable from the server itself. The panel reads the address, port and password from `config.json`, so nothing has to be added to `config.env`.
 
 The names are only shown when the server's answer is complete and lists as many players as the A2S count. Otherwise the Players card keeps the count and says why, and `journalctl -u arma-panel` has the details.
 
+Each row starts with the player's number in the server's `#players` list, which is what `#kick` takes. The Kick button needs `"permission": "admin"`: with `monitor` (what installs before this version wrote), RCON can only read, and the Players card says so. Before kicking, the panel checks that the number still belongs to the same identity ID, since numbers are reused when players leave and join. The kick only counts as done once the player has left the list; a kicked player can join again (it isn't a ban).
+
+### Force stop
+
+When the server stops responding, **Force stop** (under the Start / Stop / Restart buttons) sends SIGINT to every running `ArmaReforgerServer` process, then SIGKILL to the ones still there after 10 seconds. The game may not get to save, so it's only for when Stop doesn't work. If the server was started by the `arma-server` systemd service, which restarts it after a crash, the service may start it again within 10 seconds: `sudo systemctl stop arma-server` keeps it stopped.
+
+### Saving changes
+
+The configuration cards (server, gameplay, persistence) have no save button of their own: as soon as something differs from the stored file, a bar at the bottom of the page lists the cards with changes, and **Save changes** writes them all in one go. Every card is checked first and nothing is written if one of them is refused. The browser asks for confirmation before leaving the page with unsaved changes.
+
+### config.json editor
+
+The **config.json** card at the bottom of the panel edits the whole file, for the settings the cards don't cover, such as the [ACE settings](https://anvil.acemod.org/components/medical/) in `game.gameProperties.missionHeader`. The text is checked as you type, against the keys documented on the [Bohemia wiki](https://community.bistudio.com/wiki/Arma_Reforger:Server_Config):
+
+- **Errors** block the save: invalid JSON, a key given twice, a documented key with the wrong type or out of its range, a missing `game.scenarioId`, an RCON password that is too short or has spaces, two sockets on the same port, an invalid mod entry.
+- **Warnings** don't: keys the wiki doesn't document (a newer server version or a mod may use them, so they can't be told from a typo), a scenario the panel doesn't know.
+
+The server has the final word when it starts: its console log reports what it refuses. The editor can't be used while a card has unsaved changes, and the other way round, since both write the same file. If the file changed since the editor loaded it (from another tab or a mod set), the save is refused rather than overwriting that change. The editor also opens a `config.json` that doesn't parse, so it can repair one.
+
 ### config.json backups
 
-Before each change it makes to the server's `config.json`, the panel copies the current file to `config-backups/` in the panel directory and keeps the 20 most recent copies. To roll back, copy one of them over `config.json`. If `config.json` can't be parsed (e.g. after a manual edit), the panel shows a warning and refuses to save until the file is fixed.
+Before each change it makes to the server's `config.json`, from the cards or the editor, the panel copies the current file to `config-backups/` in the panel directory and keeps the 20 most recent copies. To roll back, copy one of them over `config.json`. If `config.json` can't be parsed (e.g. after a manual edit), the panel shows a warning and the cards refuse to save until the file is fixed, in the editor for example.
 
 ### Mod sets
 
 Mod sets are stored in `modsets/` in the panel directory: one `<id>.json` file per set (`{"name": ..., "mods": [...]}`) and an `active` file holding the id of the set in use. The server itself only reads `game.mods` in `config.json`: choosing a set copies its mods there, and changes to the set in use are written to both. On first start the panel creates a "Default" set from the mods already in `config.json`. If `game.mods` is later edited by hand, the Mods card shows that it no longer matches the set in use.
 
 Export downloads the selected set as a JSON file in the import format. Mods that don't name a version get the version the server has downloaded, read from the addon's `meta` file in `WORKSHOP_DIR`. Mods the server hasn't downloaded yet are exported without a version, and the panel lists them.
+
+**Downloaded on the server**, at the end of the Mods card, lists the mods in `WORKSHOP_DIR` with their size and the sets that hold them. **Remove** deletes a mod's folder to free disk space. It is refused while the server runs, and for a mod in `config.json`'s list (the set in use), which the server would download again at its next start. It downloads a removed mod again too when another mod in use depends on it.
 
 ---
 

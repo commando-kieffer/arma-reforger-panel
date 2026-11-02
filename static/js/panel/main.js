@@ -1,6 +1,8 @@
 // Entry point of the panel page.
 
 import { initLanguageSwitch } from '../i18n.js';
+import { initChanges } from './changes.js';
+import { initConfigEditor } from './config-editor.js';
 import { initGameplay } from './gameplay.js';
 import { initLogHistory } from './log-history.js';
 import { initLogViewer } from './logs.js';
@@ -28,9 +30,11 @@ initServerConfig();
 initGameplay();
 initMods();
 initPersistence();
+initConfigEditor();
 initLogHistory();
 initPlayers();
 
+initChanges();
 document.getElementById('btn-logout').addEventListener('click', doLogout);
 initSettings();
 initLanguageSwitch();

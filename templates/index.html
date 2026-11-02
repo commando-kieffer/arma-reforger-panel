@@ -82,6 +82,10 @@
       <span class="ctrl-icon">↺</span>{{ t('controls.restart') }}
     </button>
   </div>
+  <div class="controls-extra">
+    <span class="card-help">{{ t('controls.force_stop_help') }}</span>
+    <button type="button" class="link-btn link-btn--danger" id="btn-force-stop">{{ t('controls.force_stop') }}</button>
+  </div>
 
   <!-- Charts -->
   <div class="charts-row">
@@ -158,9 +162,6 @@
       </div>
     </div>
     <div class="card-help">{{ t('config.cross_platform_help')|safe }}</div>
-    <div class="card-actions">
-      <button class="btn btn-solid" id="btn-save">{{ t('common.save_changes') }}</button>
-    </div>
     <div class="restart-notice" id="restart-notice">{{ t('config.restart_notice') }}</div>
   </section>
 
@@ -227,9 +228,6 @@
       </div>
     </div>
     <div class="field-warning" id="battleye-warning" hidden>{{ t('gameplay.battleye_warning') }}</div>
-    <div class="card-actions">
-      <button class="btn btn-solid" id="btn-gameplay-save">{{ t('common.save_changes') }}</button>
-    </div>
     <div class="restart-notice" id="gameplay-restart-notice">{{ t('config.restart_notice') }}</div>
   </section>
 
@@ -310,6 +308,19 @@
       </div>
       <div class="restart-notice" id="mods-restart-notice">{{ t('mods.restart_notice') }}</div>
     </div>
+
+    <!-- Mods downloaded on the server -->
+    <div class="card-section">
+      <div class="section-header">
+        <h3 class="card-subtitle">{{ t('workshop.title') }}</h3>
+        <button type="button" class="link-btn" id="btn-refresh-workshop">{{ t('workshop.refresh') }}</button>
+      </div>
+      <p class="card-description">{{ t('workshop.help') }}</p>
+      <div class="card-help workshop-summary" id="workshop-summary"></div>
+      <div id="workshop-list" class="mods-list">
+        <div class="mods-placeholder">{{ t('mods.loading') }}</div>
+      </div>
+    </div>
   </section>
 
   <!-- Persistence -->
@@ -347,10 +358,23 @@
     </div>
     <div id="persist-stats" class="persist-stats"></div>
     <div class="card-actions">
-      <button class="btn btn-solid" id="btn-persist-save">{{ t('common.save_changes') }}</button>
       <button class="btn btn-danger" id="btn-persist-flush">{{ t('persistence.flush') }}</button>
     </div>
     <div class="restart-notice" id="persist-restart-notice">{{ t('persistence.restart_notice') }}</div>
+  </section>
+
+  <!-- config.json editor -->
+  <section class="card" id="raw-config-card">
+    <h2 class="card-title">{{ t('editor.title') }}</h2>
+    <p class="card-description">{{ t('editor.description')|safe }}</p>
+    <details class="editor-details" id="editor-details">
+      <summary class="link-btn">{{ t('editor.open') }}</summary>
+      <div class="field-warning" id="editor-locked" hidden>{{ t('editor.locked') }}</div>
+      <textarea id="raw-config" class="config-editor" rows="24" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="editor-problems"></textarea>
+      <div class="editor-status" id="editor-status" role="status"></div>
+      <ul class="editor-problems" id="editor-problems"></ul>
+    </details>
+    <div class="restart-notice" id="raw-restart-notice">{{ t('config.restart_notice') }}</div>
   </section>
 
   <!-- Live Logs -->
@@ -393,6 +417,21 @@
   </section>
 
 </main>
+
+<div class="save-bar" id="save-bar" role="region" aria-label="{{ t('changes.unsaved') }}" hidden>
+  <div class="save-bar-inner">
+    <div class="save-bar-text">
+      <strong>{{ t('changes.unsaved') }}</strong>
+      <span id="save-bar-sections"></span>
+      <span class="save-bar-note" id="save-bar-note" hidden></span>
+      <span class="save-bar-error" id="save-bar-error" role="alert" hidden></span>
+    </div>
+    <div class="save-bar-actions">
+      <button type="button" class="btn btn-outline btn-sm" id="btn-discard-all">{{ t('changes.discard') }}</button>
+      <button type="button" class="btn btn-solid btn-sm" id="btn-save-all">{{ t('changes.save') }}</button>
+    </div>
+  </div>
+</div>
 
 <footer class="site-footer">
   <p>{{ t('footer.refresh_in') }} <span id="refresh-timer">10</span>{{ t('footer.seconds_unit') }} &nbsp;|&nbsp; Panel v3.0</p>

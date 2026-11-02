@@ -1,7 +1,11 @@
 """Minimal client for the game server's RCON port (BattlEye RCon protocol).
 
-Used to read the names and identity IDs of the connected players with the
-`#players` command. Protocol: https://www.battleye.com/downloads/BERConProtocol.txt
+Used to read the connected players with `#players` (their player number,
+identity ID and name) and to kick one with `#kick <player number>`.
+Protocol: https://www.battleye.com/downloads/BERConProtocol.txt
+Commands: https://community.bistudio.com/wiki/Arma_Reforger:Server_Management
+(`#kick` needs `"permission": "admin"` in the rcon block; `#players` works
+with `monitor` too.)
 
 The way Reforger answers a command isn't documented. As observed on a live
 server, it acknowledges the command with an empty answer, then sends two
@@ -31,7 +35,8 @@ PROCESSING_PREFIX = "Processing Command: "
 PLAYERS_COMMAND = "#players"
 PLAYERS_HEADER = "Players on server: [Player#] ; [Player UID] ; [Player Name]"
 PLAYER_ROW_RE = re.compile(
-    r"^\d+ ; ([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}) ; ?(.*)$")
+    r"^(\d+) ; ([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}) ; ?(.*)$")
+KICK_COMMAND = "#kick {}"
 
 
 class RconError(Exception):
@@ -57,7 +62,8 @@ def parse_packet(packet):
 
 
 def parse_players(output):
-    """Parse the output of `#players` into [{"uid": ..., "name": ...}].
+    """Parse the output of `#players` into [{"id": ..., "uid": ..., "name": ...}],
+    where "id" is the player number that `#kick` takes.
 
     Expected: the header line, then one "<number> ; <identity ID> ; <name>"
     line per player. Any other line rejects the whole output.
@@ -72,7 +78,7 @@ def parse_players(output):
         match = PLAYER_ROW_RE.match(line)
         if not match:
             raise RconError("unexpected line in the player list")
-        players.append({"uid": match.group(1), "name": match.group(2)})
+        players.append({"id": int(match.group(1)), "uid": match.group(2), "name": match.group(3)})
     return players
 
 
@@ -95,14 +101,19 @@ class Client:
         self._sequence = 0
         self._last_sent = 0.0
 
-    def command(self, text):
-        """Send a command and return its output."""
+    def command(self, text, output_wait=None):
+        """Send a command and return its output.
+
+        With `output_wait`, the command may have no output: when nothing
+        follows the "Processing Command" message within that many seconds,
+        "" is returned instead of raising a timeout.
+        """
         if self._sock is not None and time.monotonic() - self._last_sent > SESSION_SECONDS:
             self.close()
         try:
             if self._sock is None:
                 self._login()
-            return self._command(text)
+            return self._command(text, output_wait)
         except (RconError, OSError):
             # Whatever went wrong, the next command starts from a new login.
             self.close()
@@ -128,15 +139,22 @@ class Client:
         if payload[1:] != b"\x01":
             raise LoginRefused("the server refused the RCON password")
 
-    def _command(self, text):
+    def _command(self, text, output_wait):
         sequence = self._sequence
         self._sequence = (sequence + 1) % 256
         deadline = time.monotonic() + self.timeout
         self._send(bytes([COMMAND, sequence]) + text.encode("utf-8"))
         self.messages = []
         acknowledged = processing = False
+        processed_at = 0.0
         while True:
-            payload = self._receive(deadline)
+            if processing and acknowledged and output_wait is not None:
+                try:
+                    payload = self._receive(min(deadline, processed_at + output_wait))
+                except socket.timeout:
+                    return ""
+            else:
+                payload = self._receive(deadline)
             if payload[0] == COMMAND:
                 # The acknowledgement: the number of the command, nothing else.
                 if acknowledged or payload[1:] != bytes([sequence]):
@@ -150,6 +168,7 @@ class Client:
                     return message
                 if message == PROCESSING_PREFIX + text:
                     processing = True
+                    processed_at = time.monotonic()
                 else:
                     self.messages.append(message)
             else:

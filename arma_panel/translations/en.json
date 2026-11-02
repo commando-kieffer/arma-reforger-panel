@@ -9,7 +9,6 @@
     "unknown": "unknown",
     "error": "Error: {error}",
     "connection_error": "Connection error",
-    "save_changes": "Save changes",
     "save_failed": "Save failed: {error}",
     "show_password": "Show",
     "hide_password": "Hide",
@@ -73,6 +72,20 @@
     "image_unreadable": "This image can't be read",
     "image_too_large": "The scaled image is too large (over {max} KB). Try a simpler image."
   },
+  "changes": {
+    "unsaved": "Unsaved changes:",
+    "save": "Save changes",
+    "discard": "Discard",
+    "confirm_discard": "Discard the unsaved changes?",
+    "saving": "Saving…",
+    "saved": "Changes saved",
+    "save_failed_section": "Not saved. {section}: {error}",
+    "forms_locked": "The forms are locked while config.json is being edited.",
+    "section_server": "Server configuration",
+    "section_gameplay": "Gameplay settings",
+    "section_persistence": "Persistence",
+    "section_raw": "config.json editor"
+  },
   "status": {
     "title": "Server Status",
     "loading": "LOADING...",
@@ -106,7 +119,13 @@
     "connecting": "connecting…",
     "seconds": "{n} s",
     "minutes": "{n} min",
-    "hours": "{h} h {m}"
+    "hours": "{h} h {m}",
+    "col_number": "ID",
+    "kick": "Kick",
+    "confirm_kick": "Kick {name}? They can join again.",
+    "kicking": "Kicking {name}…",
+    "kicked": "{name} was kicked",
+    "kick_unavailable": "To kick players from here, set \"permission\": \"admin\" in the rcon block of config.json (editor below), then restart the server."
   },
   "controls": {
     "start": "START",
@@ -117,7 +136,11 @@
     "restarting": "Restarting server...",
     "started": "Server started",
     "stopped": "Server stopped",
-    "restarted": "Server restarted"
+    "restarted": "Server restarted",
+    "force_stop": "Force stop",
+    "force_stop_help": "Server not responding to Stop?",
+    "confirm_force_stop": "Force stop the server?\n\nEvery server process gets SIGINT, and is killed if it hasn't quit within 10 seconds. The game may not get to save. Only use this when Stop doesn't work.",
+    "force_stopping": "Force stopping the server…"
   },
   "metrics": {
     "cpu_title": "CPU — System",
@@ -152,11 +175,7 @@
     "scan_nothing_found": ". No .pak files found. Tried: {tried}. Run the server once so it downloads workshop mods, or set WORKSHOP_DIR in config.env.",
     "rescan_failed": "Rescan failed: {error}",
     "rescan_error": "Rescan error",
-    "name_required": "Server name cannot be empty",
-    "admin_password_required": "Admin password cannot be empty",
-    "saving": "Saving configuration...",
-    "saved": "Configuration saved",
-    "unreadable_banner": "config.json could not be read ({error}). Settings can't be saved until the file is fixed."
+    "unreadable_banner": "config.json could not be read ({error}). The cards can't save until it's fixed, for example in the config.json editor at the bottom of the page."
   },
   "gameplay": {
     "title": "Gameplay Settings",
@@ -172,9 +191,7 @@
     "join_queue_max_size": "Join queue size (0–50, 0 = disabled)",
     "ai_limit": "AI limit (-1 = no limit)",
     "battleye_warning": "BattlEye is the server's anti-cheat. Only disable it on a private server.",
-    "fast_validation_off": "<code>fastValidation</code> is off in config.json. The Bohemia wiki says to always keep it on for a public server.",
-    "saving": "Saving gameplay settings...",
-    "saved": "Gameplay settings saved"
+    "fast_validation_off": "<code>fastValidation</code> is off in config.json. The Bohemia wiki says to always keep it on for a public server."
   },
   "mods": {
     "title": "Server Mods",
@@ -257,6 +274,26 @@
       "other": ". No downloaded version found for {count} mods: {mods}"
     }
   },
+  "workshop": {
+    "title": "Downloaded on the server",
+    "refresh": "Refresh",
+    "help": "The mods the server has downloaded to its workshop folder. Removing one frees disk space. A mod in config.json's list (the set in use) can't be removed: the server would download it again at its next start, as it does for a removed mod that another mod depends on.",
+    "summary": {
+      "one": "{count} mod, {size}, in {dir}.",
+      "other": "{count} mods, {size}, in {dir}."
+    },
+    "empty": "No downloaded mods in {dir}.",
+    "load_failed": "Could not list the downloaded mods.",
+    "in_use": "in use",
+    "in_sets": "in sets: {sets}",
+    "in_no_set": "in no mod set",
+    "uninstall": "Remove",
+    "running_help": "Stop the server to remove mods.",
+    "in_use_help": "In config.json's mod list: the server would download it again",
+    "confirm_uninstall": "Delete {name} ({size}) from the server's disk?\n\nIt's downloaded again if a mod set holding it is used later.",
+    "uninstalling": "Removing {name}…",
+    "uninstalled": "{name} removed from the server"
+  },
   "persistence": {
     "title": "Persistence",
     "description": "Session saves let the server pick the world back up after a restart. They only work in scenarios that support them (Conflict, Combat Ops); Game Master needs manual saves from the Esc menu. <strong>Server defaults</strong>: nothing in <code>config.json</code>, the server autosaves every 10 minutes. <strong>Custom settings</strong>: the settings below, written to <code>game.gameProperties.persistence</code>. <strong>Disabled</strong>: sets <code>m_eSaveTypes</code> to 0 in the mission header, which turns saving off. The server is always started with <code>-loadSessionSave</code>, so an existing save is loaded on start; use <strong>Flush saves</strong> to start from a fresh world.",
@@ -279,8 +316,6 @@
       "other": "{label}: {count} files, {size} (newest {age})"
     },
     "empty": "empty",
-    "saving": "Saving persistence settings...",
-    "saved": "Persistence settings saved",
     "confirm_flush": "Delete the world-session save (.save/game) and per-player saves (.save/playersave)? Server settings are kept. The next launch starts a fresh world. This cannot be undone.",
     "flushing": "Flushing saves...",
     "flushed": {
@@ -288,6 +323,41 @@
       "other": "Removed {count} save files"
     },
     "flush_failed": "Flush failed: {error}"
+  },
+  "editor": {
+    "title": "config.json",
+    "description": "The server's whole config file, for the settings the cards above don't cover, such as the <a href=\"https://anvil.acemod.org/components/medical/\" target=\"_blank\" rel=\"noopener\">ACE settings</a> in <code>game.gameProperties.missionHeader</code> (see the <a href=\"https://community.bistudio.com/wiki/Arma_Reforger:Server_Config\" target=\"_blank\" rel=\"noopener\">server config reference</a>). The text is checked as you type: errors block the save, warnings don't. The previous file is kept in <code>config-backups/</code>.",
+    "open": "Edit config.json",
+    "locked": "The forms above have unsaved changes: save or discard them before editing config.json.",
+    "checking": "Checking…",
+    "no_problems": "No problems found.",
+    "problem_count": "{errors} error(s), {warnings} warning(s)",
+    "level_error": "Error",
+    "level_warning": "Warning",
+    "load_failed": "Could not load config.json: {error}"
+  },
+  "check": {
+    "syntax": "Invalid JSON at line {line}, column {col}: {reason}",
+    "syntax_value": "{value} isn't valid JSON",
+    "duplicate_key": "The key \"{name}\" appears twice in the same object",
+    "not_an_object": "The file must hold a JSON object: { … }",
+    "wrong_type": "Must be {expected}",
+    "kind_string": "a string",
+    "kind_int": "a whole number",
+    "kind_bool": "true or false",
+    "kind_object": "an object { … }",
+    "kind_array": "a list [ … ]",
+    "out_of_range": "Allowed values: {allowed}",
+    "not_a_choice": "Allowed values: {allowed}",
+    "too_long": "At most {max} characters",
+    "too_short": "At least {min} characters",
+    "spaces": "Can't contain spaces",
+    "required": "Required",
+    "unknown_key": "Not a documented key. Check the spelling (keys are case-sensitive), unless it comes from a newer server version or a mod.",
+    "unknown_scenario": "Not a scenario the panel knows (base game or downloaded mods)",
+    "invalid_mod": "Invalid mod entry: modId must be 1 to 32 hexadecimal characters",
+    "duplicate_mod": "Mod {mod_id} is listed twice",
+    "port_taken": "Port {port} is already used by {other}"
   },
   "logs": {
     "title": "Server logs — live",
@@ -384,6 +454,38 @@
     "import_replaced": {
       "one": "Replaced full mod list with {count} entry",
       "other": "Replaced full mod list with {count} entries"
-    }
+    },
+    "invalid_request": "Invalid request",
+    "save_mixed": "The config.json editor and the forms can't be saved together",
+    "config_check_failed": "config.json has errors, nothing was saved (see the list under the editor)",
+    "config_changed": "config.json changed since the editor loaded it (in another tab, or through the mod sets). Nothing was saved: discard to load the current file, then make your changes again.",
+    "force_stop_none": "No server process found",
+    "force_stopped": {
+      "one": "Server force stopped ({count} process)",
+      "other": "Server force stopped ({count} processes)"
+    },
+    "force_stop_killed": {
+      "one": ". Process {pids} ignored SIGINT and was killed",
+      "other": ". Processes {pids} ignored SIGINT and were killed"
+    },
+    "force_stop_systemd": ". It was started by the arma-server service, which may start it again within 10 seconds. To keep it stopped, run: sudo systemctl stop arma-server",
+    "force_stop_remaining": {
+      "one": "Process {pids} is still running after SIGKILL",
+      "other": "Processes {pids} are still running after SIGKILL"
+    },
+    "force_stop_denied": {
+      "one": ". The panel isn't allowed to signal process {pids}: it runs as another user",
+      "other": ". The panel isn't allowed to signal processes {pids}: they run as another user"
+    },
+    "kick_rcon_disabled": "Kicking needs RCON: config.json has no rcon block with a password",
+    "kick_needs_admin": "Kicking needs \"permission\": \"admin\" in the rcon block of config.json, then a server restart",
+    "kick_rcon_refused": "The server refused the RCON password of config.json",
+    "kick_rcon_failed": "The server didn't answer over RCON",
+    "kick_player_gone": "This player is no longer in the list with this ID: refresh and try again",
+    "kick_failed": "The player is still connected after the kick command. Server answer: {answer}",
+    "stop_before_uninstall": "Stop the server before removing a mod",
+    "workshop_mod_in_use": "This mod is in config.json's mod list: remove it from the mod set in use, or switch sets, first",
+    "workshop_mod_not_found": "This mod isn't in the workshop folder anymore",
+    "workshop_remove_failed": "Could not remove the mod: {error}"
   }
 }

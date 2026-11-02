@@ -534,8 +534,9 @@ body {
   white-space: nowrap;
   cursor: pointer;
 }
-.mod-remove:hover { box-shadow: var(--button-glow); }
-.mod-remove:active { background-image: var(--button-pressed); box-shadow: none; }
+.mod-remove:hover:not(:disabled) { box-shadow: var(--button-glow); }
+.mod-remove:active:not(:disabled) { background-image: var(--button-pressed); box-shadow: none; }
+.mod-remove:disabled { color: var(--etch-dark); border-color: #C9C7BA; background-image: none; background-color: #F4F4F0; cursor: not-allowed; }
 
 .import-textarea {
   font-family: var(--font-mono);
@@ -704,6 +705,119 @@ body {
 }
 #refresh-timer { font-weight: 700; }
 
+/* Links in the explanations, such as the editor's documentation links */
+.card-description a,
+.card-help a { color: var(--link); }
+.card-description a:hover,
+.card-help a:hover { color: var(--link-hover); }
+
+/* Force stop, under the server controls */
+.controls-extra {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: -6px;
+}
+.controls-extra .card-help { margin: 0; }
+
+/* Subtitle with an action aligned on its right */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.workshop-summary { margin: 0 0 6px; }
+
+/* Players */
+.players-table .player-number { width: 1%; white-space: nowrap; font-family: var(--font-mono); font-size: 11px; color: var(--text-soft); }
+.players-table .player-action { width: 1%; text-align: right; white-space: nowrap; }
+
+/* config.json editor */
+.editor-details > summary { display: inline-block; margin-bottom: 8px; }
+
+.config-editor {
+  min-height: 320px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  tab-size: 4;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+.config-editor[readonly] { color: var(--text-muted); background-color: #F4F4F0; cursor: not-allowed; }
+#editor-locked { margin-top: 0; }
+
+.editor-status { margin-top: 6px; font-size: 12px; color: var(--text-soft); }
+.editor-status--ok      { color: #006600; }
+.editor-status--warning { color: #9A6A00; }
+.editor-status--error   { color: var(--offline); }
+
+/* Problems listed like a list view */
+.editor-problems {
+  max-height: 260px;
+  margin-top: 6px;
+  overflow-y: auto;
+  list-style: none;
+  background-color: #FFFFFF;
+  border: 1px solid var(--field-border);
+}
+.editor-problems:empty { display: none; }
+.editor-problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 3px 8px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid #EAEAEA;
+}
+.editor-problem:last-child { border-bottom: none; }
+.editor-problem-level { font-weight: 700; }
+.editor-problem--error .editor-problem-level   { color: var(--offline); }
+.editor-problem--warning .editor-problem-level { color: #9A6A00; }
+
+/* A card locked while the config.json editor has unsaved changes */
+.card.is-locked { opacity: 0.5; }
+
+/* Save bar: a yellow balloon tip over the taskbar */
+body.has-save-bar { padding-bottom: 5.5rem; }
+
+.save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  padding: 0 12px calc(36px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.save-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  max-width: 968px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text);
+  background-color: #FFFFE1;
+  border: 1px solid #000000;
+  border-radius: 6px;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+.save-bar-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; min-width: 0; }
+.save-bar-note  { flex-basis: 100%; color: var(--text-soft); }
+.save-bar-error { flex-basis: 100%; color: var(--offline); overflow-wrap: anywhere; }
+.save-bar-actions { display: flex; flex-shrink: 0; gap: 6px; }
+
 /* Responsive */
 @media (max-width: 992px) {
   .header-logo { height: 52px; }
@@ -729,6 +843,8 @@ body {
 }
 
 @media (max-width: 576px) {
+  .save-bar-actions { width: 100%; }
+  .save-bar-actions .btn { flex: 1; }
   .header-bar { grid-template-columns: 1fr; }
   .header-actions { justify-self: start; }
 
