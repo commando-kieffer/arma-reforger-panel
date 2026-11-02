@@ -197,6 +197,8 @@
     "title": "Server Mods",
     "loading": "Loading mods...",
     "empty": "No mods in this set",
+    "show_list": "Show mods",
+    "hide_list": "Hide mods",
     "remove": "Remove ✕",
     "bulk_import": "Bulk import",
     "mode_replace": "Replace full list",

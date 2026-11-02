@@ -722,14 +722,39 @@ body {
 }
 .controls-extra .card-help { margin: 0; }
 
-/* Subtitle with an action aligned on its right */
+/* Text with an action aligned on its right */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
+  margin-bottom: 6px;
 }
-.workshop-summary { margin: 0 0 6px; }
+.workshop-summary { margin: 0; }
+
+/* Collapsible parts of a card: a section that opens from its title, and a
+   list behind a show/hide button. Both use the tree view's +/- box. */
+.section-details > summary { list-style: none; cursor: pointer; }
+.section-details > summary::-webkit-details-marker { display: none; }
+.section-details > summary > .card-subtitle { margin-bottom: 0; }
+.section-details[open] > summary { margin-bottom: 8px; }
+.section-details > summary > .card-subtitle::before,
+.list-toggle::before {
+  content: '+';
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 5px;
+  border: 1px solid #7F9DB9;
+  background: #FFFFFF;
+  color: #000000;
+  font: 400 10px/9px var(--font-mono);
+  text-align: center;
+  vertical-align: -1px;
+}
+.section-details[open] > summary > .card-subtitle::before,
+.list-toggle[aria-expanded="true"]::before { content: '−'; }
+.list-toggle-row { margin-bottom: 8px; }
 
 /* Players */
 .players-table .player-number { width: 1%; white-space: nowrap; font-family: var(--font-mono); font-size: 11px; color: var(--text-soft); }

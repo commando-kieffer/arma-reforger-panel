@@ -106,6 +106,13 @@ function render() {
   renderMods(set ? set.mods : []);
 }
 
+function showModList(visible) {
+  $('mods-list').hidden = !visible;
+  const toggle = $('btn-toggle-mods');
+  toggle.setAttribute('aria-expanded', String(visible));
+  toggle.textContent = t(visible ? 'mods.hide_list' : 'mods.show_list');
+}
+
 function renderMods(mods) {
   const container = $('mods-list');
   if (mods.length === 0) {
@@ -300,6 +307,7 @@ export function initMods() {
   });
   $('btn-modset-name-cancel').addEventListener('click', closeNameForm);
 
+  $('btn-toggle-mods').addEventListener('click', () => showModList($('mods-list').hidden));
   $('btn-add-mod').addEventListener('click', () => run(addMod));
   $('btn-import-text').addEventListener('click', () => run(importModsFromTextarea));
   $('mods-import-file').addEventListener('change', event => run(() => importModsFromFile(event.target)));

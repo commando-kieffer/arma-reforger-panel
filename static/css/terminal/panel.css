@@ -656,14 +656,27 @@ body {
 .controls-extra .card-help { margin: 0; }
 .controls-extra .card-help::before { content: '# '; }
 
-/* Subtitle with an action aligned on its right */
+/* Text with an action aligned on its right */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
+  margin-bottom: 0.75rem;
 }
-.workshop-summary { margin: 0 0 0.75rem; }
+.workshop-summary { margin: 0; }
+
+/* Collapsible parts of a card: a section that opens from its title, and a
+   list behind a show/hide button */
+.section-details > summary { list-style: none; cursor: pointer; }
+.section-details > summary::-webkit-details-marker { display: none; }
+.section-details > summary > .card-subtitle { margin-bottom: 0; }
+.section-details[open] > summary { margin-bottom: 0.75rem; }
+.section-details > summary > .card-subtitle::before,
+.list-toggle::before { content: '[+] '; color: var(--green); }
+.section-details[open] > summary > .card-subtitle::before,
+.list-toggle[aria-expanded="true"]::before { content: '[-] '; }
+.list-toggle-row { margin-bottom: 0.75rem; }
 
 /* Players */
 .players-table .player-number { width: 1%; white-space: nowrap; color: var(--fg-dim); }

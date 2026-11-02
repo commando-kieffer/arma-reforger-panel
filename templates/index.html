@@ -261,8 +261,11 @@
     <div class="card-help modset-state" id="modset-state"></div>
     <div class="field-warning" id="modset-differs" hidden>{{ t('modsets.config_differs') }}</div>
 
-    <!-- Mods of the chosen set -->
-    <div id="mods-list" class="mods-list">
+    <!-- Mods of the chosen set, hidden until asked for -->
+    <div class="list-toggle-row">
+      <button type="button" class="link-btn list-toggle" id="btn-toggle-mods" aria-expanded="false" aria-controls="mods-list">{{ t('mods.show_list') }}</button>
+    </div>
+    <div id="mods-list" class="mods-list" hidden>
       <div class="mods-placeholder">{{ t('mods.loading') }}</div>
     </div>
 
@@ -309,18 +312,18 @@
       <div class="restart-notice" id="mods-restart-notice">{{ t('mods.restart_notice') }}</div>
     </div>
 
-    <!-- Mods downloaded on the server -->
-    <div class="card-section">
+    <!-- Mods downloaded on the server, collapsed until opened -->
+    <details class="card-section section-details" id="workshop-details">
+      <summary><h3 class="card-subtitle">{{ t('workshop.title') }}</h3></summary>
+      <p class="card-description">{{ t('workshop.help') }}</p>
       <div class="section-header">
-        <h3 class="card-subtitle">{{ t('workshop.title') }}</h3>
+        <div class="card-help workshop-summary" id="workshop-summary"></div>
         <button type="button" class="link-btn" id="btn-refresh-workshop">{{ t('workshop.refresh') }}</button>
       </div>
-      <p class="card-description">{{ t('workshop.help') }}</p>
-      <div class="card-help workshop-summary" id="workshop-summary"></div>
       <div id="workshop-list" class="mods-list">
         <div class="mods-placeholder">{{ t('mods.loading') }}</div>
       </div>
-    </div>
+    </details>
   </section>
 
   <!-- Persistence -->

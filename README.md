@@ -176,7 +176,7 @@ Mod sets are stored in `modsets/` in the panel directory: one `<id>.json` file p
 
 Export downloads the selected set as a JSON file in the import format. Mods that don't name a version get the version the server has downloaded, read from the addon's `meta` file in `WORKSHOP_DIR`. Mods the server hasn't downloaded yet are exported without a version, and the panel lists them.
 
-**Downloaded on the server**, at the end of the Mods card, lists the mods in `WORKSHOP_DIR` with their size and the sets that hold them. **Remove** deletes a mod's folder to free disk space. It is refused while the server runs, and for a mod in `config.json`'s list (the set in use), which the server would download again at its next start. It downloads a removed mod again too when another mod in use depends on it.
+**Downloaded on the server**, a collapsed section at the end of the Mods card, lists the mods in `WORKSHOP_DIR` with their size and the sets that hold them. **Remove** deletes a mod's folder to free disk space. It is refused while the server runs, and for a mod in `config.json`'s list (the set in use), which the server would download again at its next start. It downloads a removed mod again too when another mod in use depends on it.
 
 ---
 

@@ -197,6 +197,8 @@
     "title": "Mods du serveur",
     "loading": "Chargement des mods...",
     "empty": "Aucun mod dans ce modset",
+    "show_list": "Afficher les mods",
+    "hide_list": "Masquer les mods",
     "remove": "Retirer ✕",
     "bulk_import": "Import groupé",
     "mode_replace": "Remplacer toute la liste",
